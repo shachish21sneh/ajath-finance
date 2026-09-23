@@ -22,15 +22,18 @@
 <div class="row g-3 mb-4">
     <!-- Total Sales -->
     <div class="col-12 col-sm-6 col-xl-3">
-        <div class="card card-modern stat-card border-start border-primary border-4">
-            <div class="d-flex align-items-center justify-content-between">
-                <div class="min-w-0 pe-2">
-                    <div class="stat-label">Total Sales (Turnover)</div>
-                    <div class="stat-value text-primary">₹ {{ number_format($metrics['sales_total'], 2) }}</div>
-                    <span class="badge bg-primary-subtle text-primary small"><i class="fa-solid fa-arrow-trend-up me-1"></i> Active FY</span>
-                </div>
+        <div class="card card-modern stat-card accent-sales">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <span class="stat-label mb-0">Total Sales (Turnover)</span>
                 <div class="stat-icon bg-primary-subtle text-primary">
                     <i class="fa-solid fa-file-invoice-dollar"></i>
+                </div>
+            </div>
+            <div>
+                <div class="stat-value text-primary text-nowrap">₹ {{ number_format($metrics['sales_total'], 2) }}</div>
+                <div class="d-flex align-items-center justify-content-between mt-2 pt-2 border-top border-light-subtle">
+                    <span class="badge bg-primary-subtle text-primary small"><i class="fa-solid fa-arrow-trend-up me-1"></i> Active FY</span>
+                    <span class="text-muted small">Tax Invoices</span>
                 </div>
             </div>
         </div>
@@ -38,15 +41,18 @@
 
     <!-- Total Purchases -->
     <div class="col-12 col-sm-6 col-xl-3">
-        <div class="card card-modern stat-card border-start border-warning border-4">
-            <div class="d-flex align-items-center justify-content-between">
-                <div class="min-w-0 pe-2">
-                    <div class="stat-label">Total Purchases</div>
-                    <div class="stat-value text-warning-emphasis">₹ {{ number_format($metrics['purchase_total'], 2) }}</div>
-                    <span class="badge bg-warning-subtle text-warning-emphasis small"><i class="fa-solid fa-cart-shopping me-1"></i> Direct Procurement</span>
-                </div>
+        <div class="card card-modern stat-card accent-purchases">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <span class="stat-label mb-0">Total Purchases</span>
                 <div class="stat-icon bg-warning-subtle text-warning">
                     <i class="fa-solid fa-cart-flatbed"></i>
+                </div>
+            </div>
+            <div>
+                <div class="stat-value text-warning-emphasis text-nowrap">₹ {{ number_format($metrics['purchase_total'], 2) }}</div>
+                <div class="d-flex align-items-center justify-content-between mt-2 pt-2 border-top border-light-subtle">
+                    <span class="badge bg-warning-subtle text-warning-emphasis small"><i class="fa-solid fa-cart-shopping me-1"></i> Procurement</span>
+                    <span class="text-muted small">Inward Bills</span>
                 </div>
             </div>
         </div>
@@ -54,34 +60,37 @@
 
     <!-- Outstanding Receivables -->
     <div class="col-12 col-sm-6 col-xl-3">
-        <div class="card card-modern stat-card border-start border-danger border-4">
-            <div class="d-flex align-items-center justify-content-between">
-                <div class="min-w-0 pe-2">
-                    <div class="stat-label">Receivables (Debtors)</div>
-                    <div class="stat-value text-danger">₹ {{ number_format($metrics['receivables'], 2) }}</div>
-                    <span class="badge bg-danger-subtle text-danger small"><i class="fa-solid fa-clock me-1"></i> Due From Customers</span>
-                </div>
+        <div class="card card-modern stat-card accent-receivables">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <span class="stat-label mb-0">Receivables (Debtors)</span>
                 <div class="stat-icon bg-danger-subtle text-danger">
                     <i class="fa-solid fa-hand-holding-dollar"></i>
+                </div>
+            </div>
+            <div>
+                <div class="stat-value text-danger text-nowrap">₹ {{ number_format($metrics['receivables'], 2) }}</div>
+                <div class="d-flex align-items-center justify-content-between mt-2 pt-2 border-top border-light-subtle">
+                    <span class="badge bg-danger-subtle text-danger small"><i class="fa-solid fa-clock me-1"></i> Due From Debtors</span>
+                    <span class="text-muted small">Pending</span>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Liquid Cash & Bank -->
+    <!-- Liquid Bank & Cash -->
     <div class="col-12 col-sm-6 col-xl-3">
-        <div class="card card-modern stat-card border-start border-success border-4">
-            <div class="d-flex align-items-center justify-content-between">
-                <div class="min-w-0 pe-2">
-                    <div class="stat-label">Liquid Bank & Cash</div>
-                    <div class="stat-value text-success">₹ {{ number_format($metrics['cash_balance'] + $metrics['bank_balance'], 2) }}</div>
-                    <div class="d-flex flex-wrap gap-1 mt-1">
-                        <span class="badge bg-success-subtle text-success small">Bank: ₹ {{ number_format($metrics['bank_balance'], 0) }}</span>
-                        <span class="badge bg-success-subtle text-success small">Cash: ₹ {{ number_format($metrics['cash_balance'], 0) }}</span>
-                    </div>
-                </div>
+        <div class="card card-modern stat-card accent-liquid">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <span class="stat-label mb-0">Liquid Bank & Cash</span>
                 <div class="stat-icon bg-success-subtle text-success">
                     <i class="fa-solid fa-building-columns"></i>
+                </div>
+            </div>
+            <div>
+                <div class="stat-value text-success text-nowrap">₹ {{ number_format($metrics['cash_balance'] + $metrics['bank_balance'], 2) }}</div>
+                <div class="d-flex align-items-center justify-content-between mt-2 pt-2 border-top border-light-subtle">
+                    <span class="badge bg-success-subtle text-success small"><i class="fa-solid fa-building-columns me-1"></i> Bank: ₹ {{ number_format($metrics['bank_balance'], 0) }}</span>
+                    <span class="badge bg-success-subtle text-success small"><i class="fa-solid fa-money-bill me-1"></i> Cash: ₹ {{ number_format($metrics['cash_balance'], 0) }}</span>
                 </div>
             </div>
         </div>
@@ -109,13 +118,19 @@
                 <span class="badge bg-light text-muted border">Live Stock</span>
             </div>
             <div class="chart-container-responsive">
-                <canvas id="topProductsChart"></canvas>
+                <div class="doughnut-wrapper">
+                    <canvas id="topProductsChart"></canvas>
+                    <div class="doughnut-center-info">
+                        <div class="doughnut-center-number">{{ number_format($metrics['top_products']->sum('current_stock'), 0) }}</div>
+                        <div class="doughnut-center-text">Units in Stock</div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Recent Transactions & Quick Shortcut Guide -->
+<!-- Recent Transactions & Interactive Productivity Panel -->
 <div class="row g-3 g-md-4">
     <div class="col-12 col-lg-8">
         <div class="card card-modern p-3 p-md-4 h-100">
@@ -124,37 +139,39 @@
                 <a href="{{ route('vouchers.index') }}" class="btn btn-sm btn-link text-decoration-none">View All Vouchers <i class="fa-solid fa-arrow-right ms-1"></i></a>
             </div>
             <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="table-light">
-                        <tr class="small text-muted text-uppercase">
-                            <th>Type</th>
-                            <th>Voucher #</th>
-                            <th>Date</th>
+                <table class="table table-hover align-middle mb-0 dashboard-table-compact">
+                    <thead>
+                        <tr>
+                            <th style="width: 70px;">Type</th>
+                            <th style="width: 88px;">Voucher #</th>
+                            <th style="width: 78px;">Date</th>
                             <th>Particulars / Ledger</th>
-                            <th class="text-end">Amount</th>
-                            <th class="text-center">Action</th>
+                            <th class="text-end" style="width: 100px;">Amount</th>
+                            <th class="text-center" style="width: 38px;"></th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($metrics['recent_vouchers'] as $v)
                             <tr>
                                 <td>
-                                    <span class="badge {{ $v->voucher_type->badgeClass() }}">
+                                    <span class="badge {{ $v->voucher_type->badgeClass() }} py-1 px-2" style="font-size: 0.68rem;">
                                         {{ $v->voucher_type->value }}
                                     </span>
                                 </td>
-                                <td class="fw-semibold small">{{ $v->voucher_no }}</td>
-                                <td class="small text-muted">{{ $v->voucher_date->format('d-M-Y') }}</td>
+                                <td class="fw-semibold small text-nowrap">{{ $v->voucher_no }}</td>
+                                <td class="small text-muted text-nowrap">{{ $v->voucher_date->format('d-M-y') }}</td>
                                 <td class="small">
-                                    <div class="fw-medium">{{ $v->partyLedger->name ?? 'Multi-Ledger Entry' }}</div>
+                                    <div class="fw-semibold text-truncate" style="max-width: 200px;" title="{{ $v->partyLedger->name ?? 'Multi-Ledger Entry' }}">
+                                        {{ $v->partyLedger->name ?? 'Multi-Ledger Entry' }}
+                                    </div>
                                     @if($v->narration)
-                                        <div class="text-muted text-truncate" style="max-width: 200px; font-size: 0.75rem;">{{ $v->narration }}</div>
+                                        <div class="text-muted text-truncate" style="max-width: 200px; font-size: 0.72rem;">{{ $v->narration }}</div>
                                     @endif
                                 </td>
-                                <td class="text-end fw-bold num-align">₹ {{ number_format($v->total_amount, 2) }}</td>
+                                <td class="text-end fw-bold num-align text-nowrap">₹ {{ number_format($v->total_amount, 2) }}</td>
                                 <td class="text-center">
-                                    <a href="{{ route('vouchers.show', $v->id) }}" class="btn btn-sm btn-light border py-0 px-2" title="View details">
-                                        <i class="fa-solid fa-eye text-muted"></i>
+                                    <a href="{{ route('vouchers.show', $v->id) }}" class="btn btn-sm btn-light border py-1 px-2 text-muted" title="View details">
+                                        <i class="fa-solid fa-eye"></i>
                                     </a>
                                 </td>
                             </tr>
@@ -171,48 +188,47 @@
 
     <div class="col-12 col-lg-4">
         <div class="card card-modern p-3 p-md-4 h-100">
-            <h6 class="fw-bold mb-3"><i class="fa-solid fa-keyboard me-2 text-primary"></i> Productivity Hotkeys</h6>
-            <div class="list-group list-group-flush small">
-                <div class="list-group-item d-flex justify-content-between align-items-center px-0 py-2 border-0">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <h6 class="fw-bold mb-0"><i class="fa-solid fa-keyboard me-2 text-primary"></i> Productivity Hotkeys</h6>
+                <span class="badge bg-primary-subtle text-primary small">Interactive</span>
+            </div>
+            <div class="list-group list-group-flush gap-1">
+                <a href="#" class="hotkey-list-item d-flex justify-content-between align-items-center border-0" data-bs-toggle="modal" data-bs-target="#companySelectModal">
                     <span><kbd class="me-2">F2</kbd> Switch Company</span>
-                    <span class="text-muted">Instant Popup</span>
-                </div>
-                <div class="list-group-item d-flex justify-content-between align-items-center px-0 py-2 border-0">
+                    <span class="text-muted small">Select <i class="fa-solid fa-angle-right ms-1 opacity-50"></i></span>
+                </a>
+                <a href="#" class="hotkey-list-item d-flex justify-content-between align-items-center border-0" data-bs-toggle="modal" data-bs-target="#fySelectModal">
                     <span><kbd class="me-2">F3</kbd> Switch Financial Year</span>
-                    <span class="text-muted">Instant Popup</span>
-                </div>
-                <div class="list-group-item d-flex justify-content-between align-items-center px-0 py-2 border-0">
+                    <span class="text-muted small">Select <i class="fa-solid fa-angle-right ms-1 opacity-50"></i></span>
+                </a>
+                <a href="{{ route('vouchers.create', ['type' => 'CONTRA']) }}" class="hotkey-list-item d-flex justify-content-between align-items-center border-0">
                     <span><kbd class="me-2 text-info">F4</kbd> Contra Voucher</span>
-                    <span class="text-muted">Cash & Bank</span>
-                </div>
-                <div class="list-group-item d-flex justify-content-between align-items-center px-0 py-2 border-0">
+                    <span class="text-muted small">Cash/Bank <i class="fa-solid fa-angle-right ms-1 opacity-50"></i></span>
+                </a>
+                <a href="{{ route('vouchers.create', ['type' => 'PAYMENT']) }}" class="hotkey-list-item d-flex justify-content-between align-items-center border-0">
                     <span><kbd class="me-2 text-danger">F5</kbd> Payment Voucher</span>
-                    <span class="text-muted">Outward Cash/Bank</span>
-                </div>
-                <div class="list-group-item d-flex justify-content-between align-items-center px-0 py-2 border-0">
+                    <span class="text-muted small">Outward <i class="fa-solid fa-angle-right ms-1 opacity-50"></i></span>
+                </a>
+                <a href="{{ route('vouchers.create', ['type' => 'RECEIPT']) }}" class="hotkey-list-item d-flex justify-content-between align-items-center border-0">
                     <span><kbd class="me-2 text-success">F6</kbd> Receipt Voucher</span>
-                    <span class="text-muted">Inward Money</span>
-                </div>
-                <div class="list-group-item d-flex justify-content-between align-items-center px-0 py-2 border-0">
+                    <span class="text-muted small">Inward <i class="fa-solid fa-angle-right ms-1 opacity-50"></i></span>
+                </a>
+                <a href="{{ route('vouchers.create', ['type' => 'JOURNAL']) }}" class="hotkey-list-item d-flex justify-content-between align-items-center border-0">
                     <span><kbd class="me-2">F7</kbd> Journal Voucher</span>
-                    <span class="text-muted">Adjustment Entry</span>
-                </div>
-                <div class="list-group-item d-flex justify-content-between align-items-center px-0 py-2 border-0">
+                    <span class="text-muted small">Adjust <i class="fa-solid fa-angle-right ms-1 opacity-50"></i></span>
+                </a>
+                <a href="{{ route('sales.create') }}" class="hotkey-list-item d-flex justify-content-between align-items-center border-0">
                     <span><kbd class="me-2 text-primary">F8</kbd> Sales Invoice</span>
-                    <span class="text-muted">Tax & POS Bills</span>
-                </div>
-                <div class="list-group-item d-flex justify-content-between align-items-center px-0 py-2 border-0">
+                    <span class="text-muted small">Billing <i class="fa-solid fa-angle-right ms-1 opacity-50"></i></span>
+                </a>
+                <a href="{{ route('purchases.create') }}" class="hotkey-list-item d-flex justify-content-between align-items-center border-0">
                     <span><kbd class="me-2 text-warning">F9</kbd> Purchase Invoice</span>
-                    <span class="text-muted">Vendor Bills</span>
-                </div>
-                <div class="list-group-item d-flex justify-content-between align-items-center px-0 py-2 border-0">
+                    <span class="text-muted small">Inward <i class="fa-solid fa-angle-right ms-1 opacity-50"></i></span>
+                </a>
+                <a href="#" class="hotkey-list-item d-flex justify-content-between align-items-center border-0" data-bs-toggle="modal" data-bs-target="#spotlightSearchModal">
                     <span><kbd class="me-2">Ctrl+F</kbd> Spotlight Search</span>
-                    <span class="text-muted">Search All Records</span>
-                </div>
-                <div class="list-group-item d-flex justify-content-between align-items-center px-0 py-2 border-0">
-                    <span><kbd class="me-2">Ctrl+S</kbd> Save Active Voucher</span>
-                    <span class="text-muted">Direct Submission</span>
-                </div>
+                    <span class="text-muted small">Search <i class="fa-solid fa-angle-right ms-1 opacity-50"></i></span>
+                </a>
             </div>
         </div>
     </div>
@@ -284,8 +300,16 @@ document.addEventListener('DOMContentLoaded', function () {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                cutout: '72%',
                 plugins: {
-                    legend: { position: 'bottom' }
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            boxWidth: 10,
+                            padding: 8,
+                            font: { size: 11 }
+                        }
+                    }
                 }
             }
         });
