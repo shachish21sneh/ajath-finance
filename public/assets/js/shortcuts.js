@@ -160,6 +160,26 @@
         }
     };
 
+    // Responsive Mobile & Tablet Sidebar Drawer Controller
+    window.toggleSidebar = function () {
+        const isOpen = document.body.classList.toggle('sidebar-open');
+        const backdrop = document.getElementById('sidebarBackdrop');
+        if (backdrop) {
+            if (isOpen) {
+                backdrop.classList.add('show');
+            } else {
+                backdrop.classList.remove('show');
+            }
+        }
+    };
+
+    // Close mobile drawer on Escape key or link click
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && document.body.classList.contains('sidebar-open')) {
+            window.toggleSidebar();
+        }
+    });
+
     // Load saved theme on boot
     const savedTheme = localStorage.getItem('ajath_theme') || 'light';
     document.documentElement.setAttribute('data-bs-theme', savedTheme);

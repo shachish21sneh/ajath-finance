@@ -25,12 +25,20 @@
 </head>
 <body>
     <div class="app-wrapper">
+        <!-- Sidebar Backdrop for Mobile/Tablet -->
+        <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="toggleSidebar()"></div>
+
         <!-- Sidebar Navigation -->
-        <aside class="sidebar">
-            <a href="{{ route('dashboard') }}" class="sidebar-brand">
-                <i class="fa-solid fa-shapes me-2"></i>
-                <span>Ajath <span class="fw-light opacity-75">ERP</span></span>
-            </a>
+        <aside class="sidebar" id="appSidebar">
+            <div class="sidebar-brand">
+                <a href="{{ route('dashboard') }}" class="d-flex align-items-center">
+                    <i class="fa-solid fa-shapes me-2"></i>
+                    <span>Ajath <span class="fw-light opacity-75">ERP</span></span>
+                </a>
+                <button type="button" class="btn btn-link text-white-50 p-1 d-lg-none" onclick="toggleSidebar()" aria-label="Close sidebar">
+                    <i class="fa-solid fa-xmark fs-5"></i>
+                </button>
+            </div>
 
             <div class="sidebar-menu">
                 <div class="sidebar-section-title">Core</div>
@@ -154,21 +162,21 @@
         <div class="main-content-wrapper">
             <!-- Top Navigation Bar -->
             <header class="topbar">
-                <div class="d-flex align-items-center gap-3">
-                    <button class="btn btn-sm btn-outline-secondary d-lg-none" type="button" data-bs-toggle="collapse" data-bs-target=".sidebar">
+                <div class="topbar-left">
+                    <button class="btn btn-sm btn-outline-secondary d-lg-none flex-shrink-0" type="button" onclick="toggleSidebar()" aria-label="Toggle navigation">
                         <i class="fa-solid fa-bars"></i>
                     </button>
 
                     <!-- Global Spotlight Search Button -->
                     <button class="search-trigger-btn" type="button" data-bs-toggle="modal" data-bs-target="#spotlightSearchModal">
-                        <i class="fa-solid fa-magnifying-glass"></i>
-                        <span>Search everything...</span>
-                        <kbd>Ctrl+F</kbd>
+                        <i class="fa-solid fa-magnifying-glass text-primary"></i>
+                        <span class="d-none d-sm-inline">Search everything...</span>
+                        <kbd class="d-none d-md-inline">Ctrl+F</kbd>
                     </button>
                 </div>
 
-                <div class="d-flex align-items-center gap-3">
-                    <!-- Active Company & FY Context Badges -->
+                <div class="topbar-right">
+                    <!-- Active Company & FY Context Badges (Desktop & Tablet) -->
                     <div class="company-fy-selector d-none d-md-flex">
                         <span class="active-context-pill" data-bs-toggle="modal" data-bs-target="#companySelectModal" title="Press F2 to switch Company">
                             <i class="fa-solid fa-building"></i>
@@ -182,16 +190,28 @@
                         </span>
                     </div>
 
+                    <!-- Mobile Context Badges (Phones < 768px) -->
+                    <div class="d-flex d-md-none gap-1">
+                        <span class="active-context-pill py-1 px-2" data-bs-toggle="modal" data-bs-target="#companySelectModal" title="Switch Company (F2)">
+                            <i class="fa-solid fa-building"></i>
+                            <small>F2</small>
+                        </span>
+                        <span class="active-context-pill py-1 px-2" data-bs-toggle="modal" data-bs-target="#fySelectModal" title="Switch FY (F3)">
+                            <i class="fa-solid fa-calendar-check"></i>
+                            <small>F3</small>
+                        </span>
+                    </div>
+
                     <!-- Theme Toggle -->
-                    <button class="btn btn-sm btn-outline-secondary rounded-circle" type="button" onclick="toggleTheme()" title="Toggle Dark/Light theme" style="width: 34px; height: 34px;">
+                    <button class="btn btn-sm btn-outline-secondary rounded-circle flex-shrink-0" type="button" onclick="toggleTheme()" title="Toggle Dark/Light theme" style="width: 34px; height: 34px;">
                         <i id="themeToggleIcon" class="fa-solid fa-moon"></i>
                     </button>
 
                     <!-- User Profile Dropdown -->
-                    <div class="dropdown">
+                    <div class="dropdown flex-shrink-0">
                         <button class="btn btn-sm btn-outline-secondary dropdown-toggle d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown">
-                            <i class="fa-solid fa-circle-user text-primary"></i>
-                            <span class="d-none d-sm-inline fw-semibold">{{ auth()->user()->name ?? 'Accountant' }}</span>
+                            <i class="fa-solid fa-circle-user text-primary fs-6"></i>
+                            <span class="d-none d-xl-inline fw-semibold">{{ auth()->user()->name ?? 'Accountant' }}</span>
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end shadow-sm">
                             <li><h6 class="dropdown-header">{{ auth()->user()->email ?? 'user@ajath.com' }}</h6></li>
@@ -211,7 +231,7 @@
 
             <!-- Keyboard Quick Shortcuts Ribbon -->
             <div class="quick-shortcuts-bar no-print">
-                <span class="text-muted small fw-semibold me-2"><i class="fa-solid fa-keyboard me-1"></i> Fast Keys:</span>
+                <span class="quick-shortcuts-label"><i class="fa-solid fa-keyboard me-1"></i> Fast Keys:</span>
                 <a href="#" class="quick-voucher-btn" data-bs-toggle="modal" data-bs-target="#companySelectModal"><kbd>F2</kbd> Company</a>
                 <a href="#" class="quick-voucher-btn" data-bs-toggle="modal" data-bs-target="#fySelectModal"><kbd>F3</kbd> FY</a>
                 <a href="{{ route('vouchers.create', ['type' => 'CONTRA']) }}" class="quick-voucher-btn"><kbd>F4</kbd> Contra</a>
