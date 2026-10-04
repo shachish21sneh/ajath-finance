@@ -221,14 +221,14 @@ async function handleQuickCreateStockGroup(event) {
             selectEl.add(newOption);
             selectEl.value = data.data.id;
 
-            // Auto-fill product's HSN and GST Rate if provided in this Stock Group
+            // Sync product's HSN and GST Rate with the newly created Stock Group
             const hsnInput = document.querySelector('input[name="hsn_code"]');
-            if (data.data.hsn_code && hsnInput) {
-                hsnInput.value = data.data.hsn_code;
+            if (hsnInput) {
+                hsnInput.value = data.data.hsn_code || '';
             }
             const taxSelect = document.getElementById('product_tax_master_id');
-            if (data.data.tax_master_id && taxSelect) {
-                taxSelect.value = data.data.tax_master_id;
+            if (taxSelect) {
+                taxSelect.value = data.data.tax_master_id || '';
             }
 
             // Also add to parent group dropdown in the modal
@@ -359,25 +359,40 @@ async function handleQuickCreateTax(event) {
     }
 }
 
-// Auto-fill HSN and GST Rate when selecting a Stock Group
+// Auto-fill HSN and GST Rate when selecting a Stock Group (or clean if the group has none)
 document.addEventListener('DOMContentLoaded', function() {
     const stockGroupSelect = document.getElementById('product_stock_group_id');
     if (stockGroupSelect) {
         stockGroupSelect.addEventListener('change', function() {
             const selectedOpt = this.options[this.selectedIndex];
-            if (selectedOpt && selectedOpt.value) {
-                const hsn = selectedOpt.getAttribute('data-hsn');
-                const taxId = selectedOpt.getAttribute('data-tax-id');
-                const hsnInput = document.querySelector('input[name="hsn_code"]');
-                const taxSelect = document.getElementById('product_tax_master_id');
-                if (hsn && hsnInput && !hsnInput.value) {
-                    hsnInput.value = hsn;
-                }
-                if (taxId && taxSelect && !taxSelect.value) {
-                    taxSelect.value = taxId;
-                }
+            const hsn = (selectedOpt && selectedOpt.getAttribute('data-hsn')) ? selectedOpt.getAttribute('data-hsn') : '';
+            const taxId = (selectedOpt && selectedOpt.getAttribute('data-tax-id')) ? selectedOpt.getAttribute('data-tax-id') : '';
+            const hsnInput = document.querySelector('input[name="hsn_code"]');
+            const taxSelect = document.getElementById('product_tax_master_id');
+
+            // If Stock Group has HSN, show it; if it doesn't (or "-- No Group --" is selected), clean HSN
+            if (hsnInput) {
+                hsnInput.value = hsn;
+            }
+
+            // If Stock Group has GST rate, select it; if it doesn't (or "-- No Group --" is selected), clean GST dropdown
+            if (taxSelect) {
+                taxSelect.value = taxId;
             }
         });
     }
+
+    // Reset quick-create modals on open so they are completely fresh
+    ['quickAddStockGroupModal', 'quickAddUnitModal', 'quickAddTaxModal'].forEach(function(modalId) {
+        const modalEl = document.getElementById(modalId);
+        if (modalEl) {
+            modalEl.addEventListener('show.bs.modal', function() {
+                const form = modalEl.querySelector('form');
+                if (form) form.reset();
+                const err = modalEl.querySelector('[id$="Error"]');
+                if (err) err.classList.add('d-none');
+            });
+        }
+    });
 });
 </script>
