@@ -46,5 +46,13 @@ class SalesAndPurchaseTest extends TestCase
 
         $product->refresh();
         $this->assertEquals($initialStock - 2, (float) $product->current_stock);
+
+        // Test show view renders GST Tax Computation Breakdown with HSN
+        $showRes = $this->get('/sales/' . $invoice->id);
+        $showRes->assertStatus(200);
+        $showRes->assertSee('GST Tax Computation Breakdown');
+        $showRes->assertSee('HSN/SAC');
+        $showRes->assertSee('Taxable');
+        $showRes->assertSee('Total');
     }
 }

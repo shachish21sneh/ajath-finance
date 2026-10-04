@@ -124,46 +124,102 @@
         <!-- HSN Summary Table -->
         <div class="col-md-7 small">
             <h6 class="fw-bold mb-2 small text-uppercase text-muted">GST Tax Computation Breakdown</h6>
-            <table class="table table-sm table-bordered text-center align-middle mb-0" style="font-size: 0.75rem;">
-                <thead class="table-light">
-                    <tr>
-                        <th>Tax Component</th>
-                        <th>Taxable Value</th>
-                        <th>Rate</th>
-                        <th>Tax Amount (₹)</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @if($invoice->cgst_amount > 0)
+            @php
+                $hsnBreakdown = [];
+                $isIgst = (float)$invoice->igst_amount > 0 || ((float)$invoice->cgst_amount == 0 && (float)$invoice->sgst_amount == 0);
+
+                foreach ($invoice->items as $item) {
+                    $key = ($item->hsn_code ?: 'N/A') . '_' . (float)$item->gst_rate;
+                    if (!isset($hsnBreakdown[$key])) {
+                        $hsnBreakdown[$key] = [
+                            'hsn' => $item->hsn_code ?: ($item->description ?? 'N/A'),
+                            'rate' => (float)$item->gst_rate,
+                            'taxable' => 0.0,
+                            'cgst' => 0.0,
+                            'sgst' => 0.0,
+                            'igst' => 0.0,
+                            'total_tax' => 0.0,
+                        ];
+                    }
+                    $hsnBreakdown[$key]['taxable'] += (float)$item->taxable_amount;
+                    $hsnBreakdown[$key]['cgst'] += (float)$item->cgst_amount;
+                    $hsnBreakdown[$key]['sgst'] += (float)$item->sgst_amount;
+                    $hsnBreakdown[$key]['igst'] += (float)$item->igst_amount;
+                    $hsnBreakdown[$key]['total_tax'] += ((float)$item->cgst_amount + (float)$item->sgst_amount + (float)$item->igst_amount);
+                }
+
+                $totalTaxable = array_sum(array_column($hsnBreakdown, 'taxable'));
+                $totalCgst = array_sum(array_column($hsnBreakdown, 'cgst'));
+                $totalSgst = array_sum(array_column($hsnBreakdown, 'sgst'));
+                $totalIgst = array_sum(array_column($hsnBreakdown, 'igst'));
+                $totalTax = array_sum(array_column($hsnBreakdown, 'total_tax'));
+            @endphp
+            <div class="table-responsive">
+                <table class="table table-sm table-bordered align-middle mb-0 text-center" style="font-size: 0.78rem; border-color: #cbd5e1;">
+                    <thead class="table-light text-dark">
+                        @if($isIgst)
+                            <tr class="align-middle">
+                                <th rowspan="2" class="text-center align-middle" style="min-width: 110px;">HSN/SAC</th>
+                                <th rowspan="2" class="text-end align-middle" style="min-width: 95px;">Taxable<br>Value</th>
+                                <th colspan="2" class="text-center">IGST</th>
+                                <th rowspan="2" class="text-end align-middle" style="min-width: 95px;">Total<br>Tax Amount</th>
+                            </tr>
+                            <tr class="align-middle">
+                                <th class="text-center" style="width: 55px;">Rate</th>
+                                <th class="text-end" style="width: 85px;">Amount</th>
+                            </tr>
+                        @else
+                            <tr class="align-middle">
+                                <th rowspan="2" class="text-center align-middle" style="min-width: 90px;">HSN/SAC</th>
+                                <th rowspan="2" class="text-end align-middle" style="min-width: 85px;">Taxable<br>Value</th>
+                                <th colspan="2" class="text-center">Central Tax</th>
+                                <th colspan="2" class="text-center">State Tax</th>
+                                <th rowspan="2" class="text-end align-middle" style="min-width: 85px;">Total<br>Tax Amount</th>
+                            </tr>
+                            <tr class="align-middle">
+                                <th class="text-center" style="width: 50px;">Rate</th>
+                                <th class="text-end" style="width: 70px;">Amount</th>
+                                <th class="text-center" style="width: 50px;">Rate</th>
+                                <th class="text-end" style="width: 70px;">Amount</th>
+                            </tr>
+                        @endif
+                    </thead>
+                    <tbody>
+                        @foreach($hsnBreakdown as $row)
+                            <tr>
+                                <td class="text-start ps-2 fw-semibold">{{ $row['hsn'] }}</td>
+                                <td class="text-end num-align">{{ number_format($row['taxable'], 2) }}</td>
+                                @if($isIgst)
+                                    <td class="text-center">{{ (float)$row['rate'] }}%</td>
+                                    <td class="text-end num-align">{{ number_format($row['igst'], 2) }}</td>
+                                @else
+                                    <td class="text-center">{{ (float)($row['rate'] / 2) }}%</td>
+                                    <td class="text-end num-align">{{ number_format($row['cgst'], 2) }}</td>
+                                    <td class="text-center">{{ (float)($row['rate'] / 2) }}%</td>
+                                    <td class="text-end num-align">{{ number_format($row['sgst'], 2) }}</td>
+                                @endif
+                                <td class="text-end num-align fw-semibold">{{ number_format($row['total_tax'], 2) }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                    <tfoot class="table-light fw-bold">
                         <tr>
-                            <td>Central Tax (CGST)</td>
-                            <td>₹ {{ number_format($invoice->taxable_amount, 2) }}</td>
-                            <td>9.0%</td>
-                            <td>₹ {{ number_format($invoice->cgst_amount, 2) }}</td>
+                            <td class="text-end">Total</td>
+                            <td class="text-end num-align">{{ number_format($totalTaxable, 2) }}</td>
+                            @if($isIgst)
+                                <td></td>
+                                <td class="text-end num-align">{{ number_format($totalIgst, 2) }}</td>
+                            @else
+                                <td></td>
+                                <td class="text-end num-align">{{ number_format($totalCgst, 2) }}</td>
+                                <td></td>
+                                <td class="text-end num-align">{{ number_format($totalSgst, 2) }}</td>
+                            @endif
+                            <td class="text-end num-align">{{ number_format($totalTax, 2) }}</td>
                         </tr>
-                    @endif
-                    @if($invoice->sgst_amount > 0)
-                        <tr>
-                            <td>State Tax (SGST)</td>
-                            <td>₹ {{ number_format($invoice->taxable_amount, 2) }}</td>
-                            <td>9.0%</td>
-                            <td>₹ {{ number_format($invoice->sgst_amount, 2) }}</td>
-                        </tr>
-                    @endif
-                    @if($invoice->igst_amount > 0)
-                        <tr>
-                            <td>Integrated Tax (IGST)</td>
-                            <td>₹ {{ number_format($invoice->taxable_amount, 2) }}</td>
-                            <td>18.0%</td>
-                            <td>₹ {{ number_format($invoice->igst_amount, 2) }}</td>
-                        </tr>
-                    @endif
-                    <tr class="fw-bold table-light">
-                        <td colspan="3" class="text-end">Total Output Tax:</td>
-                        <td>₹ {{ number_format($invoice->cgst_amount + $invoice->sgst_amount + $invoice->igst_amount, 2) }}</td>
-                    </tr>
-                </tbody>
-            </table>
+                    </tfoot>
+                </table>
+            </div>
         </div>
 
         <!-- Grand Total Summary Box -->
