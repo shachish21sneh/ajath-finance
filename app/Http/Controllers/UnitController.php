@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Helpers\AccountingHelper;
 use App\Models\ActivityLog;
 use App\Models\Unit;
+use App\Models\UqcMaster;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -15,12 +16,17 @@ class UnitController extends Controller
     public function index(): View
     {
         $company = AccountingHelper::getActiveCompany();
-        $units = Unit::withCount('products')
+        $units = Unit::with(['uqcMaster'])
+            ->withCount('products')
             ->where('company_id', $company->id)
             ->orderBy('name')
             ->paginate(20);
 
-        return view('masters.units.index', compact('units', 'company'));
+        $uqcs = UqcMaster::where(function ($q) use ($company) {
+            $q->whereNull('company_id')->orWhere('company_id', $company->id);
+        })->where('is_active', true)->orderBy('code')->get();
+
+        return view('masters.units.index', compact('units', 'uqcs', 'company'));
     }
 
     public function store(Request $request): JsonResponse|RedirectResponse
@@ -30,11 +36,20 @@ class UnitController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:50'],
             'symbol' => ['required', 'string', 'max:20'],
+            'uqc_id' => ['nullable', 'exists:uqc_masters,id'],
             'decimal_places' => ['nullable', 'integer', 'min:0', 'max:4'],
         ]);
 
+        $validated['symbol'] = strtoupper(trim($validated['symbol']));
         $validated['company_id'] = $company->id;
         $validated['decimal_places'] = $validated['decimal_places'] ?? 0;
+
+        if (empty($validated['uqc_id'])) {
+            $uqc = UqcMaster::where('code', $validated['symbol'])->first();
+            if ($uqc) {
+                $validated['uqc_id'] = $uqc->id;
+            }
+        }
 
         $unit = Unit::create($validated);
 
@@ -66,10 +81,19 @@ class UnitController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:50'],
             'symbol' => ['required', 'string', 'max:20'],
+            'uqc_id' => ['nullable', 'exists:uqc_masters,id'],
             'decimal_places' => ['nullable', 'integer', 'min:0', 'max:4'],
         ]);
 
+        $validated['symbol'] = strtoupper(trim($validated['symbol']));
         $validated['decimal_places'] = $validated['decimal_places'] ?? 0;
+
+        if (empty($validated['uqc_id'])) {
+            $uqc = UqcMaster::where('code', $validated['symbol'])->first();
+            if ($uqc) {
+                $validated['uqc_id'] = $uqc->id;
+            }
+        }
 
         $unit->update($validated);
 

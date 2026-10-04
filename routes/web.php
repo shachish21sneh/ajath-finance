@@ -26,6 +26,7 @@ use App\Http\Controllers\StockGroupController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\TaxMasterController;
 use App\Http\Controllers\UnitController;
+use App\Http\Controllers\UqcMasterController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VoucherController;
 use App\Http\Controllers\WarehouseController;
@@ -67,6 +68,7 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('stock-groups', StockGroupController::class)->except(['show', 'create', 'edit']);
     Route::resource('units', UnitController::class)->except(['show', 'create', 'edit']);
     Route::resource('taxes', TaxMasterController::class)->except(['show', 'create', 'edit']);
+    Route::resource('uqc', UqcMasterController::class)->except(['show', 'create', 'edit']);
     Route::get('/warehouses', [WarehouseController::class, 'index'])->name('warehouses.index');
     Route::post('/warehouses', [WarehouseController::class, 'store'])->name('warehouses.store');
 

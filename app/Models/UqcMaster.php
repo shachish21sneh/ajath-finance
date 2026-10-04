@@ -7,16 +7,19 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Unit extends Model
+class UqcMaster extends Model
 {
     use HasFactory;
 
     protected $fillable = [
         'company_id',
+        'code',
         'name',
-        'symbol',
-        'uqc_id',
-        'decimal_places',
+        'is_active',
+    ];
+
+    protected $casts = [
+        'is_active' => 'boolean',
     ];
 
     public function company(): BelongsTo
@@ -24,13 +27,8 @@ class Unit extends Model
         return $this->belongsTo(Company::class);
     }
 
-    public function uqcMaster(): BelongsTo
+    public function units(): HasMany
     {
-        return $this->belongsTo(UqcMaster::class, 'uqc_id');
-    }
-
-    public function products(): HasMany
-    {
-        return $this->hasMany(Product::class);
+        return $this->hasMany(Unit::class, 'uqc_id');
     }
 }

@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Models\StockGroup;
 use App\Models\TaxMaster;
 use App\Models\Unit;
+use App\Models\UqcMaster;
 use App\Models\Warehouse;
 use App\Services\InventoryService;
 use Illuminate\Http\RedirectResponse;
@@ -36,8 +37,9 @@ class ProductController extends Controller
         $units = Unit::where('company_id', $company->id)->get();
         $taxes = TaxMaster::where('company_id', $company->id)->where('is_active', true)->get();
         $warehouses = Warehouse::where('company_id', $company->id)->get();
+        $uqcs = UqcMaster::where(fn($q) => $q->whereNull('company_id')->orWhere('company_id', $company->id))->where('is_active', true)->orderBy('code')->get();
 
-        return view('masters.products.create', compact('groups', 'units', 'taxes', 'warehouses', 'company'));
+        return view('masters.products.create', compact('groups', 'units', 'taxes', 'warehouses', 'uqcs', 'company'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -79,8 +81,9 @@ class ProductController extends Controller
         $groups = StockGroup::where('company_id', $company->id)->get();
         $units = Unit::where('company_id', $company->id)->get();
         $taxes = TaxMaster::where('company_id', $company->id)->where('is_active', true)->get();
+        $uqcs = UqcMaster::where(fn($q) => $q->whereNull('company_id')->orWhere('company_id', $company->id))->where('is_active', true)->orderBy('code')->get();
 
-        return view('masters.products.edit', compact('product', 'groups', 'units', 'taxes', 'company'));
+        return view('masters.products.edit', compact('product', 'groups', 'units', 'taxes', 'uqcs', 'company'));
     }
 
     public function update(Request $request, Product $product): RedirectResponse

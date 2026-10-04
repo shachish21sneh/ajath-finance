@@ -66,23 +66,34 @@
                 </div>
                 <div class="modal-body p-4">
                     <div class="mb-3">
-                        <label class="form-label small fw-semibold">Unit Name *</label>
-                        <input type="text" id="quick_unit_name" name="name" class="form-control" placeholder="e.g. Numbers, Square Feet, Kilograms" required>
+                        <div class="d-flex align-items-center justify-content-between mb-1">
+                            <label class="form-label small fw-semibold mb-0">Symbol / Code (GST UQC) *</label>
+                            <a href="{{ route('uqc.index') }}" target="_blank" class="small text-decoration-none text-muted" title="Manage UQC Codes">
+                                <i class="fa-solid fa-gear me-1"></i> Manage UQC
+                            </a>
+                        </div>
+                        <select id="quick_unit_symbol" name="symbol" class="form-select font-monospace" required onchange="handleQuickUnitUqcChange(this)">
+                            <option value="">-- Select UQC Code (e.g. NOS, KGS, PCS) --</option>
+                            @php
+                                $uqcOptions = $uqcs ?? \App\Models\UqcMaster::where('is_active', true)->orderBy('code')->get();
+                            @endphp
+                            @foreach($uqcOptions as $uqc)
+                                <option value="{{ $uqc->code }}" data-name="{{ $uqc->name }}">{{ $uqc->code }} - {{ $uqc->name }}</option>
+                            @endforeach
+                        </select>
                     </div>
-                    <div class="row g-2 mb-2">
-                        <div class="col-7">
-                            <label class="form-label small fw-semibold">Symbol / Code *</label>
-                            <input type="text" id="quick_unit_symbol" name="symbol" class="form-control" placeholder="e.g. NOS, SQFT, KGS" required>
-                        </div>
-                        <div class="col-5">
-                            <label class="form-label small fw-semibold">Decimals</label>
-                            <select id="quick_unit_decimals" name="decimal_places" class="form-select">
-                                <option value="0">0 (Whole)</option>
-                                <option value="1">1 (0.1)</option>
-                                <option value="2">2 (0.01)</option>
-                                <option value="3">3 (0.001)</option>
-                            </select>
-                        </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Unit Name *</label>
+                        <input type="text" id="quick_unit_name" name="name" class="form-control" placeholder="e.g. Numbers, Kilograms, Sets" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Decimals</label>
+                        <select id="quick_unit_decimals" name="decimal_places" class="form-select">
+                            <option value="0">0 (Whole numbers e.g. 1, 2, 3)</option>
+                            <option value="1">1 (0.1)</option>
+                            <option value="2">2 (0.01)</option>
+                            <option value="3">3 (0.001)</option>
+                        </select>
                     </div>
                     <div id="quickUnitError" class="text-danger small mt-2 d-none"></div>
                 </div>
@@ -249,6 +260,15 @@ async function handleQuickCreateStockGroup(event) {
     } finally {
         btn.disabled = false;
         btn.innerHTML = '<i class="fa-solid fa-check me-1"></i> Save & Select';
+    }
+function handleQuickUnitUqcChange(selectEl) {
+    const selectedOpt = selectEl.options[selectEl.selectedIndex];
+    if (selectedOpt && selectedOpt.value) {
+        const uqcName = selectedOpt.getAttribute('data-name');
+        const nameInput = document.getElementById('quick_unit_name');
+        if (nameInput && (!nameInput.value || nameInput.value.trim() === '')) {
+            nameInput.value = uqcName;
+        }
     }
 }
 

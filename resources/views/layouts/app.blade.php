@@ -155,6 +155,10 @@
                     <i class="fa-solid fa-scale-unbalanced text-success"></i>
                     <span>Units of Measure</span>
                 </a>
+                <a href="{{ route('uqc.index') }}" class="sidebar-nav-link {{ request()->routeIs('uqc.*') ? 'active' : '' }}">
+                    <i class="fa-solid fa-barcode text-info"></i>
+                    <span>GST UQC Codes</span>
+                </a>
                 <a href="{{ route('taxes.index') }}" class="sidebar-nav-link {{ request()->routeIs('taxes.*') ? 'active' : '' }}">
                     <i class="fa-solid fa-percent text-warning"></i>
                     <span>GST Tax Rates</span>

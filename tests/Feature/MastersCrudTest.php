@@ -6,6 +6,7 @@ use App\Models\Company;
 use App\Models\StockGroup;
 use App\Models\TaxMaster;
 use App\Models\Unit;
+use App\Models\UqcMaster;
 use App\Models\User;
 use Tests\TestCase;
 
@@ -132,7 +133,7 @@ class MastersCrudTest extends TestCase
             'decimal_places' => 2,
         ]);
         $updateRes->assertRedirect(route('units.index'));
-        $this->assertEquals('kWh', $unit->fresh()->symbol);
+        $this->assertEquals('KWH', $unit->fresh()->symbol);
 
         // 5. Delete
         $delRes = $this->delete(route('units.destroy', $mwUnit->id));
@@ -216,5 +217,71 @@ class MastersCrudTest extends TestCase
             $editRes->assertSee('quickAddTaxModal');
             $editRes->assertSee('fa-circle-plus');
         }
+    }
+
+    public function test_uqc_master_crud(): void
+    {
+        // 1. Index
+        $res = $this->get(route('uqc.index'));
+        $res->assertStatus(200);
+        $res->assertSee('GST UQC Codes');
+        $res->assertSee('NOS');
+        $res->assertSee('KGS');
+        $res->assertSee('BAG');
+
+        // 2. Search
+        $searchRes = $this->get(route('uqc.index', ['search' => 'Bags']));
+        $searchRes->assertStatus(200);
+        $searchRes->assertSee('BAG');
+        $searchRes->assertSee('Bags');
+
+        // 3. Store custom UQC (auto upper-cased)
+        $storeRes = $this->post(route('uqc.store'), [
+            'code' => 'tst',
+            'name' => 'Testing Custom Code',
+            'is_active' => 1,
+        ]);
+        $storeRes->assertRedirect(route('uqc.index'));
+
+        $customUqc = UqcMaster::where('code', 'TST')->first();
+        $this->assertNotNull($customUqc);
+        $this->assertEquals('Testing Custom Code', $customUqc->name);
+        $this->assertTrue((bool)$customUqc->is_active);
+
+        // 4. Auto-linking when Unit is created with UQC code
+        $unitRes = $this->post(route('units.store'), [
+            'name' => 'Standard Bags',
+            'symbol' => 'BAG',
+            'decimal_places' => 0,
+        ]);
+        $unitRes->assertRedirect(route('units.index'));
+
+        $bagUnit = Unit::where('symbol', 'BAG')->first();
+        $this->assertNotNull($bagUnit);
+        $bagUqc = UqcMaster::where('code', 'BAG')->first();
+        $this->assertEquals($bagUqc->id, $bagUnit->uqc_id);
+
+        // 5. Cannot delete UQC when in use
+        $delBagRes = $this->delete(route('uqc.destroy', $bagUqc->id));
+        $delBagRes->assertSessionHas('error');
+        $this->assertNotNull(UqcMaster::find($bagUqc->id));
+
+        // Clean up unit
+        $bagUnit->delete();
+
+        // 6. Update custom UQC
+        $updateRes = $this->put(route('uqc.update', $customUqc->id), [
+            'code' => 'TST2',
+            'name' => 'Updated Custom Code',
+            'is_active' => 0,
+        ]);
+        $updateRes->assertRedirect(route('uqc.index'));
+        $this->assertEquals('TST2', $customUqc->fresh()->code);
+        $this->assertFalse((bool)$customUqc->fresh()->is_active);
+
+        // 7. Delete custom UQC
+        $delRes = $this->delete(route('uqc.destroy', $customUqc->id));
+        $delRes->assertRedirect(route('uqc.index'));
+        $this->assertNull(UqcMaster::find($customUqc->id));
     }
 }

@@ -12,7 +12,10 @@
         <a href="{{ route('products.index') }}" class="btn btn-outline-secondary btn-sm">
             <i class="fa-solid fa-boxes-stacked me-1"></i> Products List
         </a>
-        <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#createUnitModal">
+        <a href="{{ route('uqc.index') }}" class="btn btn-outline-info btn-sm">
+            <i class="fa-solid fa-barcode me-1"></i> GST UQC Codes
+        </a>
+        <button type="button" class="btn btn-primary btn-sm fw-semibold" data-bs-toggle="modal" data-bs-target="#createUnitModal">
             <i class="fa-solid fa-plus me-1"></i> Add Unit
         </button>
     </div>
@@ -26,7 +29,7 @@
                     <tr>
                         <th style="width: 50px;" class="text-center">#</th>
                         <th>Unit Name</th>
-                        <th class="text-center">Symbol / Abbr</th>
+                        <th class="text-center">Symbol / UQC</th>
                         <th class="text-center">Decimal Precision</th>
                         <th class="text-center">Assigned Items</th>
                         <th style="width: 140px;" class="text-end pe-4">Actions</th>
@@ -43,7 +46,7 @@
                                 </div>
                             </td>
                             <td class="text-center">
-                                <span class="badge bg-primary-subtle text-primary border px-2 py-1 fw-bold">
+                                <span class="badge bg-primary text-white font-monospace px-2 py-1 fw-bold">
                                     {{ $unit->symbol }}
                                 </span>
                             </td>
@@ -71,7 +74,7 @@
 
                                 <!-- Edit Modal -->
                                 <div class="modal fade text-start" id="editUnitModal{{ $unit->id }}" tabindex="-1" aria-hidden="true">
-                                    <div class="modal-dialog">
+                                    <div class="modal-dialog modal-dialog-centered">
                                         <div class="modal-content">
                                             <form action="{{ route('units.update', $unit->id) }}" method="POST">
                                                 @csrf
@@ -82,12 +85,27 @@
                                                 </div>
                                                 <div class="modal-body">
                                                     <div class="mb-3">
-                                                        <label class="form-label small fw-semibold">Unit Name *</label>
-                                                        <input type="text" name="name" class="form-control" value="{{ old('name', $unit->name) }}" required>
+                                                        <div class="d-flex align-items-center justify-content-between mb-1">
+                                                            <label class="form-label small fw-semibold mb-0">Symbol / Code (GST UQC) *</label>
+                                                            <a href="{{ route('uqc.index') }}" target="_blank" class="small text-decoration-none text-muted" title="Manage UQC Codes">
+                                                                <i class="fa-solid fa-gear me-1"></i> Manage UQC
+                                                            </a>
+                                                        </div>
+                                                        <select name="symbol" class="form-select font-monospace" required onchange="handleUnitUqcChange(this, 'edit_unit_name_{{ $unit->id }}')">
+                                                            <option value="">-- Select UQC Code --</option>
+                                                            @foreach($uqcs as $uqc)
+                                                                <option value="{{ $uqc->code }}" data-name="{{ $uqc->name }}" {{ strtoupper($unit->symbol) === $uqc->code ? 'selected' : '' }}>
+                                                                    {{ $uqc->code }} - {{ $uqc->name }}
+                                                                </option>
+                                                            @endforeach
+                                                            @if(!$uqcs->contains('code', strtoupper($unit->symbol)))
+                                                                <option value="{{ $unit->symbol }}" selected>{{ $unit->symbol }} (Custom)</option>
+                                                            @endif
+                                                        </select>
                                                     </div>
                                                     <div class="mb-3">
-                                                        <label class="form-label small fw-semibold">Symbol / Code *</label>
-                                                        <input type="text" name="symbol" class="form-control" value="{{ old('symbol', $unit->symbol) }}" required>
+                                                        <label class="form-label small fw-semibold">Unit Name *</label>
+                                                        <input type="text" name="name" id="edit_unit_name_{{ $unit->id }}" class="form-control" value="{{ old('name', $unit->name) }}" required>
                                                     </div>
                                                     <div class="mb-3">
                                                         <label class="form-label small fw-semibold">Decimal Places</label>
@@ -130,7 +148,7 @@
 
 <!-- Create Modal -->
 <div class="modal fade" id="createUnitModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <form action="{{ route('units.store') }}" method="POST">
                 @csrf
@@ -140,12 +158,22 @@
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label small fw-semibold">Unit Name *</label>
-                        <input type="text" name="name" class="form-control" placeholder="e.g. Numbers, Kilograms, Sets" required>
+                        <div class="d-flex align-items-center justify-content-between mb-1">
+                            <label class="form-label small fw-semibold mb-0">Symbol / Code (GST UQC) *</label>
+                            <a href="{{ route('uqc.index') }}" target="_blank" class="small text-decoration-none text-muted" title="Manage UQC Codes">
+                                <i class="fa-solid fa-gear me-1"></i> Manage UQC
+                            </a>
+                        </div>
+                        <select name="symbol" id="new_unit_symbol" class="form-select font-monospace" required onchange="handleUnitUqcChange(this, 'new_unit_name')">
+                            <option value="">-- Select UQC Code (e.g. NOS, KGS, PCS) --</option>
+                            @foreach($uqcs as $uqc)
+                                <option value="{{ $uqc->code }}" data-name="{{ $uqc->name }}">{{ $uqc->code }} - {{ $uqc->name }}</option>
+                            @endforeach
+                        </select>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label small fw-semibold">Symbol / Code *</label>
-                        <input type="text" name="symbol" class="form-control" placeholder="e.g. NOS, KGS, SET" required>
+                        <label class="form-label small fw-semibold">Unit Name *</label>
+                        <input type="text" name="name" id="new_unit_name" class="form-control" placeholder="e.g. Numbers, Kilograms, Sets" required>
                     </div>
                     <div class="mb-3">
                         <label class="form-label small fw-semibold">Decimal Places</label>
@@ -165,4 +193,17 @@
         </div>
     </div>
 </div>
+
+<script>
+function handleUnitUqcChange(selectEl, targetNameInputId) {
+    const selectedOpt = selectEl.options[selectEl.selectedIndex];
+    if (selectedOpt && selectedOpt.value) {
+        const uqcName = selectedOpt.getAttribute('data-name');
+        const nameInput = document.getElementById(targetNameInputId);
+        if (nameInput && (!nameInput.value || nameInput.value.trim() === '')) {
+            nameInput.value = uqcName;
+        }
+    }
+}
+</script>
 @endsection
