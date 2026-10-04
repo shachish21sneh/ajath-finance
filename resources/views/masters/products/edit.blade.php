@@ -41,8 +41,13 @@
                         <input type="text" name="hsn_code" class="form-control" value="{{ old('hsn_code', $product->hsn_code) }}">
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label small fw-semibold">Stock Group</label>
-                        <select name="stock_group_id" class="form-select">
+                        <div class="d-flex align-items-center justify-content-between mb-1">
+                            <label class="form-label small fw-semibold mb-0">Stock Group</label>
+                            <button type="button" class="btn btn-link p-0 text-decoration-none small fw-semibold" data-bs-toggle="modal" data-bs-target="#quickAddStockGroupModal">
+                                <i class="fa-solid fa-plus-circle me-1"></i> New Group
+                            </button>
+                        </div>
+                        <select name="stock_group_id" id="product_stock_group_id" class="form-select">
                             <option value="">-- No Group --</option>
                             @foreach($groups as $g)
                                 <option value="{{ $g->id }}" {{ $product->stock_group_id == $g->id ? 'selected' : '' }}>{{ $g->name }}</option>
@@ -50,16 +55,26 @@
                         </select>
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label small fw-semibold">Base Measurement Unit</label>
-                        <select name="unit_id" class="form-select">
+                        <div class="d-flex align-items-center justify-content-between mb-1">
+                            <label class="form-label small fw-semibold mb-0">Base Measurement Unit</label>
+                            <button type="button" class="btn btn-link p-0 text-decoration-none small fw-semibold text-success" data-bs-toggle="modal" data-bs-target="#quickAddUnitModal">
+                                <i class="fa-solid fa-plus-circle me-1"></i> New Unit
+                            </button>
+                        </div>
+                        <select name="unit_id" id="product_unit_id" class="form-select">
                             @foreach($units as $u)
                                 <option value="{{ $u->id }}" {{ $product->unit_id == $u->id ? 'selected' : '' }}>{{ $u->name }} ({{ $u->symbol }})</option>
                             @endforeach
                         </select>
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label small fw-semibold">Applicable GST Rate</label>
-                        <select name="tax_master_id" class="form-select">
+                        <div class="d-flex align-items-center justify-content-between mb-1">
+                            <label class="form-label small fw-semibold mb-0">Applicable GST Rate</label>
+                            <button type="button" class="btn btn-link p-0 text-decoration-none small fw-semibold text-primary" data-bs-toggle="modal" data-bs-target="#quickAddTaxModal">
+                                <i class="fa-solid fa-plus-circle me-1"></i> New Rate
+                            </button>
+                        </div>
+                        <select name="tax_master_id" id="product_tax_master_id" class="form-select">
                             <option value="">-- Exempt / Zero --</option>
                             @foreach($taxes as $t)
                                 <option value="{{ $t->id }}" {{ $product->tax_master_id == $t->id ? 'selected' : '' }}>{{ $t->name }} ({{ $t->rate }}%)</option>
@@ -102,4 +117,6 @@
         </div>
     </div>
 </div>
+
+@include('masters.products.partials.quick_create_modals')
 @endsection

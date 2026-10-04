@@ -147,6 +147,18 @@
                     <i class="fa-solid fa-boxes-stacked"></i>
                     <span>Products & Services</span>
                 </a>
+                <a href="{{ route('stock-groups.index') }}" class="sidebar-nav-link {{ request()->routeIs('stock-groups.*') ? 'active' : '' }}">
+                    <i class="fa-solid fa-layer-group text-primary"></i>
+                    <span>Stock Groups</span>
+                </a>
+                <a href="{{ route('units.index') }}" class="sidebar-nav-link {{ request()->routeIs('units.*') ? 'active' : '' }}">
+                    <i class="fa-solid fa-scale-unbalanced text-success"></i>
+                    <span>Units of Measure</span>
+                </a>
+                <a href="{{ route('taxes.index') }}" class="sidebar-nav-link {{ request()->routeIs('taxes.*') ? 'active' : '' }}">
+                    <i class="fa-solid fa-percent text-warning"></i>
+                    <span>GST Tax Rates</span>
+                </a>
                 <a href="{{ route('warehouses.index') }}" class="sidebar-nav-link {{ request()->routeIs('warehouses.*') ? 'active' : '' }}">
                     <i class="fa-solid fa-warehouse"></i>
                     <span>Godowns / Depots</span>
