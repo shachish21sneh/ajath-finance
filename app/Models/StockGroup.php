@@ -15,6 +15,8 @@ class StockGroup extends Model
         'company_id',
         'parent_id',
         'name',
+        'hsn_code',
+        'tax_master_id',
     ];
 
     public function company(): BelongsTo
@@ -25,6 +27,11 @@ class StockGroup extends Model
     public function parent(): BelongsTo
     {
         return $this->belongsTo(StockGroup::class, 'parent_id');
+    }
+
+    public function taxMaster(): BelongsTo
+    {
+        return $this->belongsTo(TaxMaster::class, 'tax_master_id');
     }
 
     public function products(): HasMany

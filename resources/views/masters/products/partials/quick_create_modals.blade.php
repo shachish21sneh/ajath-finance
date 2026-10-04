@@ -15,7 +15,7 @@
                         <label class="form-label small fw-semibold">Group Name *</label>
                         <input type="text" id="quick_group_name" name="name" class="form-control" placeholder="e.g. Energy Storage & Batteries" required>
                     </div>
-                    <div class="mb-2">
+                    <div class="mb-3">
                         <label class="form-label small fw-semibold">Parent Group (Optional)</label>
                         <select id="quick_group_parent_id" name="parent_id" class="form-select">
                             <option value="">-- None (Primary Group) --</option>
@@ -23,6 +23,21 @@
                                 <option value="{{ $g->id }}">{{ $g->name }}</option>
                             @endforeach
                         </select>
+                    </div>
+                    <div class="row g-2 mb-2">
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold">HSN / SAC Code</label>
+                            <input type="text" id="quick_group_hsn" name="hsn_code" class="form-control" placeholder="e.g. 850720">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold">Applicable GST Rate</label>
+                            <select id="quick_group_tax_id" name="tax_master_id" class="form-select">
+                                <option value="">-- None / Default --</option>
+                                @foreach($taxes as $t)
+                                    <option value="{{ $t->id }}">{{ $t->name }} ({{ $t->rate }}%)</option>
+                                @endforeach
+                            </select>
+                        </div>
                     </div>
                     <div id="quickGroupError" class="text-danger small mt-2 d-none"></div>
                 </div>
@@ -177,6 +192,8 @@ async function handleQuickCreateStockGroup(event) {
 
     const name = document.getElementById('quick_group_name').value;
     const parentId = document.getElementById('quick_group_parent_id').value;
+    const hsn = document.getElementById('quick_group_hsn').value;
+    const taxId = document.getElementById('quick_group_tax_id').value;
 
     try {
         const response = await fetch("{{ route('stock-groups.store') }}", {
@@ -186,7 +203,12 @@ async function handleQuickCreateStockGroup(event) {
                 'Accept': 'application/json',
                 'X-CSRF-TOKEN': "{{ csrf_token() }}"
             },
-            body: JSON.stringify({ name: name, parent_id: parentId || null })
+            body: JSON.stringify({
+                name: name,
+                parent_id: parentId || null,
+                hsn_code: hsn || null,
+                tax_master_id: taxId || null
+            })
         });
 
         const data = await response.json();
@@ -194,8 +216,20 @@ async function handleQuickCreateStockGroup(event) {
         if (response.ok && data.success) {
             const selectEl = document.getElementById('product_stock_group_id');
             const newOption = new Option(data.data.name, data.data.id, true, true);
+            newOption.setAttribute('data-hsn', data.data.hsn_code || '');
+            newOption.setAttribute('data-tax-id', data.data.tax_master_id || '');
             selectEl.add(newOption);
             selectEl.value = data.data.id;
+
+            // Auto-fill product's HSN and GST Rate if provided in this Stock Group
+            const hsnInput = document.querySelector('input[name="hsn_code"]');
+            if (data.data.hsn_code && hsnInput) {
+                hsnInput.value = data.data.hsn_code;
+            }
+            const taxSelect = document.getElementById('product_tax_master_id');
+            if (data.data.tax_master_id && taxSelect) {
+                taxSelect.value = data.data.tax_master_id;
+            }
 
             // Also add to parent group dropdown in the modal
             const parentSelect = document.getElementById('quick_group_parent_id');
@@ -324,4 +358,26 @@ async function handleQuickCreateTax(event) {
         btn.innerHTML = '<i class="fa-solid fa-check me-1"></i> Save & Select';
     }
 }
+
+// Auto-fill HSN and GST Rate when selecting a Stock Group
+document.addEventListener('DOMContentLoaded', function() {
+    const stockGroupSelect = document.getElementById('product_stock_group_id');
+    if (stockGroupSelect) {
+        stockGroupSelect.addEventListener('change', function() {
+            const selectedOpt = this.options[this.selectedIndex];
+            if (selectedOpt && selectedOpt.value) {
+                const hsn = selectedOpt.getAttribute('data-hsn');
+                const taxId = selectedOpt.getAttribute('data-tax-id');
+                const hsnInput = document.querySelector('input[name="hsn_code"]');
+                const taxSelect = document.getElementById('product_tax_master_id');
+                if (hsn && hsnInput && !hsnInput.value) {
+                    hsnInput.value = hsn;
+                }
+                if (taxId && taxSelect && !taxSelect.value) {
+                    taxSelect.value = taxId;
+                }
+            }
+        });
+    }
+});
 </script>

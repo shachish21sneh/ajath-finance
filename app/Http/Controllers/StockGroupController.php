@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Helpers\AccountingHelper;
 use App\Models\ActivityLog;
 use App\Models\StockGroup;
+use App\Models\TaxMaster;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -15,15 +16,16 @@ class StockGroupController extends Controller
     public function index(): View
     {
         $company = AccountingHelper::getActiveCompany();
-        $stockGroups = StockGroup::with('parent')
+        $stockGroups = StockGroup::with(['parent', 'taxMaster'])
             ->withCount('products')
             ->where('company_id', $company->id)
             ->orderBy('name')
             ->paginate(20);
 
         $parentGroups = StockGroup::where('company_id', $company->id)->orderBy('name')->get();
+        $taxes = TaxMaster::where('company_id', $company->id)->where('is_active', true)->orderBy('rate')->get();
 
-        return view('masters.stock-groups.index', compact('stockGroups', 'parentGroups', 'company'));
+        return view('masters.stock-groups.index', compact('stockGroups', 'parentGroups', 'taxes', 'company'));
     }
 
     public function store(Request $request): JsonResponse|RedirectResponse
@@ -33,6 +35,8 @@ class StockGroupController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:150'],
             'parent_id' => ['nullable', 'exists:stock_groups,id'],
+            'hsn_code' => ['nullable', 'string', 'max:50'],
+            'tax_master_id' => ['nullable', 'exists:tax_masters,id'],
         ]);
 
         $validated['company_id'] = $company->id;
@@ -48,6 +52,8 @@ class StockGroupController extends Controller
                 'data' => [
                     'id' => $stockGroup->id,
                     'name' => $stockGroup->name,
+                    'hsn_code' => $stockGroup->hsn_code,
+                    'tax_master_id' => $stockGroup->tax_master_id,
                 ],
             ]);
         }
@@ -65,6 +71,8 @@ class StockGroupController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:150'],
             'parent_id' => ['nullable', 'exists:stock_groups,id'],
+            'hsn_code' => ['nullable', 'string', 'max:50'],
+            'tax_master_id' => ['nullable', 'exists:tax_masters,id'],
         ]);
 
         // Prevent setting itself as parent

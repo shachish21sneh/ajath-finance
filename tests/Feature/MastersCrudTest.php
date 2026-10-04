@@ -24,44 +24,60 @@ class MastersCrudTest extends TestCase
 
     public function test_stock_group_crud_and_ajax(): void
     {
+        $tax = TaxMaster::where('company_id', $this->company->id)->first();
+
         // 1. Index
         $res = $this->get(route('stock-groups.index'));
         $res->assertStatus(200);
         $res->assertSee('Stock Groups');
+        $res->assertSee('HSN / SAC');
+        $res->assertSee('GST Rate');
 
-        // 2. Store via standard form
+        // 2. Store via standard form with HSN and GST Rate
         $postRes = $this->post(route('stock-groups.store'), [
             'name' => 'Test Solar Inverters',
             'parent_id' => null,
+            'hsn_code' => '850440',
+            'tax_master_id' => $tax?->id,
         ]);
         $postRes->assertRedirect(route('stock-groups.index'));
 
         $group = StockGroup::where('name', 'Test Solar Inverters')->first();
         $this->assertNotNull($group);
         $this->assertEquals($this->company->id, $group->company_id);
+        $this->assertEquals('850440', $group->hsn_code);
+        $this->assertEquals($tax?->id, $group->tax_master_id);
 
-        // 3. Store via AJAX
+        // 3. Store via AJAX with HSN and GST Rate
         $ajaxRes = $this->postJson(route('stock-groups.store'), [
             'name' => 'Test Lithium Subgroup',
             'parent_id' => $group->id,
+            'hsn_code' => '850760',
+            'tax_master_id' => $tax?->id,
         ]);
         $ajaxRes->assertStatus(200)
             ->assertJson([
                 'success' => true,
                 'data' => [
                     'name' => 'Test Lithium Subgroup',
+                    'hsn_code' => '850760',
+                    'tax_master_id' => $tax?->id,
                 ],
             ]);
 
         $subGroup = StockGroup::where('name', 'Test Lithium Subgroup')->first();
         $this->assertNotNull($subGroup);
+        $this->assertEquals('850760', $subGroup->hsn_code);
 
         // 4. Update
         $updateRes = $this->put(route('stock-groups.update', $group->id), [
             'name' => 'Updated Solar Inverters',
+            'hsn_code' => '85044090',
+            'tax_master_id' => $tax?->id,
         ]);
         $updateRes->assertRedirect(route('stock-groups.index'));
         $this->assertEquals('Updated Solar Inverters', $group->fresh()->name);
+        $this->assertEquals('85044090', $group->fresh()->hsn_code);
 
         // 5. Delete
         $delRes = $this->delete(route('stock-groups.destroy', $subGroup->id));

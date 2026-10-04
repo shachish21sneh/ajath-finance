@@ -27,6 +27,8 @@
                         <th style="width: 50px;" class="text-center">#</th>
                         <th>Group Name</th>
                         <th>Parent Group</th>
+                        <th>HSN / SAC</th>
+                        <th>GST Rate</th>
                         <th class="text-center">Assigned Items</th>
                         <th style="width: 140px;" class="text-end pe-4">Actions</th>
                     </tr>
@@ -46,6 +48,22 @@
                                     <span class="badge bg-light text-dark border">{{ $group->parent->name }}</span>
                                 @else
                                     <span class="text-muted small">-- Primary Group --</span>
+                                @endif
+                            </td>
+                            <td>
+                                @if($group->hsn_code)
+                                    <span class="badge bg-light text-dark border font-monospace">{{ $group->hsn_code }}</span>
+                                @else
+                                    <span class="text-muted small">--</span>
+                                @endif
+                            </td>
+                            <td>
+                                @if($group->taxMaster)
+                                    <span class="badge bg-primary-subtle text-primary border fw-semibold">
+                                        {{ $group->taxMaster->name }} ({{ (float)$group->taxMaster->rate }}%)
+                                    </span>
+                                @else
+                                    <span class="text-muted small">--</span>
                                 @endif
                             </td>
                             <td class="text-center">
@@ -94,6 +112,21 @@
                                                             @endforeach
                                                         </select>
                                                     </div>
+                                                    <div class="row g-2 mb-2">
+                                                        <div class="col-6">
+                                                            <label class="form-label small fw-semibold">HSN / SAC Code</label>
+                                                            <input type="text" name="hsn_code" class="form-control" value="{{ old('hsn_code', $group->hsn_code) }}" placeholder="e.g. 850720">
+                                                        </div>
+                                                        <div class="col-6">
+                                                            <label class="form-label small fw-semibold">Applicable GST Rate</label>
+                                                            <select name="tax_master_id" class="form-select">
+                                                                <option value="">-- None / Default --</option>
+                                                                @foreach($taxes as $t)
+                                                                    <option value="{{ $t->id }}" {{ $group->tax_master_id == $t->id ? 'selected' : '' }}>{{ $t->name }} ({{ $t->rate }}%)</option>
+                                                                @endforeach
+                                                            </select>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                                 <div class="modal-footer">
                                                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
@@ -107,7 +140,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="text-center py-4 text-muted">
+                            <td colspan="7" class="text-center py-4 text-muted">
                                 <i class="fa-solid fa-layer-group fs-2 d-block mb-2 text-muted opacity-50"></i>
                                 No stock groups found. Click "Add Stock Group" to create one.
                             </td>
@@ -147,6 +180,21 @@
                                 <option value="{{ $pg->id }}">{{ $pg->name }}</option>
                             @endforeach
                         </select>
+                    </div>
+                    <div class="row g-2 mb-2">
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold">HSN / SAC Code</label>
+                            <input type="text" name="hsn_code" class="form-control" placeholder="e.g. 850720">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold">Applicable GST Rate</label>
+                            <select name="tax_master_id" class="form-select">
+                                <option value="">-- None / Default --</option>
+                                @foreach($taxes as $t)
+                                    <option value="{{ $t->id }}">{{ $t->name }} ({{ $t->rate }}%)</option>
+                                @endforeach
+                            </select>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">

@@ -48,7 +48,7 @@
                 <select name="stock_group_id" id="product_stock_group_id" class="form-select">
                     <option value="">-- No Group --</option>
                     @foreach($groups as $g)
-                        <option value="{{ $g->id }}" {{ $product->stock_group_id == $g->id ? 'selected' : '' }}>{{ $g->name }}</option>
+                        <option value="{{ $g->id }}" data-hsn="{{ $g->hsn_code }}" data-tax-id="{{ $g->tax_master_id }}" {{ $product->stock_group_id == $g->id ? 'selected' : '' }}>{{ $g->name }}</option>
                     @endforeach
                 </select>
             </div>
