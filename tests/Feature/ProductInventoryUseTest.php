@@ -266,7 +266,8 @@ class ProductInventoryUseTest extends TestCase
         $createRes->assertSee('inventory_use_toggle');
         $createRes->assertSee('Inventory Use (Kit / Bundle / BOM Components)');
         $createRes->assertSee('components_table');
-        $createRes->assertSee('Add to Components List');
+        $createRes->assertSee('Add Item');
+        $createRes->assertSee('searchable_component_picker');
 
         // 2. Product index shows components
         $indexRes = $this->get(route('products.index'));
