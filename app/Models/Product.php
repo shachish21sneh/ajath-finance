@@ -33,6 +33,7 @@ class Product extends Model
         'current_stock',
         'reorder_level',
         'description',
+        'has_inventory_components',
         'is_active',
     ];
 
@@ -44,8 +45,14 @@ class Product extends Model
         'opening_stock_valuation' => 'decimal:2',
         'current_stock' => 'decimal:2',
         'reorder_level' => 'decimal:2',
+        'has_inventory_components' => 'boolean',
         'is_active' => 'boolean',
     ];
+
+    public function inventoryComponents(): HasMany
+    {
+        return $this->hasMany(ProductInventoryComponent::class, 'product_id');
+    }
 
     public function company(): BelongsTo
     {

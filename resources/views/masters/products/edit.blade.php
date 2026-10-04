@@ -107,6 +107,8 @@
             </div>
         </div>
 
+        @include('masters.products.partials.inventory_use_section')
+
         <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
             <a href="{{ route('products.index') }}" class="btn btn-light border px-4">Cancel</a>
             <button type="submit" class="btn btn-primary px-4 fw-semibold">Update Item</button>

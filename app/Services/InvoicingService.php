@@ -156,6 +156,31 @@ class InvoicingService
                 ]);
 
                 if (!empty($pItem['product_id'])) {
+                    $product = Product::with('inventoryComponents')->find($pItem['product_id']);
+
+                    // If product has linked inventory components, automatically deduct stock for all components
+                    if ($product && $product->has_inventory_components && $product->inventoryComponents->isNotEmpty()) {
+                        foreach ($product->inventoryComponents as $comp) {
+                            if (!empty($comp->component_product_id)) {
+                                $consumedQty = round((float) $pItem['quantity'] * (float) $comp->quantity, 2);
+                                if ($consumedQty > 0) {
+                                    $this->inventoryService->recordStockMovement(
+                                        $company->id,
+                                        $comp->component_product_id,
+                                        $pItem['warehouse_id'] ?? null,
+                                        null,
+                                        'outward',
+                                        $consumedQty,
+                                        (float) $comp->unit_price,
+                                        $invoice->invoice_date->format('Y-m-d'),
+                                        "Component consumed for {$product->name} (Sales Invoice #{$invoice->invoice_no})"
+                                    );
+                                }
+                            }
+                        }
+                    }
+
+                    // Record outward stock movement for parent product
                     $this->inventoryService->recordStockMovement(
                         $company->id,
                         $pItem['product_id'],

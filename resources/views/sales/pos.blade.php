@@ -21,6 +21,7 @@
                         @foreach($products as $p)
                             <option value="{{ $p->id }}" data-name="{{ $p->name }}" data-price="{{ $p->selling_price }}" data-tax="{{ $p->taxMaster->rate ?? 0 }}">
                                 {{ $p->name }} - ₹ {{ number_format($p->selling_price, 2) }} ({{ $p->current_stock }} in stock)
+                                @if($p->has_inventory_components && $p->inventoryComponents->count()) [Kit: {{ $p->inventoryComponents->count() }} items] @endif
                             </option>
                         @endforeach
                     </select>
@@ -52,6 +53,7 @@
                                 <td>
                                     <div class="fw-bold small" x-text="item.name"></div>
                                     <div class="text-muted" style="font-size: 0.72rem;" x-text="'GST: ' + item.gst_rate + '%'"></div>
+                                    <div class="text-primary fw-semibold" style="font-size: 0.70rem;" x-show="item.components_count > 0" x-text="'📦 Kit: ' + item.components_count + ' components auto-deducted'"></div>
                                 </td>
                                 <td class="text-center">
                                     <div class="input-group input-group-sm justify-content-center" style="width: 110px; margin: 0 auto;">
@@ -231,7 +233,8 @@ function posBilling() {
                     name: product.name,
                     price: parseFloat(product.selling_price) || 0,
                     gst_rate: parseFloat(product.tax_master?.rate || 18),
-                    qty: 1
+                    qty: 1,
+                    components_count: product.inventory_components ? product.inventory_components.length : 0
                 });
             }
             this.recalcChange();

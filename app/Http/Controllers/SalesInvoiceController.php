@@ -36,7 +36,11 @@ class SalesInvoiceController extends Controller
 
         $invoiceNo = $this->invoicingService->generateInvoiceNumber($company, $fy, 'tax_invoice');
         $customers = Ledger::customers()->where('company_id', $company->id)->orderBy('name')->get();
-        $products = Product::with('taxMaster')->where('company_id', $company->id)->where('is_active', true)->orderBy('name')->get();
+        $products = Product::with(['taxMaster', 'unit', 'inventoryComponents.componentProduct.unit'])
+            ->where('company_id', $company->id)
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
         $warehouses = Warehouse::where('company_id', $company->id)->get();
 
         return view('sales.create', compact('invoiceNo', 'customers', 'products', 'warehouses', 'company', 'fy'));
@@ -87,7 +91,7 @@ class SalesInvoiceController extends Controller
 
     public function show(SalesInvoice $invoice): View
     {
-        $invoice->load(['company', 'customer', 'items.product', 'voucher']);
+        $invoice->load(['company', 'customer', 'items.product.inventoryComponents.componentProduct', 'voucher']);
         return view('sales.show', compact('invoice'));
     }
 
@@ -99,7 +103,11 @@ class SalesInvoiceController extends Controller
         $invoiceNo = $this->invoicingService->generateInvoiceNumber($company, $fy, 'pos');
         $customers = Ledger::customers()->where('company_id', $company->id)->orderBy('name')->get();
         $cashLedger = Ledger::where('company_id', $company->id)->where('party_type', 'cash')->first();
-        $products = Product::with('taxMaster')->where('company_id', $company->id)->where('is_active', true)->orderBy('name')->get();
+        $products = Product::with(['taxMaster', 'unit', 'inventoryComponents.componentProduct.unit'])
+            ->where('company_id', $company->id)
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
         $warehouses = Warehouse::where('company_id', $company->id)->get();
 
         return view('sales.pos', compact('invoiceNo', 'customers', 'cashLedger', 'products', 'warehouses', 'company', 'fy'));

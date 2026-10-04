@@ -66,7 +66,12 @@
                                 <td><span class="badge bg-secondary font-monospace">{{ $row['product']->sku ?? 'SKU-'.$row['product']->id }}</span></td>
                                 <td>
                                     <div class="fw-bold">{{ $row['product']->name }}</div>
-                                    <div class="small text-muted">HSN: {{ $row['product']->hsn_code ?? 'N/A' }}</div>
+                                    <div class="small text-muted">
+                                        HSN: {{ $row['product']->hsn_code ?? 'N/A' }}
+                                        @if($row['product']->has_inventory_components && $row['product']->inventoryComponents->count())
+                                            &bull; <span class="badge bg-primary-subtle text-primary border border-primary-subtle">Kit: {{ $row['product']->inventoryComponents->count() }} Components</span>
+                                        @endif
+                                    </div>
                                 </td>
                                 <td class="fw-bold fs-6">{{ $row['quantity'] }}</td>
                                 <td>{{ $row['unit'] }}</td>

@@ -83,12 +83,27 @@
                                                     data-name="{{ $p->name }}"
                                                     data-hsn="{{ $p->hsn_code ?: $p->sac_code }}"
                                                     data-price="{{ $p->selling_price }}"
-                                                    data-tax="{{ $p->taxMaster->rate ?? 0 }}">
+                                                    data-tax="{{ $p->taxMaster->rate ?? 0 }}"
+                                                    data-components="{{ json_encode($p->inventoryComponents->map(fn($c) => ['name' => $c->name, 'qty' => (float)$c->quantity, 'stock' => $c->componentProduct->current_stock ?? 0, 'unit' => $c->componentProduct->unit->symbol ?? 'PCS'])) }}">
                                                 {{ $p->name }} (₹ {{ number_format($p->selling_price, 2) }}) [Stock: {{ $p->current_stock }}]
+                                                @if($p->has_inventory_components && $p->inventoryComponents->count()) &bull; [Kit: {{ $p->inventoryComponents->count() }} Items] @endif
                                             </option>
                                         @endforeach
                                     </select>
                                     <input type="text" :name="`items[${index}][description]`" class="form-control form-control-sm mt-1" x-model="item.description" placeholder="Description..." required>
+                                    <template x-if="item.components && item.components.length > 0">
+                                        <div class="mt-1 p-2 bg-light rounded border border-info-subtle small" style="font-size: 0.72rem;">
+                                            <span class="text-primary fw-semibold"><i class="fa-solid fa-boxes-stacked me-1"></i> Auto-Deducted Components:</span>
+                                            <div class="d-flex flex-wrap gap-1 mt-1">
+                                                <template x-for="c in item.components">
+                                                    <span class="badge bg-white text-dark border">
+                                                        <span x-text="(c.qty * (parseFloat(item.quantity) || 1)).toFixed(1) + 'x ' + c.name"></span>
+                                                        <span class="text-muted" x-text="'(Avail: ' + c.stock + ' ' + c.unit + ')'"></span>
+                                                    </span>
+                                                </template>
+                                            </div>
+                                        </div>
+                                    </template>
                                 </td>
                                 <td>
                                     <input type="text" :name="`items[${index}][hsn_code]`" class="form-control form-control-sm" x-model="item.hsn_code">
@@ -198,7 +213,7 @@ function invoiceForm() {
     return {
         customerId: '',
         items: [
-            { product_id: '', description: '', hsn_code: '', quantity: 1, unit_price: 0, discount_amount: 0, gst_rate: 18, tax_amount: 0, total_amount: 0 }
+            { product_id: '', description: '', hsn_code: '', quantity: 1, unit_price: 0, discount_amount: 0, gst_rate: 18, tax_amount: 0, total_amount: 0, components: [] }
         ],
         get subtotal() {
             return this.items.reduce((sum, item) => sum + (parseFloat(item.quantity || 0) * parseFloat(item.unit_price || 0)), 0);
@@ -234,7 +249,8 @@ function invoiceForm() {
                 discount_amount: 0,
                 gst_rate: 18,
                 tax_amount: 0,
-                total_amount: 0
+                total_amount: 0,
+                components: []
             });
         },
         removeItem(index) {
@@ -250,7 +266,14 @@ function invoiceForm() {
                 this.items[index].hsn_code = opt.getAttribute('data-hsn') || '';
                 this.items[index].unit_price = parseFloat(opt.getAttribute('data-price')) || 0;
                 this.items[index].gst_rate = parseFloat(opt.getAttribute('data-tax')) || 0;
+                try {
+                    this.items[index].components = JSON.parse(opt.getAttribute('data-components') || '[]');
+                } catch(e) {
+                    this.items[index].components = [];
+                }
                 this.recalcRow(index);
+            } else {
+                this.items[index].components = [];
             }
         },
         recalcRow(index) {

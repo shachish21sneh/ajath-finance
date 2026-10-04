@@ -365,7 +365,7 @@ class ReportService
      */
     public function getStockValuationReport(Company $company): array
     {
-        $products = Product::with(['stockGroup', 'unit'])
+        $products = Product::with(['stockGroup', 'unit', 'inventoryComponents.componentProduct.unit'])
             ->where('company_id', $company->id)
             ->where('item_type', 'goods')
             ->orderBy('name')

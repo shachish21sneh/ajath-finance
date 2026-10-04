@@ -34,6 +34,68 @@
                         <td>
                             <div class="fw-bold text-main">{{ $p->name }}</div>
                             <div class="text-muted small">{{ $p->stockGroup->name ?? 'General Group' }}</div>
+                            @if($p->has_inventory_components && $p->inventoryComponents->count() > 0)
+                                <div class="mt-1">
+                                    <button type="button" class="btn btn-xs py-0 px-2 btn-outline-primary border-primary-subtle text-primary rounded-pill small"
+                                            style="font-size: 0.72rem;"
+                                            data-bs-toggle="modal" data-bs-target="#componentsModal_{{ $p->id }}">
+                                        <i class="fa-solid fa-boxes-stacked me-1"></i> {{ $p->inventoryComponents->count() }} Linked Items
+                                    </button>
+                                </div>
+
+                                <!-- Components View Modal -->
+                                <div class="modal fade text-start" id="componentsModal_{{ $p->id }}" tabindex="-1" aria-hidden="true">
+                                    <div class="modal-dialog modal-dialog-centered">
+                                        <div class="modal-content shadow border-0">
+                                            <div class="modal-header py-2 bg-light">
+                                                <h6 class="modal-title fw-bold text-main mb-0">
+                                                    <i class="fa-solid fa-boxes-stacked text-primary me-2"></i> Inventory Components: {{ $p->name }}
+                                                </h6>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body p-3">
+                                                <p class="small text-muted mb-2">When this item is sold, stock for the following components is automatically deducted:</p>
+                                                <div class="table-responsive">
+                                                    <table class="table table-sm table-bordered align-middle mb-0">
+                                                        <thead class="table-light small text-muted">
+                                                            <tr>
+                                                                <th>Component Item</th>
+                                                                <th class="text-center">HSN</th>
+                                                                <th class="text-end">Qty Used</th>
+                                                                <th class="text-center">Live Stock</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody class="small">
+                                                            @foreach($p->inventoryComponents as $comp)
+                                                                <tr>
+                                                                    <td class="fw-semibold">{{ $comp->name }}</td>
+                                                                    <td class="text-center text-muted">{{ $comp->hsn_code ?: '-' }}</td>
+                                                                    <td class="text-end font-monospace">{{ $comp->quantity }}</td>
+                                                                    <td class="text-center">
+                                                                        @if($comp->componentProduct)
+                                                                            <span class="badge {{ $comp->componentProduct->current_stock > 0 ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger' }} border">
+                                                                                {{ $comp->componentProduct->current_stock }} {{ $comp->componentProduct->unit->symbol ?? '' }}
+                                                                            </span>
+                                                                        @else
+                                                                            <span class="text-muted">-</span>
+                                                                        @endif
+                                                                    </td>
+                                                                </tr>
+                                                            @endforeach
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer py-2 bg-light">
+                                                <a href="{{ route('products.edit', $p->id) }}" class="btn btn-sm btn-primary">
+                                                    <i class="fa-solid fa-pen-to-square me-1"></i> Edit Components
+                                                </a>
+                                                <button type="button" class="btn btn-sm btn-light border" data-bs-dismiss="modal">Close</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endif
                         </td>
                         <td>
                             @if($p->item_type === 'goods')

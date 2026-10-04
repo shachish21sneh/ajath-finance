@@ -97,6 +97,16 @@
                         <td class="text-center text-muted">{{ $idx + 1 }}</td>
                         <td>
                             <div class="fw-bold text-main">{{ $item->description }}</div>
+                            @if($item->product && $item->product->has_inventory_components && $item->product->inventoryComponents->isNotEmpty())
+                                <div class="mt-1" style="font-size: 0.72rem;">
+                                    <span class="text-primary fw-semibold"><i class="fa-solid fa-boxes-stacked me-1"></i> Components Deducted:</span>
+                                    <span class="text-muted">
+                                        @foreach($item->product->inventoryComponents as $c)
+                                            {{ (float)$c->quantity * (float)$item->quantity }}x {{ $c->name }}{{ !$loop->last ? ', ' : '' }}
+                                        @endforeach
+                                    </span>
+                                </div>
+                            @endif
                         </td>
                         <td class="text-center text-muted">{{ $item->hsn_code ?: '-' }}</td>
                         <td class="text-end">{{ number_format($item->quantity, 0) }}</td>
