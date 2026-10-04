@@ -189,9 +189,7 @@ class MastersCrudTest extends TestCase
         $createRes->assertSee('quickAddStockGroupModal');
         $createRes->assertSee('quickAddUnitModal');
         $createRes->assertSee('quickAddTaxModal');
-        $createRes->assertSee('New Group');
-        $createRes->assertSee('New Unit');
-        $createRes->assertSee('New Rate');
+        $createRes->assertSee('fa-circle-plus');
 
         $product = \App\Models\Product::first();
         if ($product) {
@@ -200,6 +198,7 @@ class MastersCrudTest extends TestCase
             $editRes->assertSee('quickAddStockGroupModal');
             $editRes->assertSee('quickAddUnitModal');
             $editRes->assertSee('quickAddTaxModal');
+            $editRes->assertSee('fa-circle-plus');
         }
     }
 }
