@@ -99,6 +99,66 @@ class SearchService
             ];
         }
 
+        // 5. Search Battery Serials
+        $serials = \App\Models\BatterySerial::with('model.product')
+            ->where('company_id', $company->id)
+            ->where(function ($b) use ($q) {
+                $b->where('serial_number', 'like', "%{$q}%")
+                  ->orWhere('cell_batch_number', 'like', "%{$q}%");
+            })
+            ->take(5)
+            ->get();
+
+        foreach ($serials as $s) {
+            $results[] = [
+                'category' => 'Battery Serials',
+                'title' => "Serial: {$s->serial_number}",
+                'subtitle' => "Status: {$s->current_status} | Model: " . ($s->model?->product?->name ?? 'Battery') . " | QC: {$s->qc_status}",
+                'url' => route('battery.index', ['serial' => $s->serial_number]),
+                'icon' => 'fa-car-battery',
+            ];
+        }
+
+        // 6. Search Solar Projects
+        $solarProjects = \App\Models\SolarProject::where('company_id', $company->id)
+            ->where(function ($b) use ($q) {
+                $b->where('project_code', 'like', "%{$q}%")
+                  ->orWhere('project_name', 'like', "%{$q}%");
+            })
+            ->take(5)
+            ->get();
+
+        foreach ($solarProjects as $sp) {
+            $results[] = [
+                'category' => 'Solar Projects',
+                'title' => "{$sp->project_code}: {$sp->project_name}",
+                'subtitle' => "Capacity: {$sp->capacity_kw} kW | Status: {$sp->installation_status}",
+                'url' => route('solar.index'),
+                'icon' => 'fa-solar-panel',
+            ];
+        }
+
+        // 7. Search Service Tickets
+        $tickets = \App\Models\ServiceTicket::where('company_id', $company->id)
+            ->where(function ($b) use ($q) {
+                $b->where('ticket_no', 'like', "%{$q}%")
+                  ->orWhere('product_name', 'like', "%{$q}%")
+                  ->orWhere('serial_number', 'like', "%{$q}%")
+                  ->orWhere('customer_name', 'like', "%{$q}%");
+            })
+            ->take(5)
+            ->get();
+
+        foreach ($tickets as $t) {
+            $results[] = [
+                'category' => 'Service Tickets',
+                'title' => "Ticket #{$t->ticket_no} - {$t->product_name}",
+                'subtitle' => "Customer: {$t->customer_name} | Priority: {$t->priority} | Status: {$t->status}",
+                'url' => route('service.index'),
+                'icon' => 'fa-screwdriver-wrench',
+            ];
+        }
+
         return $results;
     }
 }

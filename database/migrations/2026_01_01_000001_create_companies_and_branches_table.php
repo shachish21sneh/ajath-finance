@@ -16,6 +16,8 @@ return new class extends Migration
             $table->string('phone')->nullable();
             $table->string('gstin', 20)->nullable()->index();
             $table->string('pan', 15)->nullable()->index();
+            $table->string('cin', 30)->nullable();
+            $table->string('website')->nullable();
             $table->text('address')->nullable();
             $table->string('city', 100)->nullable();
             $table->string('state', 100)->nullable();
@@ -24,6 +26,8 @@ return new class extends Migration
             $table->string('country', 100)->default('India');
             $table->string('currency_symbol', 10)->default('₹');
             $table->string('currency_code', 10)->default('INR');
+            $table->string('timezone', 50)->default('Asia/Kolkata');
+            $table->date('books_beginning_date')->nullable();
             $table->string('logo')->nullable();
             $table->json('settings')->nullable();
             $table->boolean('is_active')->default(true);

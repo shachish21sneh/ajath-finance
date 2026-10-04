@@ -71,4 +71,36 @@ class ReportController extends Controller
 
         return view('reports.gst', compact('company', 'fromDate', 'toDate', 'gstr1'));
     }
+
+    public function stockValuation(Request $request): View
+    {
+        $company = AccountingHelper::getActiveCompany();
+        $report = $this->reportService->getStockValuationReport($company);
+
+        return view('reports.stock-valuation', compact('company', 'report'));
+    }
+
+    public function batteryReport(Request $request): View
+    {
+        $company = AccountingHelper::getActiveCompany();
+        $report = $this->reportService->getBatteryReport($company);
+
+        return view('reports.battery', compact('company', 'report'));
+    }
+
+    public function solarReport(Request $request): View
+    {
+        $company = AccountingHelper::getActiveCompany();
+        $report = $this->reportService->getSolarReport($company);
+
+        return view('reports.solar', compact('company', 'report'));
+    }
+
+    public function payrollReport(Request $request): View
+    {
+        $company = AccountingHelper::getActiveCompany();
+        $report = $this->reportService->getPayrollReport($company);
+
+        return view('reports.payroll', compact('company', 'report'));
+    }
 }

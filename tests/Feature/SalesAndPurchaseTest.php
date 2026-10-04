@@ -13,7 +13,7 @@ class SalesAndPurchaseTest extends TestCase
 {
     public function test_can_create_tax_invoice_and_deduct_inventory(): void
     {
-        $admin = User::where('email', 'admin@ajath.com')->first();
+        $admin = User::where('email', 'admin@fuzurra.com')->first();
         $this->actingAs($admin);
 
         $company = Company::first();

@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Models\Company;
-use App\Models\FinancialYear;
 use App\Models\Ledger;
 use App\Models\User;
 use App\Models\Voucher;
@@ -13,7 +12,7 @@ class VoucherWorkflowTest extends TestCase
 {
     public function test_voucher_index_renders_for_authenticated_accountant(): void
     {
-        $accountant = User::where('email', 'accountant@ajath.com')->first();
+        $accountant = User::where('email', 'accountant@fuzurra.com')->first();
         $this->actingAs($accountant);
 
         $response = $this->get('/vouchers');
@@ -23,7 +22,7 @@ class VoucherWorkflowTest extends TestCase
 
     public function test_can_post_payment_voucher_with_balanced_entries(): void
     {
-        $admin = User::where('email', 'admin@ajath.com')->first();
+        $admin = User::where('email', 'admin@fuzurra.com')->first();
         $this->actingAs($admin);
 
         $company = Company::first();

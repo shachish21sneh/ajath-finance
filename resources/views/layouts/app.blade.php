@@ -32,8 +32,8 @@
         <aside class="sidebar" id="appSidebar">
             <div class="sidebar-brand">
                 <a href="{{ route('dashboard') }}" class="d-flex align-items-center">
-                    <i class="fa-solid fa-shapes me-2"></i>
-                    <span>Ajath <span class="fw-light opacity-75">ERP</span></span>
+                    <i class="fa-solid fa-bolt-lightning text-warning me-2 fs-4"></i>
+                    <span>FUZURRA <span class="fw-light opacity-75">ERP</span></span>
                 </a>
                 <button type="button" class="btn btn-link text-white-50 p-1 d-lg-none" onclick="toggleSidebar()" aria-label="Close sidebar">
                     <i class="fa-solid fa-xmark fs-5"></i>
@@ -41,10 +41,49 @@
             </div>
 
             <div class="sidebar-menu">
-                <div class="sidebar-section-title">Core</div>
+                <div class="sidebar-section-title">Core & Intelligence</div>
                 <a href="{{ route('dashboard') }}" class="sidebar-nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
                     <i class="fa-solid fa-gauge-high"></i>
                     <span>Dashboard</span>
+                </a>
+                <a href="{{ route('ai-assistant.index') }}" class="sidebar-nav-link {{ request()->routeIs('ai-assistant.*') ? 'active' : '' }}">
+                    <i class="fa-solid fa-wand-magic-sparkles text-info"></i>
+                    <span>AI Business Assistant</span>
+                    <span class="badge bg-primary ms-auto small">AI</span>
+                </a>
+
+                <div class="sidebar-section-title">Domain ERP Suites</div>
+                <a href="{{ route('battery.index') }}" class="sidebar-nav-link {{ request()->routeIs('battery.*') ? 'active' : '' }}">
+                    <i class="fa-solid fa-car-battery text-danger"></i>
+                    <span>Battery ERP & Serials</span>
+                </a>
+                <a href="{{ route('solar.index') }}" class="sidebar-nav-link {{ request()->routeIs('solar.*') ? 'active' : '' }}">
+                    <i class="fa-solid fa-solar-panel text-warning"></i>
+                    <span>Solar EPC Suite</span>
+                </a>
+                <a href="{{ route('manufacturing.index') }}" class="sidebar-nav-link {{ request()->routeIs('manufacturing.*') ? 'active' : '' }}">
+                    <i class="fa-solid fa-industry text-primary"></i>
+                    <span>Manufacturing & BOM</span>
+                </a>
+                <a href="{{ route('payroll.index') }}" class="sidebar-nav-link {{ request()->routeIs('payroll.*') ? 'active' : '' }}">
+                    <i class="fa-solid fa-users-gear text-success"></i>
+                    <span>Payroll & Attendance</span>
+                </a>
+                <a href="{{ route('dealers.index') }}" class="sidebar-nav-link {{ request()->routeIs('dealers.*') ? 'active' : '' }}">
+                    <i class="fa-solid fa-users-viewfinder text-primary"></i>
+                    <span>Dealers & Distribution</span>
+                </a>
+                <a href="{{ route('service.index') }}" class="sidebar-nav-link {{ request()->routeIs('service.*') ? 'active' : '' }}">
+                    <i class="fa-solid fa-headset text-info"></i>
+                    <span>Service & Support</span>
+                </a>
+                <a href="{{ route('crm.index') }}" class="sidebar-nav-link {{ request()->routeIs('crm.*') ? 'active' : '' }}">
+                    <i class="fa-solid fa-funnel-dollar text-warning"></i>
+                    <span>CRM Sales Pipeline</span>
+                </a>
+                <a href="{{ route('assets-expenses.index') }}" class="sidebar-nav-link {{ request()->routeIs('assets-expenses.*') ? 'active' : '' }}">
+                    <i class="fa-solid fa-calculator text-secondary"></i>
+                    <span>Assets & Expenses</span>
                 </a>
 
                 <div class="sidebar-section-title">Accounting</div>
@@ -119,7 +158,7 @@
                     <span>Bank & Cash Books</span>
                 </a>
 
-                <div class="sidebar-section-title">Financial Reports</div>
+                <div class="sidebar-section-title">Financial & Operational Reports</div>
                 <a href="{{ route('reports.day-book') }}" class="sidebar-nav-link {{ request()->routeIs('reports.day-book') ? 'active' : '' }}">
                     <i class="fa-solid fa-calendar-day"></i>
                     <span>Day Book</span>
@@ -139,6 +178,22 @@
                 <a href="{{ route('reports.gst') }}" class="sidebar-nav-link {{ request()->routeIs('reports.gst') ? 'active' : '' }}">
                     <i class="fa-solid fa-file-shield text-success"></i>
                     <span>GST Summary (GSTR-1)</span>
+                </a>
+                <a href="{{ route('reports.stock-valuation') }}" class="sidebar-nav-link {{ request()->routeIs('reports.stock-valuation') ? 'active' : '' }}">
+                    <i class="fa-solid fa-cubes text-info"></i>
+                    <span>Stock Valuation</span>
+                </a>
+                <a href="{{ route('reports.battery') }}" class="sidebar-nav-link {{ request()->routeIs('reports.battery') ? 'active' : '' }}">
+                    <i class="fa-solid fa-battery-half text-danger"></i>
+                    <span>Battery Intelligence</span>
+                </a>
+                <a href="{{ route('reports.solar') }}" class="sidebar-nav-link {{ request()->routeIs('reports.solar') ? 'active' : '' }}">
+                    <i class="fa-solid fa-sun text-warning"></i>
+                    <span>Solar Projects</span>
+                </a>
+                <a href="{{ route('reports.payroll') }}" class="sidebar-nav-link {{ request()->routeIs('reports.payroll') ? 'active' : '' }}">
+                    <i class="fa-solid fa-file-invoice-dollar text-success"></i>
+                    <span>Payroll Register</span>
                 </a>
 
                 <div class="sidebar-section-title">Administration</div>

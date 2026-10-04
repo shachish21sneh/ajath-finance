@@ -1,5 +1,5 @@
 /.phpunit.cache
-/node_modules
+node_modules/
 /public/build
 /public/hot
 /public/storage
@@ -9,6 +9,16 @@
 .env
 .env.backup
 .env.production
+backend/.env
+frontend/.env*
+database/*.sqlite
+database/*.sqlite-journal
+*.db
+backend/dist/
+backend/node_modules/
+frontend/.next/
+frontend/node_modules/
+*.tsbuildinfo
 .phpactor.json
 .phpunit.result.cache
 Homestead.json
@@ -21,3 +31,4 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+

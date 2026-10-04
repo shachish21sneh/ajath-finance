@@ -1,0 +1,939 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// -------------------------------------------------------------
+// 1. CORE & MULTI-TENANCY
+// -------------------------------------------------------------
+
+model Company {
+  id              String          @id @default(cuid())
+  name            String
+  legalName       String?
+  gstin           String?
+  pan             String?
+  cin             String?
+  email           String?
+  phone           String?
+  address         String?
+  city            String?
+  state           String?
+  stateCode       String?
+  pincode         String?
+  currency        String          @default("INR")
+  currencySymbol  String          @default("₹")
+  logoUrl         String?
+  isActive        Boolean         @default(true)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  branches        Branch[]
+  financialYears  FinancialYear[]
+  users           User[]
+  roles           Role[]
+  accountGroups   AccountGroup[]
+  ledgers         Ledger[]
+  vouchers        Voucher[]
+  productGroups   ProductGroup[]
+  products        Product[]
+  warehouses      Warehouse[]
+  customers       Customer[]
+  suppliers       Supplier[]
+  salesOrders     SalesOrder[]
+  saleInvoices    SaleInvoice[]
+  purchaseOrders  PurchaseOrder[]
+  purchaseInvoices PurchaseInvoice[]
+  boms            BOM[]
+  productionOrders ProductionOrder[]
+  batteryModels   BatteryModel[]
+  solarProjects   SolarProject[]
+  departments     Department[]
+  designations    Designation[]
+  employees       Employee[]
+  payrollRuns     PayrollRun[]
+  dealers         Dealer[]
+  serviceTickets  ServiceTicket[]
+  leads           Lead[]
+  auditLogs       AuditLog[]
+}
+
+model Branch {
+  id              String          @id @default(cuid())
+  companyId       String
+  name            String
+  code            String
+  gstin           String?
+  state           String
+  stateCode       String
+  address         String?
+  phone           String?
+  isHeadOffice    Boolean         @default(false)
+  isActive        Boolean         @default(true)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  company         Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  warehouses      Warehouse[]
+  users           User[]
+  vouchers        Voucher[]
+  salesOrders     SalesOrder[]
+  saleInvoices    SaleInvoice[]
+  purchaseOrders  PurchaseOrder[]
+  purchaseInvoices PurchaseInvoice[]
+  productionOrders ProductionOrder[]
+}
+
+model FinancialYear {
+  id              String          @id @default(cuid())
+  companyId       String
+  yearCode        String          // e.g. FY 2024-25
+  startDate       DateTime
+  endDate         DateTime
+  isActive        Boolean         @default(true)
+  isLocked        Boolean         @default(false)
+  createdAt       DateTime        @default(now())
+
+  company         Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  vouchers        Voucher[]
+}
+
+model User {
+  id              String          @id @default(cuid())
+  companyId       String
+  branchId        String?
+  roleId          String
+  username        String          @unique
+  email           String          @unique
+  passwordHash    String
+  fullName        String
+  phone           String?
+  isActive        Boolean         @default(true)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  company         Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  branch          Branch?         @relation(fields: [branchId], references: [id])
+  role            Role            @relation(fields: [roleId], references: [id])
+  vouchersCreated Voucher[]
+  auditLogs       AuditLog[]
+}
+
+model Role {
+  id              String          @id @default(cuid())
+  companyId       String
+  name            String
+  description     String?
+  isSystem        Boolean         @default(false)
+  createdAt       DateTime        @default(now())
+
+  company         Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  users           User[]
+  permissions     RolePermission[]
+}
+
+model RolePermission {
+  id              String          @id @default(cuid())
+  roleId          String
+  module          String          // accounting, inventory, sales, purchase, payroll, manufacturing, battery, solar, crm, reports
+  action          String          // create, read, update, delete, approve, export
+
+  role            Role            @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, module, action])
+}
+
+// -------------------------------------------------------------
+// 2. ACCOUNTING ENGINE (DOUBLE-ENTRY)
+// -------------------------------------------------------------
+
+model AccountGroup {
+  id              String          @id @default(cuid())
+  companyId       String
+  parentGroupId   String?
+  name            String
+  code            String
+  nature          String          // ASSET, LIABILITY, EQUITY, INCOME, EXPENSE
+  sequence        Int             @default(0)
+  createdAt       DateTime        @default(now())
+
+  company         Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  parentGroup     AccountGroup?   @relation("GroupHierarchy", fields: [parentGroupId], references: [id])
+  childGroups     AccountGroup[]  @relation("GroupHierarchy")
+  ledgers         Ledger[]
+}
+
+model Ledger {
+  id              String          @id @default(cuid())
+  companyId       String
+  accountGroupId  String
+  name            String
+  code            String
+  openingBalance  Float           @default(0.0)
+  openingType     String          @default("DEBIT") // DEBIT or CREDIT
+  currentBalance  Float           @default(0.0)
+  balanceType     String          @default("DEBIT")
+  gstin           String?
+  pan             String?
+  hsnSacCode      String?
+  stateCode       String?
+  isBankCash      Boolean         @default(false)
+  isPartyLedger   Boolean         @default(false)
+  isActive        Boolean         @default(true)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  company         Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  accountGroup    AccountGroup    @relation(fields: [accountGroupId], references: [id])
+  voucherEntries  VoucherEntry[]
+  customer        Customer?
+  supplier        Supplier?
+  bankAccount     BankAccount?
+}
+
+model Voucher {
+  id              String          @id @default(cuid())
+  companyId       String
+  branchId        String
+  financialYearId String
+  voucherNumber   String
+  voucherType     String          // CONTRA, PAYMENT, RECEIPT, JOURNAL, SALES, PURCHASE, CREDIT_NOTE, DEBIT_NOTE
+  date            DateTime
+  narration       String?
+  totalAmount     Float           @default(0.0)
+  referenceType   String?         // SALE_INVOICE, PURCHASE_INVOICE, PAYROLL, etc.
+  referenceId     String?
+  status          String          @default("POSTED") // DRAFT, POSTED, CANCELLED
+  createdById     String
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  company         Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  branch          Branch          @relation(fields: [branchId], references: [id])
+  financialYear   FinancialYear   @relation(fields: [financialYearId], references: [id])
+  createdBy       User            @relation(fields: [createdById], references: [id])
+  entries         VoucherEntry[]
+
+  @@unique([companyId, voucherType, voucherNumber])
+}
+
+model VoucherEntry {
+  id              String          @id @default(cuid())
+  voucherId       String
+  ledgerId        String
+  type            String          // DEBIT, CREDIT
+  amount          Float
+  narration       String?
+
+  voucher         Voucher         @relation(fields: [voucherId], references: [id], onDelete: Cascade)
+  ledger          Ledger          @relation(fields: [ledgerId], references: [id])
+}
+
+// -------------------------------------------------------------
+// 3. INVENTORY & WAREHOUSE ENGINE
+// -------------------------------------------------------------
+
+model ProductGroup {
+  id              String          @id @default(cuid())
+  companyId       String
+  name            String
+  code            String
+  description     String?
+
+  company         Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  products        Product[]
+}
+
+model Product {
+  id              String          @id @default(cuid())
+  companyId       String
+  productGroupId  String
+  sku             String
+  name            String
+  description     String?
+  unit            String          @default("NOS") // NOS, PCS, KGS, MTR, SET
+  hsnSacCode      String?
+  gstRate         Float           @default(18.0) // 0, 5, 12, 18, 28
+  purchasePrice   Float           @default(0.0)
+  sellingPrice    Float           @default(0.0)
+  minStockAlert   Float           @default(5.0)
+  currentStock    Float           @default(0.0)
+  isSerialized    Boolean         @default(false)
+  productType     String          @default("STANDARD") // STANDARD, RAW_MATERIAL, FINISHED_GOODS, BATTERY, SOLAR_PANEL, INVERTER
+  isActive        Boolean         @default(true)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  company         Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  productGroup    ProductGroup    @relation(fields: [productGroupId], references: [id])
+  stockTransactions StockTransaction[]
+  serialNumbers   SerialNumber[]
+  saleItems       SaleItem[]
+  purchaseItems   PurchaseItem[]
+  bomOutputs      BOM[]           @relation("BOMOutput")
+  bomItems        BOMItem[]
+  batteryModel    BatteryModel?
+}
+
+model Warehouse {
+  id              String          @id @default(cuid())
+  companyId       String
+  branchId        String
+  name            String
+  code            String
+  address         String?
+  isPrimary       Boolean         @default(false)
+  isActive        Boolean         @default(true)
+  createdAt       DateTime        @default(now())
+
+  company         Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  branch          Branch          @relation(fields: [branchId], references: [id])
+  stockTransactions StockTransaction[]
+  serialNumbers   SerialNumber[]
+}
+
+model StockTransaction {
+  id              String          @id @default(cuid())
+  companyId       String
+  warehouseId     String
+  productId       String
+  transactionType String          // PURCHASE, SALE, PRODUCTION_IN, PRODUCTION_OUT, TRANSFER_IN, TRANSFER_OUT, ADJUSTMENT
+  quantity        Float           // Positive for in, Negative for out
+  unitCost        Float           @default(0.0)
+  totalCost       Float           @default(0.0)
+  referenceType   String?         // SALE_INVOICE, PURCHASE_INVOICE, PRODUCTION, etc.
+  referenceId     String?
+  batchNumber     String?
+  serialNumber    String?
+  createdAt       DateTime        @default(now())
+
+  warehouse       Warehouse       @relation(fields: [warehouseId], references: [id])
+  product         Product         @relation(fields: [productId], references: [id])
+}
+
+model SerialNumber {
+  id              String          @id @default(cuid())
+  productId       String
+  warehouseId     String?
+  serialNumber    String          @unique
+  batchNumber     String?
+  status          String          @default("IN_STOCK") // IN_STOCK, ALLOCATED, DISPATCHED, SCRAPPED, RETURNED
+  manufacturingDate DateTime?
+  dispatchDate    DateTime?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  product         Product         @relation(fields: [productId], references: [id])
+  warehouse       Warehouse?      @relation(fields: [warehouseId], references: [id])
+}
+
+// -------------------------------------------------------------
+// 4. SALES, CUSTOMERS & GST COMPLIANCE
+// -------------------------------------------------------------
+
+model Customer {
+  id              String          @id @default(cuid())
+  companyId       String
+  ledgerId        String          @unique
+  tradeName       String
+  legalName       String?
+  gstin           String?
+  pan             String?
+  phone           String?
+  email           String?
+  billingAddress  String?
+  shippingAddress String?
+  state           String
+  stateCode       String
+  creditLimit     Float           @default(0.0)
+  creditDays      Int             @default(30)
+  outstanding     Float           @default(0.0)
+  isActive        Boolean         @default(true)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  company         Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  ledger          Ledger          @relation(fields: [ledgerId], references: [id])
+  salesOrders     SalesOrder[]
+  saleInvoices    SaleInvoice[]
+  batteryWarranties BatteryWarranty[]
+  solarProjects   SolarProject[]
+}
+
+model SalesOrder {
+  id              String          @id @default(cuid())
+  companyId       String
+  branchId        String
+  orderNumber     String
+  orderDate       DateTime
+  customerId      String
+  subTotal        Float           @default(0.0)
+  taxTotal        Float           @default(0.0)
+  grandTotal      Float           @default(0.0)
+  status          String          @default("PENDING") // PENDING, CONFIRMED, DISPATCHED, CANCELLED
+  createdAt       DateTime        @default(now())
+
+  company         Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  branch          Branch          @relation(fields: [branchId], references: [id])
+  customer        Customer        @relation(fields: [customerId], references: [id])
+  saleInvoices    SaleInvoice[]
+}
+
+model SaleInvoice {
+  id              String          @id @default(cuid())
+  companyId       String
+  branchId        String
+  invoiceNumber   String
+  invoiceDate     DateTime
+  dueDate         DateTime?
+  customerId      String
+  salesOrderId    String?
+  voucherId       String?
+  placeOfSupply   String
+  isInterState    Boolean         @default(false)
+  subTotal        Float           @default(0.0)
+  cgstTotal       Float           @default(0.0)
+  sgstTotal       Float           @default(0.0)
+  igstTotal       Float           @default(0.0)
+  cessTotal       Float           @default(0.0)
+  roundOff        Float           @default(0.0)
+  grandTotal      Float           @default(0.0)
+  paidAmount      Float           @default(0.0)
+  paymentStatus   String          @default("UNPAID") // UNPAID, PARTIAL, PAID
+  notes           String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  company         Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  branch          Branch          @relation(fields: [branchId], references: [id])
+  customer        Customer        @relation(fields: [customerId], references: [id])
+  salesOrder      SalesOrder?     @relation(fields: [salesOrderId], references: [id])
+  items           SaleItem[]
+  eInvoice        EInvoice?
+  ewayBill        EwayBill?
+}
+
+model SaleItem {
+  id              String          @id @default(cuid())
+  saleInvoiceId   String
+  productId       String
+  quantity        Float
+  unitPrice       Float
+  discountPercent Float           @default(0.0)
+  discountAmount  Float           @default(0.0)
+  taxableAmount   Float
+  gstRate         Float
+  cgstAmount      Float           @default(0.0)
+  sgstAmount      Float           @default(0.0)
+  igstAmount      Float           @default(0.0)
+  totalAmount     Float
+
+  saleInvoice     SaleInvoice     @relation(fields: [saleInvoiceId], references: [id], onDelete: Cascade)
+  product         Product         @relation(fields: [productId], references: [id])
+}
+
+model EInvoice {
+  id              String          @id @default(cuid())
+  saleInvoiceId   String          @unique
+  irn             String          @unique
+  ackNo           String?
+  ackDate         DateTime?
+  signedInvoice   String?
+  signedQrCode    String?
+  status          String          @default("GENERATED") // GENERATED, CANCELLED
+  createdAt       DateTime        @default(now())
+
+  saleInvoice     SaleInvoice     @relation(fields: [saleInvoiceId], references: [id], onDelete: Cascade)
+}
+
+model EwayBill {
+  id              String          @id @default(cuid())
+  saleInvoiceId   String          @unique
+  ewbNumber       String          @unique
+  ewbDate         DateTime
+  validUpto       DateTime
+  vehicleNumber   String?
+  transporterId   String?
+  status          String          @default("ACTIVE") // ACTIVE, CANCELLED, EXPIRED
+  createdAt       DateTime        @default(now())
+
+  saleInvoice     SaleInvoice     @relation(fields: [saleInvoiceId], references: [id], onDelete: Cascade)
+}
+
+// -------------------------------------------------------------
+// 5. PURCHASES & SUPPLIER MANAGEMENT
+// -------------------------------------------------------------
+
+model Supplier {
+  id              String          @id @default(cuid())
+  companyId       String
+  ledgerId        String          @unique
+  tradeName       String
+  legalName       String?
+  gstin           String?
+  pan             String?
+  phone           String?
+  email           String?
+  address         String?
+  state           String
+  stateCode       String
+  creditDays      Int             @default(30)
+  outstanding     Float           @default(0.0)
+  isActive        Boolean         @default(true)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  company         Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  ledger          Ledger          @relation(fields: [ledgerId], references: [id])
+  purchaseOrders  PurchaseOrder[]
+  purchaseInvoices PurchaseInvoice[]
+}
+
+model PurchaseOrder {
+  id              String          @id @default(cuid())
+  companyId       String
+  branchId        String
+  poNumber        String
+  poDate          DateTime
+  supplierId      String
+  grandTotal      Float           @default(0.0)
+  status          String          @default("PENDING") // PENDING, APPROVED, RECEIVED, CANCELLED
+  createdAt       DateTime        @default(now())
+
+  company         Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  branch          Branch          @relation(fields: [branchId], references: [id])
+  supplier        Supplier        @relation(fields: [supplierId], references: [id])
+  purchaseInvoices PurchaseInvoice[]
+}
+
+model PurchaseInvoice {
+  id              String          @id @default(cuid())
+  companyId       String
+  branchId        String
+  billNumber      String
+  billDate        DateTime
+  supplierId      String
+  purchaseOrderId String?
+  voucherId       String?
+  isInterState    Boolean         @default(false)
+  subTotal        Float           @default(0.0)
+  cgstTotal       Float           @default(0.0)
+  sgstTotal       Float           @default(0.0)
+  igstTotal       Float           @default(0.0)
+  grandTotal      Float           @default(0.0)
+  paidAmount      Float           @default(0.0)
+  paymentStatus   String          @default("UNPAID")
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  company         Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  branch          Branch          @relation(fields: [branchId], references: [id])
+  supplier        Supplier        @relation(fields: [supplierId], references: [id])
+  purchaseOrder   PurchaseOrder?  @relation(fields: [purchaseOrderId], references: [id])
+  items           PurchaseItem[]
+}
+
+model PurchaseItem {
+  id              String          @id @default(cuid())
+  purchaseInvoiceId String
+  productId       String
+  quantity        Float
+  unitPrice       Float
+  taxableAmount   Float
+  gstRate         Float
+  taxAmount       Float
+  totalAmount     Float
+
+  purchaseInvoice PurchaseInvoice @relation(fields: [purchaseInvoiceId], references: [id], onDelete: Cascade)
+  product         Product         @relation(fields: [productId], references: [id])
+}
+
+// -------------------------------------------------------------
+// 6. BANKING & RECONCILIATION
+// -------------------------------------------------------------
+
+model BankAccount {
+  id              String          @id @default(cuid())
+  ledgerId        String          @unique
+  bankName        String
+  accountNumber   String
+  ifscCode        String
+  branchName      String?
+  accountType     String          @default("CURRENT") // CURRENT, SAVINGS, OVERDRAFT
+
+  ledger          Ledger          @relation(fields: [ledgerId], references: [id], onDelete: Cascade)
+}
+
+// -------------------------------------------------------------
+// 7. HR & PAYROLL ENGINE
+// -------------------------------------------------------------
+
+model Department {
+  id              String          @id @default(cuid())
+  companyId       String
+  name            String
+  code            String
+
+  company         Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  employees       Employee[]
+}
+
+model Designation {
+  id              String          @id @default(cuid())
+  companyId       String
+  title           String
+  code            String
+
+  company         Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  employees       Employee[]
+}
+
+model Employee {
+  id              String          @id @default(cuid())
+  companyId       String
+  departmentId    String
+  designationId   String
+  employeeCode    String          @unique
+  firstName       String
+  lastName        String
+  email           String?
+  phone           String?
+  panNumber       String?
+  aadhaarNumber   String?
+  bankAccountNo   String?
+  ifscCode        String?
+  dateOfJoining   DateTime
+  monthlySalary   Float           @default(0.0)
+  isActive        Boolean         @default(true)
+  createdAt       DateTime        @default(now())
+
+  company         Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  department      Department      @relation(fields: [departmentId], references: [id])
+  designation     Designation     @relation(fields: [designationId], references: [id])
+  salaryStructure SalaryStructure?
+  attendances     Attendance[]
+  payslips        Payslip[]
+}
+
+model SalaryStructure {
+  id              String          @id @default(cuid())
+  employeeId      String          @unique
+  basicSalary     Float
+  hra             Float           @default(0.0)
+  conveyance      Float           @default(0.0)
+  specialAllowance Float          @default(0.0)
+  pfDeduction     Float           @default(0.0)
+  esiDeduction    Float           @default(0.0)
+  professionalTax Float           @default(0.0)
+
+  employee        Employee        @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+}
+
+model Attendance {
+  id              String          @id @default(cuid())
+  employeeId      String
+  date            DateTime
+  status          String          @default("PRESENT") // PRESENT, ABSENT, HALF_DAY, LEAVE
+  hoursWorked     Float           @default(8.0)
+
+  employee        Employee        @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@unique([employeeId, date])
+}
+
+model PayrollRun {
+  id              String          @id @default(cuid())
+  companyId       String
+  month           Int
+  year            Int
+  totalGross      Float           @default(0.0)
+  totalDeductions Float           @default(0.0)
+  totalNet        Float           @default(0.0)
+  status          String          @default("COMPLETED")
+  voucherId       String?
+  createdAt       DateTime        @default(now())
+
+  company         Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  payslips        Payslip[]
+
+  @@unique([companyId, month, year])
+}
+
+model Payslip {
+  id              String          @id @default(cuid())
+  payrollRunId    String
+  employeeId      String
+  basicSalary     Float
+  hra             Float
+  allowances      Float
+  grossSalary     Float
+  pfDeduction     Float
+  esiDeduction    Float
+  taxDeductions   Float
+  netSalary       Float
+
+  payrollRun      PayrollRun      @relation(fields: [payrollRunId], references: [id], onDelete: Cascade)
+  employee        Employee        @relation(fields: [employeeId], references: [id])
+}
+
+// -------------------------------------------------------------
+// 8. MANUFACTURING & BOM
+// -------------------------------------------------------------
+
+model BOM {
+  id              String          @id @default(cuid())
+  companyId       String
+  productId       String          // Finished good
+  code            String
+  name            String
+  outputQuantity  Float           @default(1.0)
+  isActive        Boolean         @default(true)
+  createdAt       DateTime        @default(now())
+
+  company         Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  product         Product         @relation("BOMOutput", fields: [productId], references: [id])
+  items           BOMItem[]
+  productionOrders ProductionOrder[]
+}
+
+model BOMItem {
+  id              String          @id @default(cuid())
+  bomId           String
+  productId       String          // Raw material
+  quantity        Float
+  scrapAllowance  Float           @default(0.0)
+
+  bom             BOM             @relation(fields: [bomId], references: [id], onDelete: Cascade)
+  product         Product         @relation(fields: [productId], references: [id])
+}
+
+model ProductionOrder {
+  id              String          @id @default(cuid())
+  companyId       String
+  branchId        String
+  bomId           String
+  orderNumber     String
+  plannedQuantity Float
+  producedQuantity Float          @default(0.0)
+  status          String          @default("PLANNED") // PLANNED, IN_PROGRESS, COMPLETED, CANCELLED
+  startDate       DateTime?
+  completionDate  DateTime?
+  createdAt       DateTime        @default(now())
+
+  company         Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  branch          Branch          @relation(fields: [branchId], references: [id])
+  bom             BOM             @relation(fields: [bomId], references: [id])
+}
+
+// -------------------------------------------------------------
+// 9. BATTERY ERP DOMAIN
+// -------------------------------------------------------------
+
+model BatteryModel {
+  id              String          @id @default(cuid())
+  companyId       String
+  productId       String          @unique
+  batteryType     String          // LEAD_ACID, TUBULAR, LITHIUM_ION, LIFEPO4, E_RICKSHAW, EV
+  capacityAh      Float           // e.g., 150Ah, 200Ah
+  voltage         Float           // e.g., 12V, 48V, 72V
+  warrantyMonths  Int             @default(36)
+  freeReplacementMonths Int       @default(24)
+  proRataMonths   Int             @default(12)
+  createdAt       DateTime        @default(now())
+
+  company         Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  product         Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  batterySerials  BatterySerial[]
+}
+
+model BatterySerial {
+  id              String          @id @default(cuid())
+  batteryModelId  String
+  serialNumber    String          @unique
+  cellBatchNumber String?
+  mfgDate         DateTime        @default(now())
+  qcStatus        String          @default("PASSED") // PENDING, PASSED, FAILED
+  currentStatus   String          @default("IN_FACTORY") // IN_FACTORY, DEALER_STOCK, SOLD, CLAIMED, SCRAPPED
+  createdAt       DateTime        @default(now())
+
+  batteryModel    BatteryModel    @relation(fields: [batteryModelId], references: [id])
+  tests           BatteryTest[]
+  warranty        BatteryWarranty?
+}
+
+model BatteryTest {
+  id              String          @id @default(cuid())
+  batterySerialId String
+  testDate        DateTime        @default(now())
+  openCircuitVoltage Float
+  internalResistance Float
+  actualCapacityAh Float
+  specificGravity Float?
+  qcResult        String          @default("PASS") // PASS, FAIL
+  inspectorName   String?
+
+  batterySerial   BatterySerial   @relation(fields: [batterySerialId], references: [id], onDelete: Cascade)
+}
+
+model BatteryWarranty {
+  id              String          @id @default(cuid())
+  batterySerialId String          @unique
+  customerId      String
+  invoiceNumber   String?
+  purchaseDate    DateTime
+  warrantyEndDate DateTime
+  isActive        Boolean         @default(true)
+  createdAt       DateTime        @default(now())
+
+  batterySerial   BatterySerial   @relation(fields: [batterySerialId], references: [id], onDelete: Cascade)
+  customer        Customer        @relation(fields: [customerId], references: [id])
+  claims          WarrantyClaim[]
+}
+
+model WarrantyClaim {
+  id              String          @id @default(cuid())
+  warrantyId      String
+  claimNumber     String          @unique
+  claimDate       DateTime        @default(now())
+  claimType       String          // REPLACEMENT, PRO_RATA, REPAIR
+  reportedIssue   String
+  testFindings    String?
+  approvalStatus  String          @default("PENDING") // PENDING, APPROVED, REJECTED
+  replacementSerial String?
+  resolvedDate    DateTime?
+  createdAt       DateTime        @default(now())
+
+  warranty        BatteryWarranty @relation(fields: [warrantyId], references: [id], onDelete: Cascade)
+}
+
+// -------------------------------------------------------------
+// 10. SOLAR ERP DOMAIN
+// -------------------------------------------------------------
+
+model SolarProject {
+  id              String          @id @default(cuid())
+  companyId       String
+  customerId      String
+  projectCode     String          @unique
+  projectType     String          // RESIDENTIAL_ROOFTOP, COMMERCIAL, SOLAR_PUMP, GROUND_MOUNT
+  capacityKw      Float
+  inverterCapacityKw Float?
+  totalContractValue Float        @default(0.0)
+  status          String          @default("LEAD") // LEAD, SURVEY_DONE, ORDERED, DISPATCHED, INSTALLED, COMMISSIONED, NET_METERED
+  subsidyStatus   String?         // APPLIED, APPROVED, DISBURSED
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  company         Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  customer        Customer        @relation(fields: [customerId], references: [id])
+  surveys         SolarSurvey[]
+  amcContracts    SolarAMC[]
+}
+
+model SolarSurvey {
+  id              String          @id @default(cuid())
+  solarProjectId  String
+  surveyDate      DateTime        @default(now())
+  surveyorName    String?
+  roofType        String?         // RCC, TIN_SHED, TILED
+  roofAreaSqFt    Float?
+  shadowFreeSqFt  Float?
+  sanctionedLoadKw Float?
+  proposedCapacityKw Float?
+  notes           String?
+
+  solarProject    SolarProject    @relation(fields: [solarProjectId], references: [id], onDelete: Cascade)
+}
+
+model SolarAMC {
+  id              String          @id @default(cuid())
+  solarProjectId  String
+  contractNumber  String          @unique
+  startDate       DateTime
+  endDate         DateTime
+  annualVisits    Int             @default(4)
+  completedVisits Int             @default(0)
+  annualAmount    Float           @default(0.0)
+  status          String          @default("ACTIVE") // ACTIVE, EXPIRED, RENEWED
+
+  solarProject    SolarProject    @relation(fields: [solarProjectId], references: [id], onDelete: Cascade)
+}
+
+// -------------------------------------------------------------
+// 11. CRM, DEALERS & SERVICE MANAGEMENT
+// -------------------------------------------------------------
+
+model Lead {
+  id              String          @id @default(cuid())
+  companyId       String
+  name            String
+  companyName     String?
+  phone           String
+  email           String?
+  category        String          // SOLAR, BATTERY, INVERTER, ELECTRICAL
+  expectedValue   Float           @default(0.0)
+  status          String          @default("NEW") // NEW, CONTACTED, QUALIFIED, WON, LOST
+  assignedTo      String?
+  createdAt       DateTime        @default(now())
+
+  company         Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+}
+
+model Dealer {
+  id              String          @id @default(cuid())
+  companyId       String
+  dealerCode      String          @unique
+  businessName    String
+  ownerName       String
+  phone           String
+  email           String?
+  commissionPercent Float         @default(5.0)
+  totalSales      Float           @default(0.0)
+  totalCommission Float           @default(0.0)
+  isActive        Boolean         @default(true)
+  createdAt       DateTime        @default(now())
+
+  company         Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+}
+
+model ServiceTicket {
+  id              String          @id @default(cuid())
+  companyId       String
+  ticketNumber    String          @unique
+  customerName    String
+  customerPhone   String
+  productType     String          // BATTERY, SOLAR_INVERTER, SOLAR_PANEL, APPLIANCE
+  serialNumber    String?
+  issueReported   String
+  resolutionNotes String?
+  assignedTechnician String?
+  priority        String          @default("MEDIUM") // LOW, MEDIUM, HIGH, URGENT
+  status          String          @default("OPEN") // OPEN, IN_PROGRESS, RESOLVED, CLOSED
+  createdAt       DateTime        @default(now())
+  resolvedAt      DateTime?
+
+  company         Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+}
+
+// -------------------------------------------------------------
+// 12. AUDIT TRAIL
+// -------------------------------------------------------------
+
+model AuditLog {
+  id              String          @id @default(cuid())
+  companyId       String
+  userId          String?
+  entityName      String
+  entityId        String
+  action          String          // CREATE, UPDATE, DELETE, POST, APPROVE
+  changes         String?         // JSON string
+  ipAddress       String?
+  createdAt       DateTime        @default(now())
+
+  company         Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  user            User?           @relation(fields: [userId], references: [id])
+}

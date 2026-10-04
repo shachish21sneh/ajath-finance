@@ -3,15 +3,23 @@
 namespace App\Services;
 
 use App\Enums\PartyType;
+use App\Models\BatteryModel;
+use App\Models\BatterySerial;
+use App\Models\BatteryWarranty;
 use App\Models\Company;
+use App\Models\Employee;
 use App\Models\FinancialYear;
 use App\Models\Ledger;
 use App\Models\LedgerEntry;
 use App\Models\LedgerGroup;
+use App\Models\PayrollRun;
 use App\Models\Product;
 use App\Models\PurchaseInvoice;
 use App\Models\SalesInvoice;
+use App\Models\SolarProject;
+use App\Models\SolarSiteSurvey;
 use App\Models\Voucher;
+use App\Models\WarrantyClaim;
 use Illuminate\Support\Facades\DB;
 
 class ReportService
@@ -351,4 +359,125 @@ class ReportService
             'top_products' => $topProducts,
         ];
     }
+
+    /**
+     * Stock Valuation Report: Detailed breakdown of current inventory quantities, rates, and values.
+     */
+    public function getStockValuationReport(Company $company): array
+    {
+        $products = Product::with(['stockGroup', 'unit'])
+            ->where('company_id', $company->id)
+            ->where('item_type', 'goods')
+            ->orderBy('name')
+            ->get();
+
+        $totalValuation = 0.0;
+        $rows = [];
+
+        foreach ($products as $p) {
+            $qty = (float) $p->current_stock;
+            $rate = (float) $p->purchase_price;
+            $value = $qty * $rate;
+            $totalValuation += $value;
+
+            $rows[] = [
+                'product' => $p,
+                'quantity' => $qty,
+                'unit' => $p->unit?->symbol ?? 'PCS',
+                'purchase_rate' => $rate,
+                'selling_rate' => (float) $p->selling_price,
+                'valuation' => $value,
+                'reorder_level' => (float) $p->reorder_level,
+                'is_low_stock' => $qty <= (float) $p->reorder_level,
+            ];
+        }
+
+        return [
+            'rows' => $rows,
+            'total_items' => count($rows),
+            'total_valuation' => $totalValuation,
+        ];
+    }
+
+    /**
+     * Battery Lifecycle & Warranty Status Report.
+     */
+    public function getBatteryReport(Company $company): array
+    {
+        $totalModels = BatteryModel::where('company_id', $company->id)->count();
+        $totalSerials = BatterySerial::where('company_id', $company->id)->count();
+        $inStock = BatterySerial::where('company_id', $company->id)->where('current_status', 'IN_STOCK')->count();
+        $dispatched = BatterySerial::where('company_id', $company->id)->where('current_status', 'DISPATCHED')->count();
+        $installed = BatterySerial::where('company_id', $company->id)->where('current_status', 'INSTALLED')->count();
+
+        $activeWarranties = BatteryWarranty::where('company_id', $company->id)
+            ->where('is_active', true)
+            ->where('warranty_end_date', '>=', now())
+            ->count();
+
+        $expiringSoon = BatteryWarranty::where('company_id', $company->id)
+            ->where('is_active', true)
+            ->whereBetween('warranty_end_date', [now(), now()->addDays(30)])
+            ->count();
+
+        $openClaims = WarrantyClaim::where('company_id', $company->id)
+            ->whereIn('status', ['PENDING', 'APPROVED'])
+            ->count();
+
+        return [
+            'total_models' => $totalModels,
+            'total_serials' => $totalSerials,
+            'in_stock' => $inStock,
+            'dispatched' => $dispatched,
+            'installed' => $installed,
+            'active_warranties' => $activeWarranties,
+            'expiring_soon' => $expiringSoon,
+            'open_claims' => $openClaims,
+        ];
+    }
+
+    /**
+     * Solar Installation & Projects Report.
+     */
+    public function getSolarReport(Company $company): array
+    {
+        $projects = SolarProject::with('customer')
+            ->where('company_id', $company->id)
+            ->latest()
+            ->get();
+
+        $totalCapacityKw = (float) $projects->sum('capacity_kw');
+        $totalValue = (float) $projects->sum('total_project_cost');
+        $commissionedCount = $projects->where('installation_status', 'COMMISSIONED')->count();
+        $inProgressCount = $projects->where('installation_status', '!=', 'COMMISSIONED')->count();
+
+        return [
+            'projects' => $projects,
+            'total_projects' => $projects->count(),
+            'total_capacity_kw' => $totalCapacityKw,
+            'total_value' => $totalValue,
+            'commissioned_count' => $commissionedCount,
+            'in_progress_count' => $inProgressCount,
+        ];
+    }
+
+    /**
+     * Payroll Run & Salary Register Report.
+     */
+    public function getPayrollReport(Company $company): array
+    {
+        $runs = PayrollRun::with('payslips.employee')
+            ->where('company_id', $company->id)
+            ->latest('year')
+            ->latest('month')
+            ->get();
+
+        $totalEmployees = Employee::where('company_id', $company->id)->where('status', 'active')->count();
+
+        return [
+            'runs' => $runs,
+            'total_employees' => $totalEmployees,
+        ];
+    }
 }
+

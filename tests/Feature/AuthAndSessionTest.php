@@ -12,14 +12,14 @@ class AuthAndSessionTest extends TestCase
     {
         $response = $this->get('/login');
         $response->assertStatus(200);
-        $response->assertSee('Ajath Cloud ERP');
+        $response->assertSee('FUZURRA ERP');
     }
 
     public function test_user_can_authenticate_and_access_dashboard(): void
     {
         $response = $this->post('/login', [
-            'email' => 'admin@ajath.com',
-            'password' => 'password',
+            'email' => 'admin@fuzurra.com',
+            'password' => 'password123',
         ]);
 
         $response->assertRedirect('/dashboard');
@@ -32,7 +32,7 @@ class AuthAndSessionTest extends TestCase
 
     public function test_switching_company_changes_session_context(): void
     {
-        $admin = User::where('email', 'admin@ajath.com')->first();
+        $admin = User::where('email', 'admin@fuzurra.com')->first();
         $this->actingAs($admin);
 
         $newCompany = Company::create([

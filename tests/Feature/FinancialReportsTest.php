@@ -9,7 +9,7 @@ class FinancialReportsTest extends TestCase
 {
     public function test_financial_reports_render_successfully(): void
     {
-        $admin = User::where('email', 'admin@ajath.com')->first();
+        $admin = User::where('email', 'admin@fuzurra.com')->first();
         $this->actingAs($admin);
 
         // Day Book
@@ -36,5 +36,25 @@ class FinancialReportsTest extends TestCase
         $r5 = $this->get('/reports/gst');
         $r5->assertStatus(200);
         $r5->assertSee('GSTR-1');
+
+        // Stock Valuation Report
+        $r6 = $this->get('/reports/stock-valuation');
+        $r6->assertStatus(200);
+        $r6->assertSee('Stock Valuation');
+
+        // Battery Intelligence Report
+        $r7 = $this->get('/reports/battery');
+        $r7->assertStatus(200);
+        $r7->assertSee('Battery Intelligence');
+
+        // Solar Projects Report
+        $r8 = $this->get('/reports/solar');
+        $r8->assertStatus(200);
+        $r8->assertSee('Solar EPC');
+
+        // Payroll Register Report
+        $r9 = $this->get('/reports/payroll');
+        $r9->assertStatus(200);
+        $r9->assertSee('Payroll Register');
     }
 }

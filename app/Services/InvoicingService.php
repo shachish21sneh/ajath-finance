@@ -48,8 +48,13 @@ class InvoicingService
     /**
      * Create a Sales Invoice, its items, deduction from inventory, and balanced Sales Accounting Voucher.
      */
-    public function createSalesInvoice(array $header, array $items): SalesInvoice
+    public function createSalesInvoice(array $header, array $items = []): SalesInvoice
     {
+        if (empty($items) && isset($header['items'])) {
+            $items = $header['items'];
+            unset($header['items']);
+        }
+
         return DB::transaction(function () use ($header, $items) {
             $company = Company::findOrFail($header['company_id']);
             $fy = FinancialYear::findOrFail($header['financial_year_id']);
@@ -255,8 +260,13 @@ class InvoicingService
     /**
      * Create a Purchase Invoice, item inward stock movements, and balanced Purchase Accounting Voucher.
      */
-    public function createPurchaseInvoice(array $header, array $items): PurchaseInvoice
+    public function createPurchaseInvoice(array $header, array $items = []): PurchaseInvoice
     {
+        if (empty($items) && isset($header['items'])) {
+            $items = $header['items'];
+            unset($header['items']);
+        }
+
         return DB::transaction(function () use ($header, $items) {
             $company = Company::findOrFail($header['company_id']);
             $fy = FinancialYear::findOrFail($header['financial_year_id']);
