@@ -1005,41 +1005,11 @@ body {
    PRODUCT SEARCH AJAX COMBOBOX ENGINE (ENTERPRISE GRADE)
    ========================================================================== */
 .table-responsive-combobox {
-    overflow-x: auto !important;
-    overflow-y: visible;
-    -webkit-overflow-scrolling: touch;
-    padding-bottom: 15px;
-    margin-bottom: -5px;
-}
-
-.table-responsive-combobox::-webkit-scrollbar {
-    height: 8px;
-}
-
-.table-responsive-combobox::-webkit-scrollbar-track {
-    background: #f1f5f9;
-    border-radius: 4px;
-}
-
-.table-responsive-combobox::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
-    border-radius: 4px;
-}
-
-.table-responsive-combobox::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8;
-}
-
-[data-bs-theme="dark"] .table-responsive-combobox::-webkit-scrollbar-track {
-    background: #1e293b;
-}
-
-[data-bs-theme="dark"] .table-responsive-combobox::-webkit-scrollbar-thumb {
-    background: #475569;
+    overflow: visible !important;
 }
 
 .invoice-items-table {
-    min-width: 1260px;
+    width: 100% !important;
 }
 
 .product-combobox-wrapper {

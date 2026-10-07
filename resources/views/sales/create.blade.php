@@ -58,20 +58,20 @@
             </div>
 
             <div class="table-responsive table-responsive-combobox" style="min-height: 280px;">
-                <table class="table table-bordered align-middle mb-0 invoice-items-table" style="min-width: 1260px;">
+                <table class="table table-bordered align-middle mb-0 invoice-items-table w-100">
                     <thead class="table-light small text-uppercase">
                         <tr>
-                            <th style="min-width: 250px;">Item / Product *</th>
-                            <th style="width: 100px; min-width: 100px;">HSN/SAC</th>
-                            <th style="width: 80px; min-width: 80px;" class="text-end">Qty *</th>
-                            <th style="width: 140px; min-width: 140px;" class="text-end">Rate (Incl. of Tax)</th>
-                            <th style="width: 120px; min-width: 120px;" class="text-end">Rate (₹) *</th>
-                            <th style="width: 90px; min-width: 90px;" class="text-end">Disc (₹)</th>
-                            <th style="width: 95px; min-width: 95px;">GST %</th>
-                            <th style="width: 110px; min-width: 110px;" class="text-end text-nowrap">Tax (₹)</th>
-                            <th style="width: 125px; min-width: 125px;" class="text-end text-nowrap">Total (₹)</th>
-                            <th style="width: 150px; min-width: 150px;">Godown</th>
-                            <th style="width: 45px; min-width: 45px;" class="text-center"></th>
+                            <th style="min-width: 180px;">Item / Product *</th>
+                            <th style="width: 85px;">HSN/SAC</th>
+                            <th style="width: 65px;" class="text-end">Qty *</th>
+                            <th style="width: 110px;" class="text-end">Rate (Incl. of Tax)</th>
+                            <th style="width: 95px;" class="text-end">Rate (₹) *</th>
+                            <th style="width: 75px;" class="text-end">Disc (₹)</th>
+                            <th style="width: 75px;">GST %</th>
+                            <th style="width: 90px;" class="text-end text-nowrap">Tax (₹)</th>
+                            <th style="width: 105px;" class="text-end text-nowrap">Total (₹)</th>
+                            <th style="width: 115px;">Godown</th>
+                            <th style="width: 35px;" class="text-center"></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -263,7 +263,7 @@
                                     <input type="number" step="0.01" min="0" :name="`items[${index}][discount_amount]`" class="form-control form-control-sm text-end num-align" x-model="item.discount_amount" @input="recalcRow(index)">
                                 </td>
                                 <td>
-                                    <select :name="`items[${index}][gst_rate]`" class="form-select form-select-sm" x-model="item.gst_rate" @change="onGstRateChange(index)">
+                                    <select :name="`items[${index}][gst_rate]`" class="form-select form-select-sm px-1" x-model="item.gst_rate" @change="onGstRateChange(index)">
                                         <option value="0">0%</option>
                                         <option value="5">5%</option>
                                         <option value="12">12%</option>
@@ -274,7 +274,7 @@
                                 <td class="text-end small num-align fw-semibold text-muted text-nowrap" x-text="'₹ ' + formatNumber(item.tax_amount)"></td>
                                 <td class="text-end fw-bold num-align text-nowrap" x-text="'₹ ' + formatNumber(item.total_amount)"></td>
                                 <td>
-                                    <select :name="`items[${index}][warehouse_id]`" class="form-select form-select-sm" x-model="item.warehouse_id">
+                                    <select :name="`items[${index}][warehouse_id]`" class="form-select form-select-sm px-1" x-model="item.warehouse_id">
                                         <option value="">-- Main Godown --</option>
                                         @foreach($warehouses as $w)
                                             <option value="{{ $w->id }}">{{ $w->name }}</option>
