@@ -160,6 +160,24 @@
         }
     };
 
+    // Responsive Mobile & Desktop Collapsible Sidebar Controller
+    window.toggleSidebarCollapse = function () {
+        if (window.innerWidth < 992) {
+            window.toggleSidebar();
+            return;
+        }
+
+        const isCollapsed = document.body.classList.toggle('sidebar-collapsed');
+        document.documentElement.classList.toggle('sidebar-is-collapsed', isCollapsed);
+        document.body.classList.toggle('sidebar-expanded', !isCollapsed);
+        localStorage.setItem('ajath_sidebar_collapsed', isCollapsed ? '1' : '0');
+
+        const arrow = document.getElementById('sidebarCollapseArrow');
+        if (arrow) {
+            arrow.className = isCollapsed ? 'fa-solid fa-angles-right' : 'fa-solid fa-angles-left';
+        }
+    };
+
     // Responsive Mobile & Tablet Sidebar Drawer Controller
     window.toggleSidebar = function () {
         const isOpen = document.body.classList.toggle('sidebar-open');
@@ -187,6 +205,28 @@
         const icon = document.getElementById('themeToggleIcon');
         if (icon) {
             icon.className = savedTheme === 'dark' ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+        }
+
+        // Initialize tooltips data-title for collapsed sidebar icons
+        document.querySelectorAll('.sidebar-nav-link').forEach(link => {
+            const text = link.querySelector('span')?.textContent?.trim();
+            if (text && !link.getAttribute('data-title')) {
+                link.setAttribute('data-title', text);
+            }
+        });
+
+        // Initialize desktop sidebar collapse preference
+        const isCollapsed = localStorage.getItem('ajath_sidebar_collapsed') === '1';
+        if (isCollapsed && window.innerWidth >= 992) {
+            document.body.classList.add('sidebar-collapsed');
+            document.documentElement.classList.add('sidebar-is-collapsed');
+            const arrow = document.getElementById('sidebarCollapseArrow');
+            if (arrow) {
+                arrow.className = 'fa-solid fa-angles-right';
+            }
+        } else if (window.innerWidth >= 992) {
+            document.body.classList.add('sidebar-expanded');
+            document.documentElement.classList.remove('sidebar-is-collapsed');
         }
     });
 

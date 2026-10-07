@@ -58,20 +58,20 @@
             </div>
 
             <div class="table-responsive table-responsive-combobox" style="min-height: 280px;">
-                <table class="table table-bordered align-middle">
+                <table class="table table-bordered align-middle mb-0 invoice-items-table" style="min-width: 1260px;">
                     <thead class="table-light small text-uppercase">
                         <tr>
                             <th style="min-width: 250px;">Item / Product *</th>
-                            <th style="width: 100px;">HSN Code</th>
-                            <th style="width: 80px;" class="text-end">Qty *</th>
-                            <th style="width: 140px;" class="text-end">Rate (Incl. of Tax)</th>
-                            <th style="width: 110px;" class="text-end">Unit Rate (₹) *</th>
-                            <th style="width: 90px;" class="text-end">Disc (₹)</th>
-                            <th style="width: 95px;">GST %</th>
-                            <th style="width: 115px;" class="text-end">Tax (₹)</th>
-                            <th style="width: 130px;" class="text-end">Total (₹)</th>
-                            <th style="width: 150px;">Godown</th>
-                            <th style="width: 38px;"></th>
+                            <th style="width: 100px; min-width: 100px;">HSN Code</th>
+                            <th style="width: 80px; min-width: 80px;" class="text-end">Qty *</th>
+                            <th style="width: 140px; min-width: 140px;" class="text-end">Rate (Incl. of Tax)</th>
+                            <th style="width: 120px; min-width: 120px;" class="text-end">Unit Rate (₹) *</th>
+                            <th style="width: 90px; min-width: 90px;" class="text-end">Disc (₹)</th>
+                            <th style="width: 95px; min-width: 95px;">GST %</th>
+                            <th style="width: 110px; min-width: 110px;" class="text-end text-nowrap">Tax (₹)</th>
+                            <th style="width: 125px; min-width: 125px;" class="text-end text-nowrap">Total (₹)</th>
+                            <th style="width: 150px; min-width: 150px;">Godown</th>
+                            <th style="width: 45px; min-width: 45px;" class="text-center"></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -217,16 +217,16 @@
                                     <input type="text" :name="`items[${index}][description]`" class="form-control form-control-sm mt-1" x-model="item.description" :placeholder="item.product_id ? 'Description / Details (optional)...' : 'Item description...'" :required="!item.product_id">
                                 </td>
                                 <td>
-                                    <input type="text" :name="`items[${index}][hsn_code]`" class="form-control form-control-sm" x-model="item.hsn_code">
+                                    <input type="text" :name="`items[${index}][hsn_code]`" class="form-control form-control-sm text-center" x-model="item.hsn_code" placeholder="HSN">
                                 </td>
                                 <td>
-                                    <input type="number" step="0.01" min="0.01" :name="`items[${index}][quantity]`" class="form-control form-control-sm text-end" x-model="item.quantity" @input="recalcRow(index)" required>
+                                    <input type="number" step="0.01" min="0.01" :name="`items[${index}][quantity]`" class="form-control form-control-sm text-end num-align" x-model="item.quantity" @input="recalcRow(index)" required>
                                 </td>
                                 <td>
                                     <input type="number" 
                                            step="0.01" 
                                            min="0" 
-                                           class="form-control form-control-sm text-end" 
+                                           class="form-control form-control-sm text-end num-align" 
                                            x-model="item.rate_inclusive" 
                                            @input="onRateInclusiveChange(index)" 
                                            placeholder="0.00">
@@ -236,13 +236,13 @@
                                            step="0.01" 
                                            min="0" 
                                            :name="`items[${index}][unit_price]`" 
-                                           class="form-control form-control-sm text-end" 
+                                           class="form-control form-control-sm text-end num-align" 
                                            x-model="item.unit_price" 
                                            @input="onUnitPriceChange(index)" 
                                            required>
                                 </td>
                                 <td>
-                                    <input type="number" step="0.01" min="0" :name="`items[${index}][discount_amount]`" class="form-control form-control-sm text-end" x-model="item.discount_amount" @input="recalcRow(index)">
+                                    <input type="number" step="0.01" min="0" :name="`items[${index}][discount_amount]`" class="form-control form-control-sm text-end num-align" x-model="item.discount_amount" @input="recalcRow(index)">
                                 </td>
                                 <td>
                                     <select :name="`items[${index}][gst_rate]`" class="form-select form-select-sm" x-model="item.gst_rate" @change="onGstRateChange(index)">
@@ -253,8 +253,8 @@
                                         <option value="28">28%</option>
                                     </select>
                                 </td>
-                                <td class="text-end small num-align fw-semibold text-muted" x-text="'₹ ' + formatNumber(item.tax_amount)"></td>
-                                <td class="text-end fw-bold num-align" x-text="'₹ ' + formatNumber(item.total_amount)"></td>
+                                <td class="text-end small num-align fw-semibold text-muted text-nowrap" x-text="'₹ ' + formatNumber(item.tax_amount)"></td>
+                                <td class="text-end fw-bold num-align text-nowrap" x-text="'₹ ' + formatNumber(item.total_amount)"></td>
                                 <td>
                                     <select :name="`items[${index}][warehouse_id]`" class="form-select form-select-sm" x-model="item.warehouse_id">
                                         <option value="">-- Main Godown --</option>

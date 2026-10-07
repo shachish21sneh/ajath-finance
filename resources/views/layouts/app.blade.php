@@ -22,6 +22,15 @@
     <link href="{{ asset('assets/css/app.css') }}" rel="stylesheet">
 
     @stack('styles')
+
+    <!-- Immediate sidebar state restoration to prevent layout flash -->
+    <script>
+        (function() {
+            if (window.innerWidth >= 992 && localStorage.getItem('ajath_sidebar_collapsed') === '1') {
+                document.documentElement.classList.add('sidebar-is-collapsed');
+            }
+        })();
+    </script>
 </head>
 <body>
     <div class="app-wrapper">
@@ -31,10 +40,13 @@
         <!-- Sidebar Navigation -->
         <aside class="sidebar" id="appSidebar">
             <div class="sidebar-brand">
-                <a href="{{ route('dashboard') }}" class="d-flex align-items-center">
-                    <i class="fa-solid fa-bolt-lightning text-warning me-2 fs-4"></i>
-                    <span>FUZURRA <span class="fw-light opacity-75">ERP</span></span>
+                <a href="{{ route('dashboard') }}" class="d-flex align-items-center text-truncate brand-link" onclick="if(document.body.classList.contains('sidebar-collapsed')){ event.preventDefault(); toggleSidebarCollapse(); }">
+                    <i class="fa-solid fa-bolt-lightning text-warning me-2 fs-4 brand-icon flex-shrink-0"></i>
+                    <span class="brand-text">FUZURRA <span class="fw-light opacity-75">ERP</span></span>
                 </a>
+                <button type="button" class="btn btn-link text-white-50 p-1 d-none d-lg-inline-flex sidebar-collapse-btn" onclick="toggleSidebarCollapse()" aria-label="Toggle sidebar collapse" title="Collapse / Expand menu">
+                    <i class="fa-solid fa-angles-left" id="sidebarCollapseArrow"></i>
+                </button>
                 <button type="button" class="btn btn-link text-white-50 p-1 d-lg-none" onclick="toggleSidebar()" aria-label="Close sidebar">
                     <i class="fa-solid fa-xmark fs-5"></i>
                 </button>
@@ -234,8 +246,8 @@
             <!-- Top Navigation Bar -->
             <header class="topbar">
                 <div class="topbar-left">
-                    <button class="btn btn-sm btn-outline-secondary d-lg-none flex-shrink-0" type="button" onclick="toggleSidebar()" aria-label="Toggle navigation">
-                        <i class="fa-solid fa-bars"></i>
+                    <button class="btn btn-sm btn-outline-secondary flex-shrink-0 me-1 sidebar-toggle-btn" type="button" onclick="toggleSidebarCollapse()" aria-label="Toggle menu" title="Collapse / Expand Menu">
+                        <i class="fa-solid fa-bars" id="sidebarToggleIcon"></i>
                     </button>
 
                     <!-- Global Spotlight Search Button -->

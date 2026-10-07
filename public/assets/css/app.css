@@ -13,6 +13,7 @@
     --sidebar-active-bg: #1e293b;
     --sidebar-active-color: #ffffff;
     --sidebar-width: 260px;
+    --sidebar-collapsed-width: 68px;
     --topbar-height: 64px;
     --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
     --card-shadow-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
@@ -1004,12 +1005,41 @@ body {
    PRODUCT SEARCH AJAX COMBOBOX ENGINE (ENTERPRISE GRADE)
    ========================================================================== */
 .table-responsive-combobox {
-    overflow: visible !important;
+    overflow-x: auto !important;
+    overflow-y: visible;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 15px;
+    margin-bottom: -5px;
 }
-@media (max-width: 991.98px) {
-    .table-responsive-combobox {
-        overflow-x: auto !important;
-    }
+
+.table-responsive-combobox::-webkit-scrollbar {
+    height: 8px;
+}
+
+.table-responsive-combobox::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 4px;
+}
+
+.table-responsive-combobox::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+.table-responsive-combobox::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+[data-bs-theme="dark"] .table-responsive-combobox::-webkit-scrollbar-track {
+    background: #1e293b;
+}
+
+[data-bs-theme="dark"] .table-responsive-combobox::-webkit-scrollbar-thumb {
+    background: #475569;
+}
+
+.invoice-items-table {
+    min-width: 1260px;
 }
 
 .product-combobox-wrapper {
@@ -1262,6 +1292,136 @@ body {
 [data-bs-theme="dark"] .product-combobox-footer {
     background-color: #0f172a;
     border-color: #1e293b;
+}
+
+/* ==========================================================================
+   COLLAPSIBLE MINI-SIDEBAR (DESKTOP)
+   ========================================================================== */
+@media (min-width: 992px) {
+    body.sidebar-collapsed .sidebar,
+    html.sidebar-is-collapsed body:not(.sidebar-expanded) .sidebar {
+        width: var(--sidebar-collapsed-width, 68px) !important;
+    }
+
+    body.sidebar-collapsed .main-content-wrapper,
+    html.sidebar-is-collapsed body:not(.sidebar-expanded) .main-content-wrapper {
+        margin-left: var(--sidebar-collapsed-width, 68px) !important;
+        width: calc(100% - var(--sidebar-collapsed-width, 68px)) !important;
+    }
+
+    /* Brand Header in Collapsed Mode */
+    body.sidebar-collapsed .sidebar-brand,
+    html.sidebar-is-collapsed body:not(.sidebar-expanded) .sidebar-brand {
+        padding: 0 0.5rem;
+        justify-content: center;
+        text-align: center;
+    }
+
+    body.sidebar-collapsed .sidebar-brand .brand-text,
+    html.sidebar-is-collapsed body:not(.sidebar-expanded) .sidebar-brand .brand-text {
+        display: none !important;
+    }
+
+    body.sidebar-collapsed .sidebar-brand .sidebar-collapse-btn,
+    html.sidebar-is-collapsed body:not(.sidebar-expanded) .sidebar-brand .sidebar-collapse-btn {
+        display: none !important;
+    }
+
+    body.sidebar-collapsed .sidebar-brand a,
+    html.sidebar-is-collapsed body:not(.sidebar-expanded) .sidebar-brand a {
+        justify-content: center;
+        width: 100%;
+    }
+
+    body.sidebar-collapsed .sidebar-brand .brand-icon,
+    html.sidebar-is-collapsed body:not(.sidebar-expanded) .sidebar-brand .brand-icon {
+        margin-right: 0 !important;
+        font-size: 1.4rem;
+        cursor: pointer;
+    }
+
+    /* Section Titles in Collapsed Mode (clean thin divider) */
+    body.sidebar-collapsed .sidebar-section-title,
+    html.sidebar-is-collapsed body:not(.sidebar-expanded) .sidebar-section-title {
+        height: 1px;
+        min-height: 1px;
+        padding: 0;
+        margin: 0.65rem 0.5rem;
+        background: rgba(255, 255, 255, 0.08);
+        font-size: 0;
+        line-height: 0;
+        color: transparent;
+        overflow: hidden;
+    }
+
+    /* Nav Links in Collapsed Mode: show only icon */
+    body.sidebar-collapsed .sidebar-nav-link,
+    html.sidebar-is-collapsed body:not(.sidebar-expanded) .sidebar-nav-link {
+        padding: 0.65rem 0;
+        justify-content: center;
+        text-align: center;
+        position: relative;
+    }
+
+    body.sidebar-collapsed .sidebar-nav-link i,
+    html.sidebar-is-collapsed body:not(.sidebar-expanded) .sidebar-nav-link i {
+        margin: 0 auto !important;
+        font-size: 1.15rem;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    body.sidebar-collapsed .sidebar-nav-link span,
+    html.sidebar-is-collapsed body:not(.sidebar-expanded) .sidebar-nav-link span,
+    body.sidebar-collapsed .sidebar-nav-link .badge,
+    html.sidebar-is-collapsed body:not(.sidebar-expanded) .sidebar-nav-link .badge,
+    body.sidebar-collapsed .sidebar-nav-link .badge-shortcut,
+    html.sidebar-is-collapsed body:not(.sidebar-expanded) .sidebar-nav-link .badge-shortcut {
+        display: none !important;
+    }
+
+    /* Hover Tooltip when Collapsed */
+    body.sidebar-collapsed .sidebar-nav-link:hover::after,
+    html.sidebar-is-collapsed body:not(.sidebar-expanded) .sidebar-nav-link:hover::after {
+        content: attr(data-title);
+        position: absolute;
+        left: calc(100% + 12px);
+        top: 50%;
+        transform: translateY(-50%);
+        background: #0f172a;
+        color: #ffffff;
+        padding: 0.35rem 0.75rem;
+        font-size: 0.8rem;
+        font-weight: 600;
+        white-space: nowrap;
+        border-radius: 6px;
+        box-shadow: 0 10px 25px -4px rgba(0, 0, 0, 0.45), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        z-index: 1099;
+        pointer-events: none;
+        animation: tooltipFade 0.15s ease-out;
+    }
+
+    body.sidebar-collapsed .sidebar-nav-link:hover::before,
+    html.sidebar-is-collapsed body:not(.sidebar-expanded) .sidebar-nav-link:hover::before {
+        content: '';
+        position: absolute;
+        left: calc(100% + 5px);
+        top: 50%;
+        transform: translateY(-50%);
+        border-width: 5px;
+        border-style: solid;
+        border-color: transparent #0f172a transparent transparent;
+        z-index: 1099;
+        pointer-events: none;
+    }
+
+    @keyframes tooltipFade {
+        from { opacity: 0; transform: translateY(-50%) translateX(-4px); }
+        to { opacity: 1; transform: translateY(-50%) translateX(0); }
+    }
 }
 
 /* ==========================================================================
