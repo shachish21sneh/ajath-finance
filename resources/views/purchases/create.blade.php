@@ -87,15 +87,7 @@
                                                 @click="openProductSearch(index)"
                                                 :title="item.selectedLabel || '-- Choose Product / Item --'">
                                             <div class="d-flex align-items-center text-truncate me-2" style="min-width: 0; flex: 1 1 auto;">
-                                                <i class="fa-solid fa-box text-primary me-1.5 flex-shrink-0 opacity-75" x-show="item.product_id"></i>
-                                                <i class="fa-solid fa-magnifying-glass text-muted me-1.5 flex-shrink-0 opacity-50" x-show="!item.product_id"></i>
-                                                <span class="text-truncate fw-semibold" :class="item.product_id ? 'text-dark' : 'text-muted'" x-text="item.selectedLabel || '-- Choose Product / Item --'"></span>
-                                                <template x-if="item.product_id && item.unit_price">
-                                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle ms-1.5 font-monospace flex-shrink-0" style="font-size: 0.7rem; padding: 0.2em 0.45em;" x-text="'₹ ' + formatNumber(item.unit_price)"></span>
-                                                </template>
-                                                <template x-if="item.product_id && item.selectedStock">
-                                                    <span class="badge bg-light text-muted border ms-1 flex-shrink-0" style="font-size: 0.65rem; padding: 0.2em 0.4em;" x-text="item.selectedStock"></span>
-                                                </template>
+                                                <span class="text-truncate" :class="item.selectedLabel ? 'fw-semibold text-dark' : 'text-muted'" x-text="item.selectedLabel || '-- Choose Product / Item --'"></span>
                                             </div>
                                             <div class="d-flex align-items-center flex-shrink-0 ms-auto gap-1">
                                                 <span x-show="item.product_id || item.selectedLabel" 
