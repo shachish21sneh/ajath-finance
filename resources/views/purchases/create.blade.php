@@ -81,31 +81,32 @@
 
                                     <!-- Product Combobox Input Trigger -->
                                     <div class="product-combobox-wrapper">
-                                        <div class="input-group input-group-sm">
-                                            <button type="button" 
-                                                    class="product-combobox-trigger"
-                                                    :class="{'is-active': item.isOpen, 'border-primary': item.product_id}"
-                                                    @click="openProductSearch(index)"
-                                                    :title="item.selectedLabel || '-- Choose Product / Item --'">
-                                                <div class="d-flex align-items-center text-truncate me-1">
-                                                    <i class="fa-solid fa-box text-primary me-2 opacity-75" x-show="item.product_id"></i>
-                                                    <i class="fa-solid fa-magnifying-glass text-muted me-2 opacity-50" x-show="!item.product_id"></i>
-                                                    <span class="text-truncate" :class="item.product_id ? 'fw-semibold text-dark' : 'text-muted'" x-text="item.selectedLabel || '-- Choose Product / Item --'"></span>
-                                                    <template x-if="item.product_id && item.unit_price">
-                                                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle ms-2 font-monospace" x-text="'₹ ' + formatNumber(item.unit_price)"></span>
-                                                    </template>
-                                                    <template x-if="item.product_id && item.selectedStock">
-                                                        <span class="badge bg-light text-muted border ms-1" style="font-size: 0.68rem;" x-text="item.selectedStock"></span>
-                                                    </template>
-                                                </div>
-                                                <i class="fa-solid fa-chevron-down text-muted small ms-auto opacity-75"></i>
-                                            </button>
-                                            <template x-if="item.product_id || item.selectedLabel">
-                                                <button type="button" class="btn btn-outline-secondary btn-sm px-2" @click.stop="clearProduct(index)" title="Clear product selection">
-                                                    <i class="fa-solid fa-xmark text-muted"></i>
-                                                </button>
-                                            </template>
-                                        </div>
+                                        <button type="button" 
+                                                class="product-combobox-trigger"
+                                                :class="{'is-active': item.isOpen, 'border-primary': item.product_id}"
+                                                @click="openProductSearch(index)"
+                                                :title="item.selectedLabel || '-- Choose Product / Item --'">
+                                            <div class="d-flex align-items-center text-truncate me-2" style="min-width: 0; flex: 1 1 auto;">
+                                                <i class="fa-solid fa-box text-primary me-1.5 flex-shrink-0 opacity-75" x-show="item.product_id"></i>
+                                                <i class="fa-solid fa-magnifying-glass text-muted me-1.5 flex-shrink-0 opacity-50" x-show="!item.product_id"></i>
+                                                <span class="text-truncate fw-semibold" :class="item.product_id ? 'text-dark' : 'text-muted'" x-text="item.selectedLabel || '-- Choose Product / Item --'"></span>
+                                                <template x-if="item.product_id && item.unit_price">
+                                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle ms-1.5 font-monospace flex-shrink-0" style="font-size: 0.7rem; padding: 0.2em 0.45em;" x-text="'₹ ' + formatNumber(item.unit_price)"></span>
+                                                </template>
+                                                <template x-if="item.product_id && item.selectedStock">
+                                                    <span class="badge bg-light text-muted border ms-1 flex-shrink-0" style="font-size: 0.65rem; padding: 0.2em 0.4em;" x-text="item.selectedStock"></span>
+                                                </template>
+                                            </div>
+                                            <div class="d-flex align-items-center flex-shrink-0 ms-auto gap-1">
+                                                <span x-show="item.product_id || item.selectedLabel" 
+                                                      @click.stop="clearProduct(index)" 
+                                                      class="product-clear-btn" 
+                                                      title="Clear selection">
+                                                    <i class="fa-solid fa-xmark"></i>
+                                                </span>
+                                                <i class="fa-solid fa-chevron-down text-muted small opacity-75"></i>
+                                            </div>
+                                        </button>
 
                                         <!-- Floating AJAX Search Dropdown Menu -->
                                         <div x-show="item.isOpen" 
