@@ -61,15 +61,17 @@
                 <table class="table table-bordered align-middle">
                     <thead class="table-light small text-uppercase">
                         <tr>
-                            <th style="min-width: 280px;">Item / Product *</th>
-                            <th style="width: 110px;">HSN/SAC</th>
-                            <th style="width: 100px;" class="text-end">Qty *</th>
-                            <th style="width: 130px;" class="text-end">Rate (₹) *</th>
-                            <th style="width: 100px;" class="text-end">Disc (₹)</th>
-                            <th style="width: 110px;">GST %</th>
-                            <th style="width: 140px;" class="text-end">Tax (₹)</th>
-                            <th style="width: 150px;" class="text-end">Total (₹)</th>
-                            <th style="width: 40px;"></th>
+                            <th style="min-width: 250px;">Item / Product *</th>
+                            <th style="width: 100px;">HSN/SAC</th>
+                            <th style="width: 80px;" class="text-end">Qty *</th>
+                            <th style="width: 140px;" class="text-end">Rate (Incl. of Tax)</th>
+                            <th style="width: 110px;" class="text-end">Rate (₹) *</th>
+                            <th style="width: 90px;" class="text-end">Disc (₹)</th>
+                            <th style="width: 95px;">GST %</th>
+                            <th style="width: 115px;" class="text-end">Tax (₹)</th>
+                            <th style="width: 130px;" class="text-end">Total (₹)</th>
+                            <th style="width: 150px;">Godown</th>
+                            <th style="width: 38px;"></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -239,13 +241,29 @@
                                     <input type="number" step="0.01" min="0.01" :name="`items[${index}][quantity]`" class="form-control form-control-sm text-end" x-model="item.quantity" @input="recalcRow(index)" required>
                                 </td>
                                 <td>
-                                    <input type="number" step="0.01" min="0" :name="`items[${index}][unit_price]`" class="form-control form-control-sm text-end" x-model="item.unit_price" @input="recalcRow(index)" required>
+                                    <input type="number" 
+                                           step="0.01" 
+                                           min="0" 
+                                           class="form-control form-control-sm text-end" 
+                                           x-model="item.rate_inclusive" 
+                                           @input="onRateInclusiveChange(index)" 
+                                           placeholder="0.00">
+                                </td>
+                                <td>
+                                    <input type="number" 
+                                           step="0.01" 
+                                           min="0" 
+                                           :name="`items[${index}][unit_price]`" 
+                                           class="form-control form-control-sm text-end" 
+                                           x-model="item.unit_price" 
+                                           @input="onUnitPriceChange(index)" 
+                                           required>
                                 </td>
                                 <td>
                                     <input type="number" step="0.01" min="0" :name="`items[${index}][discount_amount]`" class="form-control form-control-sm text-end" x-model="item.discount_amount" @input="recalcRow(index)">
                                 </td>
                                 <td>
-                                    <select :name="`items[${index}][gst_rate]`" class="form-select form-select-sm" x-model="item.gst_rate" @change="recalcRow(index)">
+                                    <select :name="`items[${index}][gst_rate]`" class="form-select form-select-sm" x-model="item.gst_rate" @change="onGstRateChange(index)">
                                         <option value="0">0%</option>
                                         <option value="5">5%</option>
                                         <option value="12">12%</option>
@@ -255,6 +273,14 @@
                                 </td>
                                 <td class="text-end small num-align fw-semibold text-muted" x-text="'₹ ' + formatNumber(item.tax_amount)"></td>
                                 <td class="text-end fw-bold num-align" x-text="'₹ ' + formatNumber(item.total_amount)"></td>
+                                <td>
+                                    <select :name="`items[${index}][warehouse_id]`" class="form-select form-select-sm" x-model="item.warehouse_id">
+                                        <option value="">-- Main Godown --</option>
+                                        @foreach($warehouses as $w)
+                                            <option value="{{ $w->id }}">{{ $w->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </td>
                                 <td class="text-center">
                                     <button type="button" class="btn btn-sm text-danger p-0" @click="removeItem(index)" x-show="items.length > 1">
                                         <i class="fa-solid fa-trash-can"></i>
@@ -339,6 +365,7 @@
 function invoiceForm() {
     return {
         customerId: '',
+        defaultWarehouseId: '{{ $warehouses->firstWhere('is_default', true)?->id ?? $warehouses->first()?->id ?? '' }}',
         searchDebounce: null,
         defaultProducts: [],
         items: [
@@ -347,7 +374,9 @@ function invoiceForm() {
                 selectedLabel: '',
                 description: '',
                 hsn_code: '',
+                warehouse_id: '{{ $warehouses->firstWhere('is_default', true)?->id ?? $warehouses->first()?->id ?? '' }}',
                 quantity: 1,
+                rate_inclusive: 0,
                 unit_price: 0,
                 discount_amount: 0,
                 gst_rate: 18,
@@ -405,7 +434,9 @@ function invoiceForm() {
                 selectedLabel: '',
                 description: '',
                 hsn_code: '',
+                warehouse_id: this.defaultWarehouseId,
                 quantity: 1,
+                rate_inclusive: 0,
                 unit_price: 0,
                 discount_amount: 0,
                 gst_rate: 18,
@@ -501,6 +532,9 @@ function invoiceForm() {
             item.hsn_code = prod.hsn || '';
             item.unit_price = parseFloat(prod.price) || 0;
             item.gst_rate = parseFloat(prod.tax_rate) || 0;
+            const gst = item.gst_rate;
+            const incl = gst > 0 ? (item.unit_price * (1 + (gst / 100))) : item.unit_price;
+            item.rate_inclusive = Math.round(incl * 100) / 100;
             item.components = prod.components || [];
 
             this.recalcRow(index);
@@ -516,6 +550,8 @@ function invoiceForm() {
             item.description = '';
             item.components = [];
             item.searchQuery = '';
+            item.unit_price = 0;
+            item.rate_inclusive = 0;
             item.results = [...this.defaultProducts];
             item.isOpen = false;
             this.recalcRow(index);
@@ -570,6 +606,54 @@ function invoiceForm() {
                     target.scrollIntoView({ block: 'nearest' });
                 }
             });
+        },
+        onRateInclusiveChange(index) {
+            const item = this.items[index];
+            if (!item) return;
+
+            const rateIncl = parseFloat(item.rate_inclusive);
+            if (isNaN(rateIncl) || rateIncl === 0) {
+                item.unit_price = 0;
+                this.recalcRow(index);
+                return;
+            }
+
+            const gst = parseFloat(item.gst_rate) || 0;
+            const excl = gst > 0 ? (rateIncl / (1 + (gst / 100))) : rateIncl;
+            item.unit_price = Math.round(excl * 100) / 100;
+            this.recalcRow(index);
+        },
+        onUnitPriceChange(index) {
+            const item = this.items[index];
+            if (!item) return;
+
+            const price = parseFloat(item.unit_price);
+            if (isNaN(price) || price === 0) {
+                item.rate_inclusive = 0;
+                this.recalcRow(index);
+                return;
+            }
+
+            const gst = parseFloat(item.gst_rate) || 0;
+            const incl = gst > 0 ? (price * (1 + (gst / 100))) : price;
+            item.rate_inclusive = Math.round(incl * 100) / 100;
+            this.recalcRow(index);
+        },
+        onGstRateChange(index) {
+            const item = this.items[index];
+            if (!item) return;
+
+            const price = parseFloat(item.unit_price) || 0;
+            const gst = parseFloat(item.gst_rate) || 0;
+            if (price > 0) {
+                const incl = gst > 0 ? (price * (1 + (gst / 100))) : price;
+                item.rate_inclusive = Math.round(incl * 100) / 100;
+            } else if (parseFloat(item.rate_inclusive) > 0) {
+                const incl = parseFloat(item.rate_inclusive);
+                const excl = gst > 0 ? (incl / (1 + (gst / 100))) : incl;
+                item.unit_price = Math.round(excl * 100) / 100;
+            }
+            this.recalcRow(index);
         },
         recalcRow(index) {
             const item = this.items[index];
