@@ -84,13 +84,23 @@
                                         <div class="input-group input-group-sm">
                                             <button type="button" 
                                                     class="product-combobox-trigger"
-                                                    :class="{'is-active': item.isOpen, 'text-muted': !item.product_id}"
+                                                    :class="{'is-active': item.isOpen, 'border-primary': item.product_id}"
                                                     @click="openProductSearch(index)"
                                                     :title="item.selectedLabel || '-- Select Product / Custom --'">
-                                                <span class="text-truncate me-1" x-text="item.selectedLabel || '-- Select Product / Custom --'"></span>
+                                                <div class="d-flex align-items-center text-truncate me-1">
+                                                    <i class="fa-solid fa-box text-primary me-2 opacity-75" x-show="item.product_id"></i>
+                                                    <i class="fa-solid fa-magnifying-glass text-muted me-2 opacity-50" x-show="!item.product_id"></i>
+                                                    <span class="text-truncate" :class="item.product_id ? 'fw-semibold text-dark' : 'text-muted'" x-text="item.selectedLabel || '-- Select Product / Custom --'"></span>
+                                                    <template x-if="item.product_id && item.unit_price">
+                                                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle ms-2 font-monospace" x-text="'₹ ' + formatNumber(item.unit_price)"></span>
+                                                    </template>
+                                                    <template x-if="item.product_id && item.selectedStock">
+                                                        <span class="badge bg-light text-muted border ms-1" style="font-size: 0.68rem;" x-text="item.selectedStock"></span>
+                                                    </template>
+                                                </div>
                                                 <i class="fa-solid fa-chevron-down text-muted small ms-auto opacity-75"></i>
                                             </button>
-                                            <template x-if="item.product_id">
+                                            <template x-if="item.product_id || item.selectedLabel">
                                                 <button type="button" class="btn btn-outline-secondary btn-sm px-2" @click.stop="clearProduct(index)" title="Clear product selection">
                                                     <i class="fa-solid fa-xmark text-muted"></i>
                                                 </button>
@@ -106,14 +116,14 @@
                                             <!-- Live Search Bar -->
                                             <div class="product-combobox-search-box">
                                                 <div class="input-group input-group-sm">
-                                                    <span class="input-group-text bg-white border-end-0 text-muted">
-                                                        <i class="fa-solid fa-magnifying-glass" x-show="!item.loading"></i>
-                                                        <i class="fa-solid fa-spinner fa-spin text-primary" x-show="item.loading"></i>
+                                                    <span class="input-group-text bg-white border-end-0 text-muted ps-2.5">
+                                                        <i class="fa-solid fa-magnifying-glass text-primary" x-show="!item.loading"></i>
+                                                        <i class="fa-solid fa-circle-notch fa-spin text-primary" x-show="item.loading"></i>
                                                     </span>
                                                     <input type="text" 
                                                            :id="`product-search-input-${index}`"
-                                                           class="form-control border-start-0" 
-                                                           placeholder="Search name, SKU, HSN, barcode..."
+                                                           class="form-control product-combobox-search-input border-start-0" 
+                                                           placeholder="Search product by name, SKU, HSN, or barcode..."
                                                            x-model="item.searchQuery"
                                                            @input="onProductSearchInput(index)"
                                                            @keydown.down.prevent="onSearchKeyDown($event, index)"
@@ -122,16 +132,19 @@
                                                            @keydown.escape.prevent="closeProductSearch(index)"
                                                            autocomplete="off">
                                                     <button type="button" 
-                                                            class="btn btn-outline-secondary border-start-0" 
+                                                            class="btn btn-light border border-start-0 text-muted" 
                                                             x-show="item.searchQuery" 
                                                             @click="item.searchQuery = ''; onProductSearchInput(index)">
                                                         <i class="fa-solid fa-xmark"></i>
                                                     </button>
                                                 </div>
-                                                <div class="d-flex justify-content-between align-items-center mt-1 px-1 text-muted" style="font-size: 0.70rem;">
-                                                    <span><i class="fa-solid fa-bolt text-warning me-1"></i>Live AJAX search</span>
-                                                    <span>&uarr;&darr; navigate &bull; Enter to select</span>
-                                                </div>
+                                            </div>
+
+                                            <!-- Table Header for Dropdown Results -->
+                                            <div class="product-combobox-grid-header">
+                                                <span>Item Particulars & Details</span>
+                                                <span class="text-center">Inventory Stock</span>
+                                                <span class="text-end">Selling Rate</span>
                                             </div>
 
                                             <!-- Results Container -->
@@ -145,34 +158,59 @@
 
                                                 <!-- Results items -->
                                                 <template x-for="(prod, pIdx) in item.results" :key="prod.id">
-                                                    <div class="product-combobox-item"
+                                                    <div class="product-combobox-row"
                                                          :class="{'is-selected': item.highlightIndex === pIdx}"
                                                          @mouseenter="item.highlightIndex = pIdx"
                                                          @click="selectProduct(index, prod)">
-                                                        <div class="d-flex justify-content-between align-items-start">
-                                                            <span class="fw-semibold small text-truncate me-2 item-name" x-text="prod.name"></span>
-                                                            <span class="badge bg-primary-subtle text-primary fw-bold" x-text="'₹ ' + formatNumber(prod.price)"></span>
+                                                        <!-- Col 1: Name and Meta tags -->
+                                                        <div class="pe-2 overflow-hidden">
+                                                            <div class="d-flex align-items-center gap-1.5">
+                                                                <span class="fw-semibold text-truncate item-name text-dark" style="font-size: 0.8125rem;" x-text="prod.name"></span>
+                                                                <template x-if="prod.has_components">
+                                                                    <span class="product-badge-kit flex-shrink-0">
+                                                                        <i class="fa-solid fa-boxes-stacked me-1"></i>Kit (<span x-text="prod.components_count"></span>)
+                                                                    </span>
+                                                                </template>
+                                                            </div>
+                                                            <div class="d-flex align-items-center gap-1.5 mt-1">
+                                                                <template x-if="prod.hsn">
+                                                                    <span class="product-badge-hsn" x-text="'HSN: ' + prod.hsn"></span>
+                                                                </template>
+                                                                <span class="product-badge-hsn" x-text="'GST ' + prod.tax_rate + '%'"></span>
+                                                                <template x-if="prod.sku">
+                                                                    <span class="text-muted small" style="font-size: 0.68rem;" x-text="'• SKU: ' + prod.sku"></span>
+                                                                </template>
+                                                            </div>
                                                         </div>
-                                                        <div class="d-flex flex-wrap align-items-center gap-1 mt-1" style="font-size: 0.72rem;">
-                                                            <span class="badge border" 
-                                                                  :class="prod.current_stock > 0 ? 'bg-success-subtle text-success border-success-subtle' : 'bg-danger-subtle text-danger border-danger-subtle'"
-                                                                  x-text="'Stock: ' + prod.current_stock + ' ' + prod.unit_symbol">
-                                                            </span>
-                                                            <template x-if="prod.hsn">
-                                                                <span class="badge bg-light text-muted border" x-text="'HSN: ' + prod.hsn"></span>
+
+                                                        <!-- Col 2: Stock Status -->
+                                                        <div class="text-center px-1">
+                                                            <template x-if="prod.current_stock > 0">
+                                                                <span class="product-stock-badge in-stock">
+                                                                    <i class="fa-solid fa-circle text-success me-1" style="font-size: 6px;"></i>
+                                                                    <span x-text="prod.current_stock + ' ' + prod.unit_symbol"></span>
+                                                                </span>
                                                             </template>
-                                                            <span class="badge bg-light text-muted border" x-text="'GST: ' + prod.tax_rate + '%'"></span>
-                                                            <template x-if="prod.has_components">
-                                                                <span class="badge bg-warning-subtle text-dark border border-warning-subtle" x-text="'[Kit: ' + prod.components_count + ' Items]'"></span>
+                                                            <template x-if="prod.current_stock <= 0">
+                                                                <span class="product-stock-badge out-stock">
+                                                                    <i class="fa-solid fa-circle text-danger me-1" style="font-size: 6px;"></i>
+                                                                    <span>0.00 In Stock</span>
+                                                                </span>
                                                             </template>
+                                                        </div>
+
+                                                        <!-- Col 3: Selling Price -->
+                                                        <div class="text-end ps-1">
+                                                            <div class="fw-bold text-dark num-align" style="font-size: 0.875rem;" x-text="'₹ ' + formatNumber(prod.price)"></div>
+                                                            <div class="text-muted num-align" style="font-size: 0.68rem;" x-text="'+ ' + prod.tax_rate + '% GST'"></div>
                                                         </div>
                                                     </div>
                                                 </template>
 
                                                 <!-- No results found -->
                                                 <template x-if="!item.loading && item.results && item.results.length === 0">
-                                                    <div class="p-3 text-center text-muted small">
-                                                        <i class="fa-solid fa-box-open mb-1 d-block opacity-50 fs-5"></i>
+                                                    <div class="p-4 text-center text-muted small">
+                                                        <i class="fa-solid fa-box-open mb-2 d-block opacity-40 fs-4"></i>
                                                         <span>No products matching "<span class="fw-semibold text-dark" x-text="item.searchQuery"></span>"</span>
                                                     </div>
                                                 </template>
@@ -180,11 +218,15 @@
 
                                             <!-- Dropdown Footer -->
                                             <div class="product-combobox-footer d-flex justify-content-between align-items-center">
-                                                <button type="button" class="btn btn-sm btn-link text-decoration-none p-0 fw-semibold text-primary" @click="selectCustomItem(index)">
-                                                    <i class="fa-solid fa-plus-circle me-1"></i>
-                                                    <span x-text="item.searchQuery ? `Use '${item.searchQuery}' as custom item` : 'Enter custom item'"></span>
+                                                <button type="button" class="btn btn-sm btn-link text-decoration-none p-0 fw-semibold text-primary d-flex align-items-center" @click="selectCustomItem(index)">
+                                                    <i class="fa-solid fa-plus-circle me-1.5 fs-6"></i>
+                                                    <span x-text="item.searchQuery ? `Use '${item.searchQuery}' as custom item` : 'Enter custom / one-off item'"></span>
                                                 </button>
-                                                <span class="text-muted">Esc to cancel</span>
+                                                <div class="d-flex align-items-center gap-1 text-muted" style="font-size: 0.68rem;">
+                                                    <span class="badge bg-white text-secondary border">↑↓ Navigate</span>
+                                                    <span class="badge bg-white text-secondary border">↵ Select</span>
+                                                    <span class="badge bg-white text-secondary border">Esc Close</span>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -467,7 +509,8 @@ function invoiceForm() {
             if (!item || !prod) return;
 
             item.product_id = prod.id;
-            item.selectedLabel = `${prod.name} (₹ ${this.formatNumber(prod.price)}) [Stock: ${prod.current_stock}]`;
+            item.selectedLabel = prod.name;
+            item.selectedStock = `${prod.current_stock} ${prod.unit_symbol}`;
             item.description = prod.name;
             item.hsn_code = prod.hsn || '';
             item.unit_price = parseFloat(prod.price) || 0;
@@ -483,6 +526,7 @@ function invoiceForm() {
 
             item.product_id = '';
             item.selectedLabel = '';
+            item.selectedStock = '';
             item.components = [];
             item.searchQuery = '';
             item.results = [...this.defaultProducts];
@@ -497,10 +541,11 @@ function invoiceForm() {
             const q = (item.searchQuery || '').trim();
             if (q.length > 0) {
                 item.description = q;
-                item.selectedLabel = `Custom: ${q}`;
+                item.selectedLabel = q;
             } else {
-                item.selectedLabel = '-- Custom Item --';
+                item.selectedLabel = 'Custom Item';
             }
+            item.selectedStock = '';
             item.components = [];
             item.isOpen = false;
         },
