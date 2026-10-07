@@ -208,7 +208,7 @@
                                         </div>
                                     </div>
 
-                                    <input type="text" :name="`items[${index}][description]`" class="form-control form-control-sm mt-1" x-model="item.description" placeholder="Description..." required>
+                                    <input type="text" :name="`items[${index}][description]`" class="form-control form-control-sm mt-1" x-model="item.description" :placeholder="item.product_id ? 'Description / Details (optional)...' : 'Item description...'" :required="!item.product_id">
                                 </td>
                                 <td>
                                     <input type="text" :name="`items[${index}][hsn_code]`" class="form-control form-control-sm" x-model="item.hsn_code">
@@ -425,7 +425,7 @@ function purchaseForm() {
             item.product_id = prod.id;
             item.selectedLabel = prod.name;
             item.selectedStock = `${prod.current_stock} ${prod.unit_symbol}`;
-            item.description = prod.name;
+            item.description = '';
             item.hsn_code = prod.hsn || '';
             item.unit_price = parseFloat(prod.price) || 0;
             item.gst_rate = parseFloat(prod.tax_rate) || 0;
@@ -440,6 +440,7 @@ function purchaseForm() {
             item.product_id = '';
             item.selectedLabel = '';
             item.selectedStock = '';
+            item.description = '';
             item.searchQuery = '';
             item.results = [...this.defaultProducts];
             item.isOpen = false;

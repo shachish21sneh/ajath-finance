@@ -70,7 +70,16 @@
                 @foreach($purchase->items as $item)
                     <tr>
                         <td>
-                            <div class="fw-bold text-main">{{ $item->description }}</div>
+                            @php
+                                $productName = $item->product ? $item->product->name : null;
+                                $desc = trim((string)($item->description ?? ''));
+                                $title = $productName ?: ($desc ?: 'Item');
+                                $hasSubtitle = $productName && $desc !== '' && $desc !== $productName;
+                            @endphp
+                            <div class="fw-bold text-main">{{ $title }}</div>
+                            @if($hasSubtitle)
+                                <div class="text-muted fst-italic mt-0.5" style="font-size: 0.8125rem;">{{ $desc }}</div>
+                            @endif
                         </td>
                         <td class="text-center text-muted">{{ $item->hsn_code ?: '-' }}</td>
                         <td class="text-end">{{ number_format($item->quantity, 0) }}</td>

@@ -96,7 +96,16 @@
                     <tr>
                         <td class="text-center text-muted">{{ $idx + 1 }}</td>
                         <td>
-                            <div class="fw-bold text-main">{{ $item->description }}</div>
+                            @php
+                                $productName = $item->product ? $item->product->name : null;
+                                $desc = trim((string)($item->description ?? ''));
+                                $title = $productName ?: ($desc ?: 'Item');
+                                $hasSubtitle = $productName && $desc !== '' && $desc !== $productName;
+                            @endphp
+                            <div class="fw-bold text-main">{{ $title }}</div>
+                            @if($hasSubtitle)
+                                <div class="text-muted fst-italic mt-0.5" style="font-size: 0.8125rem;">{{ $desc }}</div>
+                            @endif
                             @if($item->product && $item->product->has_inventory_components && $item->product->inventoryComponents->isNotEmpty())
                                 <div class="mt-1" style="font-size: 0.72rem;">
                                     <span class="text-primary fw-semibold"><i class="fa-solid fa-boxes-stacked me-1"></i> Components Deducted:</span>
@@ -142,7 +151,7 @@
                     $key = ($item->hsn_code ?: 'N/A') . '_' . (float)$item->gst_rate;
                     if (!isset($hsnBreakdown[$key])) {
                         $hsnBreakdown[$key] = [
-                            'hsn' => $item->hsn_code ?: ($item->description ?? 'N/A'),
+                            'hsn' => $item->hsn_code ?: ($item->product?->name ?: ($item->description ?: 'N/A')),
                             'rate' => (float)$item->gst_rate,
                             'taxable' => 0.0,
                             'cgst' => 0.0,
