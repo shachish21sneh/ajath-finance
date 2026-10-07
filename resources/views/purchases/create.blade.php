@@ -143,8 +143,8 @@
 
                                             <!-- Table Header for Dropdown Results -->
                                             <div class="product-combobox-grid-header">
-                                                <span>Item Particulars & Details</span>
-                                                <span class="text-center">Inventory Stock</span>
+                                                <span>Item / Product</span>
+                                                <span class="text-center">Stock</span>
                                                 <span class="text-end">Buying Rate</span>
                                             </div>
 
@@ -152,7 +152,7 @@
                                             <div class="product-combobox-list" :id="`purchase-dropdown-list-${index}`">
                                                 <!-- Loading state -->
                                                 <template x-if="item.loading && (!item.results || item.results.length === 0)">
-                                                    <div class="text-center py-4 text-muted small">
+                                                    <div class="text-center py-3 text-muted small">
                                                         <i class="fa-solid fa-circle-notch fa-spin text-primary me-2"></i>Searching inventory...
                                                     </div>
                                                 </template>
@@ -163,48 +163,38 @@
                                                          :class="{'is-selected': item.highlightIndex === pIdx}"
                                                          @mouseenter="item.highlightIndex = pIdx"
                                                          @click="selectProduct(index, prod)">
-                                                        <!-- Col 1: Name and Meta tags -->
-                                                        <div class="pe-2 overflow-hidden">
+                                                        <!-- Col 1: Product Name -->
+                                                        <div class="pe-2 overflow-hidden d-flex align-items-center gap-1.5">
                                                             <span class="fw-semibold text-truncate item-name text-dark" style="font-size: 0.8125rem;" x-text="prod.name"></span>
-                                                            <div class="d-flex align-items-center gap-1.5 mt-1">
-                                                                <template x-if="prod.hsn">
-                                                                    <span class="product-badge-hsn" x-text="'HSN: ' + prod.hsn"></span>
-                                                                </template>
-                                                                <span class="product-badge-hsn" x-text="'GST ' + prod.tax_rate + '%'"></span>
-                                                                <template x-if="prod.sku">
-                                                                    <span class="text-muted small" style="font-size: 0.68rem;" x-text="'• SKU: ' + prod.sku"></span>
-                                                                </template>
-                                                            </div>
                                                         </div>
 
                                                         <!-- Col 2: Stock Status -->
                                                         <div class="text-center px-1">
                                                             <template x-if="prod.current_stock > 0">
                                                                 <span class="product-stock-badge in-stock">
-                                                                    <i class="fa-solid fa-circle text-success me-1" style="font-size: 6px;"></i>
+                                                                    <i class="fa-solid fa-circle text-success me-1" style="font-size: 5px;"></i>
                                                                     <span x-text="prod.current_stock + ' ' + prod.unit_symbol"></span>
                                                                 </span>
                                                             </template>
                                                             <template x-if="prod.current_stock <= 0">
                                                                 <span class="product-stock-badge out-stock">
-                                                                    <i class="fa-solid fa-circle text-danger me-1" style="font-size: 6px;"></i>
-                                                                    <span>0.00 In Stock</span>
+                                                                    <i class="fa-solid fa-circle text-danger me-1" style="font-size: 5px;"></i>
+                                                                    <span>0 Stock</span>
                                                                 </span>
                                                             </template>
                                                         </div>
 
                                                         <!-- Col 3: Buying Price -->
                                                         <div class="text-end ps-1">
-                                                            <div class="fw-bold text-dark num-align" style="font-size: 0.875rem;" x-text="'₹ ' + formatNumber(prod.price)"></div>
-                                                            <div class="text-muted num-align" style="font-size: 0.68rem;" x-text="'+ ' + prod.tax_rate + '% GST'"></div>
+                                                            <div class="fw-bold text-dark num-align" style="font-size: 0.8125rem;" x-text="'₹ ' + formatNumber(prod.price)"></div>
                                                         </div>
                                                     </div>
                                                 </template>
 
                                                 <!-- No results found -->
                                                 <template x-if="!item.loading && item.results && item.results.length === 0">
-                                                    <div class="p-4 text-center text-muted small">
-                                                        <i class="fa-solid fa-box-open mb-2 d-block opacity-40 fs-4"></i>
+                                                    <div class="p-3 text-center text-muted small">
+                                                        <i class="fa-solid fa-box-open mb-1.5 d-block opacity-40 fs-4"></i>
                                                         <span>No items matching "<span class="fw-semibold text-dark" x-text="item.searchQuery"></span>"</span>
                                                     </div>
                                                 </template>
@@ -214,7 +204,7 @@
                                             <div class="product-combobox-footer d-flex justify-content-between align-items-center">
                                                 <button type="button" class="btn btn-sm btn-link text-decoration-none p-0 fw-semibold text-primary d-flex align-items-center" @click="selectCustomItem(index)">
                                                     <i class="fa-solid fa-plus-circle me-1.5 fs-6"></i>
-                                                    <span x-text="item.searchQuery ? `Use '${item.searchQuery}' as custom item` : 'Enter custom / one-off item'"></span>
+                                                    <span x-text="item.searchQuery ? `Use '${item.searchQuery}'` : 'Custom item'"></span>
                                                 </button>
                                                 <div class="d-flex align-items-center gap-1 text-muted" style="font-size: 0.68rem;">
                                                     <span class="badge bg-white text-secondary border">↑↓ Navigate</span>
