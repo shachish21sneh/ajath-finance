@@ -63,15 +63,14 @@
                         <tr>
                             <th style="min-width: 180px;">Item / Product *</th>
                             <th style="width: 85px;">HSN/SAC</th>
-                            <th style="width: 65px;" class="text-end">Qty *</th>
+                            <th style="width: 70px;" class="text-end">Qty *</th>
                             <th style="width: 110px;" class="text-end">Rate (Incl. of Tax)</th>
                             <th style="width: 95px;" class="text-end">Rate (₹) *</th>
                             <th style="width: 75px;" class="text-end">Disc (₹)</th>
                             <th style="width: 75px;">GST %</th>
                             <th style="width: 90px;" class="text-end text-nowrap">Tax (₹)</th>
                             <th style="width: 105px;" class="text-end text-nowrap">Total (₹)</th>
-                            <th style="width: 115px;">Godown</th>
-                            <th style="width: 35px;" class="text-center"></th>
+                            <th style="width: 130px;">Godown</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -238,7 +237,7 @@
                                     <input type="text" :name="`items[${index}][hsn_code]`" class="form-control form-control-sm text-center" x-model="item.hsn_code" placeholder="HSN">
                                 </td>
                                 <td>
-                                    <input type="number" step="0.01" min="0.01" :name="`items[${index}][quantity]`" class="form-control form-control-sm text-end num-align" x-model="item.quantity" @input="recalcRow(index)" required>
+                                    <input type="number" step="1" min="1" :name="`items[${index}][quantity]`" class="form-control form-control-sm text-end num-align px-1" x-model="item.quantity" @input="recalcRow(index)" required>
                                 </td>
                                 <td>
                                     <input type="number" 
@@ -274,17 +273,21 @@
                                 <td class="text-end small num-align fw-semibold text-muted text-nowrap" x-text="'₹ ' + formatNumber(item.tax_amount)"></td>
                                 <td class="text-end fw-bold num-align text-nowrap" x-text="'₹ ' + formatNumber(item.total_amount)"></td>
                                 <td>
-                                    <select :name="`items[${index}][warehouse_id]`" class="form-select form-select-sm px-1" x-model="item.warehouse_id">
-                                        <option value="">-- Main Godown --</option>
-                                        @foreach($warehouses as $w)
-                                            <option value="{{ $w->id }}">{{ $w->name }}</option>
-                                        @endforeach
-                                    </select>
-                                </td>
-                                <td class="text-center">
-                                    <button type="button" class="btn btn-sm text-danger p-0" @click="removeItem(index)" x-show="items.length > 1">
-                                        <i class="fa-solid fa-trash-can"></i>
-                                    </button>
+                                    <div class="d-flex align-items-center gap-1">
+                                        <select :name="`items[${index}][warehouse_id]`" class="form-select form-select-sm px-1 flex-grow-1" x-model="item.warehouse_id">
+                                            <option value="">-- Main Godown --</option>
+                                            @foreach($warehouses as $w)
+                                                <option value="{{ $w->id }}">{{ $w->name }}</option>
+                                            @endforeach
+                                        </select>
+                                        <button type="button" 
+                                                class="btn btn-sm text-danger p-0 ms-1 flex-shrink-0" 
+                                                @click="removeItem(index)" 
+                                                x-show="items.length > 1" 
+                                                title="Delete item">
+                                            <i class="fa-solid fa-trash-can"></i>
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         </template>
