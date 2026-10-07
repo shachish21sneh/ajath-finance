@@ -36,14 +36,9 @@ class SalesInvoiceController extends Controller
 
         $invoiceNo = $this->invoicingService->generateInvoiceNumber($company, $fy, 'tax_invoice');
         $customers = Ledger::customers()->where('company_id', $company->id)->orderBy('name')->get();
-        $products = Product::with(['taxMaster', 'unit', 'inventoryComponents.componentProduct.unit'])
-            ->where('company_id', $company->id)
-            ->where('is_active', true)
-            ->orderBy('name')
-            ->get();
         $warehouses = Warehouse::where('company_id', $company->id)->get();
 
-        return view('sales.create', compact('invoiceNo', 'customers', 'products', 'warehouses', 'company', 'fy'));
+        return view('sales.create', compact('invoiceNo', 'customers', 'warehouses', 'company', 'fy'));
     }
 
     public function store(Request $request): RedirectResponse

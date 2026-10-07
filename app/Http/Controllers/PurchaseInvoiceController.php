@@ -35,10 +35,9 @@ class PurchaseInvoiceController extends Controller
         $fy = AccountingHelper::getActiveFinancialYear();
 
         $suppliers = Ledger::suppliers()->where('company_id', $company->id)->orderBy('name')->get();
-        $products = Product::with('taxMaster')->where('company_id', $company->id)->where('is_active', true)->orderBy('name')->get();
         $warehouses = Warehouse::where('company_id', $company->id)->get();
 
-        return view('purchases.create', compact('suppliers', 'products', 'warehouses', 'company', 'fy'));
+        return view('purchases.create', compact('suppliers', 'warehouses', 'company', 'fy'));
     }
 
     public function store(Request $request): RedirectResponse

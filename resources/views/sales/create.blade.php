@@ -57,11 +57,11 @@
                 </button>
             </div>
 
-            <div class="table-responsive">
+            <div class="table-responsive table-responsive-combobox" style="min-height: 280px;">
                 <table class="table table-bordered align-middle">
                     <thead class="table-light small text-uppercase">
                         <tr>
-                            <th style="min-width: 260px;">Item / Product *</th>
+                            <th style="min-width: 280px;">Item / Product *</th>
                             <th style="width: 110px;">HSN/SAC</th>
                             <th style="width: 100px;" class="text-end">Qty *</th>
                             <th style="width: 130px;" class="text-end">Rate (₹) *</th>
@@ -75,21 +75,120 @@
                     <tbody>
                         <template x-for="(item, index) in items" :key="index">
                             <tr>
-                                <td>
-                                    <select :name="`items[${index}][product_id]`" class="form-select form-select-sm" x-model="item.product_id" @change="onProductChange(index)">
-                                        <option value="">-- Select Product / Custom --</option>
-                                        @foreach($products as $p)
-                                            <option value="{{ $p->id }}"
-                                                    data-name="{{ $p->name }}"
-                                                    data-hsn="{{ $p->hsn_code ?: $p->sac_code }}"
-                                                    data-price="{{ $p->selling_price }}"
-                                                    data-tax="{{ $p->taxMaster->rate ?? 0 }}"
-                                                    data-components="{{ json_encode($p->inventoryComponents->map(fn($c) => ['name' => $c->name, 'qty' => (float)$c->quantity, 'stock' => $c->componentProduct->current_stock ?? 0, 'unit' => $c->componentProduct->unit->symbol ?? 'PCS'])) }}">
-                                                {{ $p->name }} (₹ {{ number_format($p->selling_price, 2) }}) [Stock: {{ $p->current_stock }}]
-                                                @if($p->has_inventory_components && $p->inventoryComponents->count()) &bull; [Kit: {{ $p->inventoryComponents->count() }} Items] @endif
-                                            </option>
-                                        @endforeach
-                                    </select>
+                                <td class="position-relative">
+                                    <!-- Hidden input for product_id form submit -->
+                                    <input type="hidden" :name="`items[${index}][product_id]`" :value="item.product_id">
+
+                                    <!-- Product Combobox Input Trigger -->
+                                    <div class="product-combobox-wrapper">
+                                        <div class="input-group input-group-sm">
+                                            <button type="button" 
+                                                    class="product-combobox-trigger"
+                                                    :class="{'is-active': item.isOpen, 'text-muted': !item.product_id}"
+                                                    @click="openProductSearch(index)"
+                                                    :title="item.selectedLabel || '-- Select Product / Custom --'">
+                                                <span class="text-truncate me-1" x-text="item.selectedLabel || '-- Select Product / Custom --'"></span>
+                                                <i class="fa-solid fa-chevron-down text-muted small ms-auto opacity-75"></i>
+                                            </button>
+                                            <template x-if="item.product_id">
+                                                <button type="button" class="btn btn-outline-secondary btn-sm px-2" @click.stop="clearProduct(index)" title="Clear product selection">
+                                                    <i class="fa-solid fa-xmark text-muted"></i>
+                                                </button>
+                                            </template>
+                                        </div>
+
+                                        <!-- Floating AJAX Search Dropdown Menu -->
+                                        <div x-show="item.isOpen" 
+                                             @click.outside="closeProductSearch(index)"
+                                             class="product-combobox-menu"
+                                             x-cloak>
+                                            
+                                            <!-- Live Search Bar -->
+                                            <div class="product-combobox-search-box">
+                                                <div class="input-group input-group-sm">
+                                                    <span class="input-group-text bg-white border-end-0 text-muted">
+                                                        <i class="fa-solid fa-magnifying-glass" x-show="!item.loading"></i>
+                                                        <i class="fa-solid fa-spinner fa-spin text-primary" x-show="item.loading"></i>
+                                                    </span>
+                                                    <input type="text" 
+                                                           :id="`product-search-input-${index}`"
+                                                           class="form-control border-start-0" 
+                                                           placeholder="Search name, SKU, HSN, barcode..."
+                                                           x-model="item.searchQuery"
+                                                           @input="onProductSearchInput(index)"
+                                                           @keydown.down.prevent="onSearchKeyDown($event, index)"
+                                                           @keydown.up.prevent="onSearchKeyDown($event, index)"
+                                                           @keydown.enter.prevent="onSearchKeyDown($event, index)"
+                                                           @keydown.escape.prevent="closeProductSearch(index)"
+                                                           autocomplete="off">
+                                                    <button type="button" 
+                                                            class="btn btn-outline-secondary border-start-0" 
+                                                            x-show="item.searchQuery" 
+                                                            @click="item.searchQuery = ''; onProductSearchInput(index)">
+                                                        <i class="fa-solid fa-xmark"></i>
+                                                    </button>
+                                                </div>
+                                                <div class="d-flex justify-content-between align-items-center mt-1 px-1 text-muted" style="font-size: 0.70rem;">
+                                                    <span><i class="fa-solid fa-bolt text-warning me-1"></i>Live AJAX search</span>
+                                                    <span>&uarr;&darr; navigate &bull; Enter to select</span>
+                                                </div>
+                                            </div>
+
+                                            <!-- Results Container -->
+                                            <div class="product-combobox-list" :id="`product-dropdown-list-${index}`">
+                                                <!-- Loading state -->
+                                                <template x-if="item.loading && (!item.results || item.results.length === 0)">
+                                                    <div class="text-center py-4 text-muted small">
+                                                        <i class="fa-solid fa-circle-notch fa-spin text-primary me-2"></i>Searching inventory...
+                                                    </div>
+                                                </template>
+
+                                                <!-- Results items -->
+                                                <template x-for="(prod, pIdx) in item.results" :key="prod.id">
+                                                    <div class="product-combobox-item"
+                                                         :class="{'is-selected': item.highlightIndex === pIdx}"
+                                                         @mouseenter="item.highlightIndex = pIdx"
+                                                         @click="selectProduct(index, prod)">
+                                                        <div class="d-flex justify-content-between align-items-start">
+                                                            <span class="fw-semibold small text-truncate me-2 item-name" x-text="prod.name"></span>
+                                                            <span class="badge bg-primary-subtle text-primary fw-bold" x-text="'₹ ' + formatNumber(prod.price)"></span>
+                                                        </div>
+                                                        <div class="d-flex flex-wrap align-items-center gap-1 mt-1" style="font-size: 0.72rem;">
+                                                            <span class="badge border" 
+                                                                  :class="prod.current_stock > 0 ? 'bg-success-subtle text-success border-success-subtle' : 'bg-danger-subtle text-danger border-danger-subtle'"
+                                                                  x-text="'Stock: ' + prod.current_stock + ' ' + prod.unit_symbol">
+                                                            </span>
+                                                            <template x-if="prod.hsn">
+                                                                <span class="badge bg-light text-muted border" x-text="'HSN: ' + prod.hsn"></span>
+                                                            </template>
+                                                            <span class="badge bg-light text-muted border" x-text="'GST: ' + prod.tax_rate + '%'"></span>
+                                                            <template x-if="prod.has_components">
+                                                                <span class="badge bg-warning-subtle text-dark border border-warning-subtle" x-text="'[Kit: ' + prod.components_count + ' Items]'"></span>
+                                                            </template>
+                                                        </div>
+                                                    </div>
+                                                </template>
+
+                                                <!-- No results found -->
+                                                <template x-if="!item.loading && item.results && item.results.length === 0">
+                                                    <div class="p-3 text-center text-muted small">
+                                                        <i class="fa-solid fa-box-open mb-1 d-block opacity-50 fs-5"></i>
+                                                        <span>No products matching "<span class="fw-semibold text-dark" x-text="item.searchQuery"></span>"</span>
+                                                    </div>
+                                                </template>
+                                            </div>
+
+                                            <!-- Dropdown Footer -->
+                                            <div class="product-combobox-footer d-flex justify-content-between align-items-center">
+                                                <button type="button" class="btn btn-sm btn-link text-decoration-none p-0 fw-semibold text-primary" @click="selectCustomItem(index)">
+                                                    <i class="fa-solid fa-plus-circle me-1"></i>
+                                                    <span x-text="item.searchQuery ? `Use '${item.searchQuery}' as custom item` : 'Enter custom item'"></span>
+                                                </button>
+                                                <span class="text-muted">Esc to cancel</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
                                     <input type="text" :name="`items[${index}][description]`" class="form-control form-control-sm mt-1" x-model="item.description" placeholder="Description..." required>
                                     <template x-if="item.components && item.components.length > 0">
                                         <div class="mt-1 p-2 bg-light rounded border border-info-subtle small" style="font-size: 0.72rem;">
@@ -212,9 +311,42 @@
 function invoiceForm() {
     return {
         customerId: '',
+        searchDebounce: null,
+        defaultProducts: [],
         items: [
-            { product_id: '', description: '', hsn_code: '', quantity: 1, unit_price: 0, discount_amount: 0, gst_rate: 18, tax_amount: 0, total_amount: 0, components: [] }
+            {
+                product_id: '',
+                selectedLabel: '',
+                description: '',
+                hsn_code: '',
+                quantity: 1,
+                unit_price: 0,
+                discount_amount: 0,
+                gst_rate: 18,
+                tax_amount: 0,
+                total_amount: 0,
+                components: [],
+                isOpen: false,
+                searchQuery: '',
+                results: [],
+                loading: false,
+                highlightIndex: 0
+            }
         ],
+        init() {
+            this.fetchDefaultProducts();
+        },
+        fetchDefaultProducts() {
+            fetch('{{ route('api.products.search') }}?type=sales&limit=25')
+                .then(res => res.json())
+                .then(data => {
+                    this.defaultProducts = data || [];
+                    if (this.items[0] && (!this.items[0].results || this.items[0].results.length === 0)) {
+                        this.items[0].results = [...this.defaultProducts];
+                    }
+                })
+                .catch(err => console.error('Failed to load initial products:', err));
+        },
         get subtotal() {
             return this.items.reduce((sum, item) => sum + (parseFloat(item.quantity || 0) * parseFloat(item.unit_price || 0)), 0);
         },
@@ -237,11 +369,12 @@ function invoiceForm() {
             return Math.round((this.grandTotal - this.rawGrandTotal) * 100) / 100;
         },
         formatNumber(num) {
-            return (num || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            return (parseFloat(num) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         },
         addItem() {
             this.items.push({
                 product_id: '',
+                selectedLabel: '',
                 description: '',
                 hsn_code: '',
                 quantity: 1,
@@ -250,7 +383,12 @@ function invoiceForm() {
                 gst_rate: 18,
                 tax_amount: 0,
                 total_amount: 0,
-                components: []
+                components: [],
+                isOpen: false,
+                searchQuery: '',
+                results: [...this.defaultProducts],
+                loading: false,
+                highlightIndex: 0
             });
         },
         removeItem(index) {
@@ -258,23 +396,148 @@ function invoiceForm() {
                 this.items.splice(index, 1);
             }
         },
-        onProductChange(index) {
-            const select = event.target;
-            const opt = select.selectedOptions[0];
-            if (opt && opt.value) {
-                this.items[index].description = opt.getAttribute('data-name');
-                this.items[index].hsn_code = opt.getAttribute('data-hsn') || '';
-                this.items[index].unit_price = parseFloat(opt.getAttribute('data-price')) || 0;
-                this.items[index].gst_rate = parseFloat(opt.getAttribute('data-tax')) || 0;
-                try {
-                    this.items[index].components = JSON.parse(opt.getAttribute('data-components') || '[]');
-                } catch(e) {
-                    this.items[index].components = [];
+        openProductSearch(index) {
+            // Close other rows' search menus
+            this.items.forEach((it, i) => {
+                if (i !== index) it.isOpen = false;
+            });
+
+            const item = this.items[index];
+            item.isOpen = true;
+            item.highlightIndex = 0;
+
+            if ((!item.results || item.results.length === 0) && (!item.searchQuery || item.searchQuery === '')) {
+                if (this.defaultProducts.length > 0) {
+                    item.results = [...this.defaultProducts];
+                } else {
+                    this.fetchProducts(index, '');
                 }
-                this.recalcRow(index);
-            } else {
-                this.items[index].components = [];
             }
+
+            this.$nextTick(() => {
+                const input = document.getElementById(`product-search-input-${index}`);
+                if (input) {
+                    input.focus();
+                    input.select();
+                }
+            });
+        },
+        closeProductSearch(index) {
+            if (this.items[index]) {
+                this.items[index].isOpen = false;
+            }
+        },
+        onProductSearchInput(index) {
+            clearTimeout(this.searchDebounce);
+            const item = this.items[index];
+            const q = (item.searchQuery || '').trim();
+
+            if (q === '') {
+                item.results = [...this.defaultProducts];
+                item.loading = false;
+                item.highlightIndex = 0;
+                return;
+            }
+
+            item.loading = true;
+            this.searchDebounce = setTimeout(() => {
+                this.fetchProducts(index, q);
+            }, 200);
+        },
+        fetchProducts(index, query) {
+            const item = this.items[index];
+            if (!item) return;
+
+            item.loading = true;
+            fetch(`{{ route('api.products.search') }}?type=sales&q=${encodeURIComponent(query || '')}`)
+                .then(res => res.json())
+                .then(data => {
+                    item.results = data || [];
+                    item.loading = false;
+                    item.highlightIndex = 0;
+                })
+                .catch(err => {
+                    console.error('Product search error:', err);
+                    item.results = [];
+                    item.loading = false;
+                });
+        },
+        selectProduct(index, prod) {
+            const item = this.items[index];
+            if (!item || !prod) return;
+
+            item.product_id = prod.id;
+            item.selectedLabel = `${prod.name} (₹ ${this.formatNumber(prod.price)}) [Stock: ${prod.current_stock}]`;
+            item.description = prod.name;
+            item.hsn_code = prod.hsn || '';
+            item.unit_price = parseFloat(prod.price) || 0;
+            item.gst_rate = parseFloat(prod.tax_rate) || 0;
+            item.components = prod.components || [];
+
+            this.recalcRow(index);
+            item.isOpen = false;
+        },
+        clearProduct(index) {
+            const item = this.items[index];
+            if (!item) return;
+
+            item.product_id = '';
+            item.selectedLabel = '';
+            item.components = [];
+            item.searchQuery = '';
+            item.results = [...this.defaultProducts];
+            item.isOpen = false;
+            this.recalcRow(index);
+        },
+        selectCustomItem(index) {
+            const item = this.items[index];
+            if (!item) return;
+
+            item.product_id = '';
+            const q = (item.searchQuery || '').trim();
+            if (q.length > 0) {
+                item.description = q;
+                item.selectedLabel = `Custom: ${q}`;
+            } else {
+                item.selectedLabel = '-- Custom Item --';
+            }
+            item.components = [];
+            item.isOpen = false;
+        },
+        onSearchKeyDown(event, index) {
+            const item = this.items[index];
+            if (!item) return;
+
+            if (event.key === 'ArrowDown') {
+                if (item.results && item.results.length > 0) {
+                    item.highlightIndex = (item.highlightIndex + 1) % item.results.length;
+                    this.scrollHighlightedIntoView(index);
+                }
+            } else if (event.key === 'ArrowUp') {
+                if (item.results && item.results.length > 0) {
+                    item.highlightIndex = (item.highlightIndex - 1 + item.results.length) % item.results.length;
+                    this.scrollHighlightedIntoView(index);
+                }
+            } else if (event.key === 'Enter') {
+                if (item.results && item.results.length > 0 && item.results[item.highlightIndex]) {
+                    this.selectProduct(index, item.results[item.highlightIndex]);
+                } else {
+                    this.selectCustomItem(index);
+                }
+            } else if (event.key === 'Escape') {
+                this.closeProductSearch(index);
+            }
+        },
+        scrollHighlightedIntoView(index) {
+            this.$nextTick(() => {
+                const list = document.getElementById(`product-dropdown-list-${index}`);
+                if (!list) return;
+                const items = list.querySelectorAll('.product-combobox-item');
+                const target = items[this.items[index].highlightIndex];
+                if (target) {
+                    target.scrollIntoView({ block: 'nearest' });
+                }
+            });
         },
         recalcRow(index) {
             const item = this.items[index];

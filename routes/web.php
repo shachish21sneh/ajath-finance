@@ -64,6 +64,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/ledgers/{ledger}/statement', [LedgerController::class, 'statement'])->name('ledgers.statement');
     Route::resource('customers', CustomerController::class)->except(['show', 'destroy']);
     Route::resource('suppliers', SupplierController::class)->except(['show', 'destroy']);
+    Route::get('/api/products/search', [ProductController::class, 'searchAjax'])->name('api.products.search');
     Route::resource('products', ProductController::class)->except(['show', 'destroy']);
     Route::resource('stock-groups', StockGroupController::class)->except(['show', 'create', 'edit']);
     Route::resource('units', UnitController::class)->except(['show', 'create', 'edit']);

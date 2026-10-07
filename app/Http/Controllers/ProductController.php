@@ -11,6 +11,7 @@ use App\Models\Unit;
 use App\Models\UqcMaster;
 use App\Models\Warehouse;
 use App\Services\InventoryService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -166,5 +167,67 @@ class ProductController extends Controller
         ActivityLog::log('Update Product', 'Inventory', "Updated item: {$product->name}");
 
         return redirect()->route('products.index')->with('success', "Item '{$product->name}' updated successfully.");
+    }
+
+    public function searchAjax(Request $request): JsonResponse
+    {
+        $company = AccountingHelper::getActiveCompany();
+        if (!$company) {
+            return response()->json([]);
+        }
+
+        $query = trim((string) $request->get('q', ''));
+        $type = $request->get('type', 'sales'); // 'sales' or 'purchase'
+        $limit = (int) $request->get('limit', 25);
+        $limit = min(max($limit, 5), 50);
+
+        $productsQuery = Product::with(['taxMaster', 'unit', 'inventoryComponents.componentProduct.unit'])
+            ->where('company_id', $company->id)
+            ->where('is_active', true);
+
+        if ($query !== '') {
+            $productsQuery->where(function ($b) use ($query) {
+                $b->where('name', 'like', "%{$query}%")
+                  ->orWhere('sku', 'like', "%{$query}%")
+                  ->orWhere('barcode', 'like', "%{$query}%")
+                  ->orWhere('hsn_code', 'like', "%{$query}%")
+                  ->orWhere('sac_code', 'like', "%{$query}%");
+            });
+        }
+
+        $products = $productsQuery->orderBy('name')
+            ->limit($limit)
+            ->get();
+
+        $items = $products->map(function (Product $p) use ($type) {
+            $price = $type === 'purchase' ? (float) $p->purchase_price : (float) $p->selling_price;
+            $hsn = $p->hsn_code ?: $p->sac_code ?: '';
+
+            $components = $p->inventoryComponents->map(function ($c) {
+                return [
+                    'name' => $c->name,
+                    'qty' => (float) $c->quantity,
+                    'stock' => (float) ($c->componentProduct->current_stock ?? 0),
+                    'unit' => $c->componentProduct->unit->symbol ?? 'PCS',
+                ];
+            })->values();
+
+            return [
+                'id' => $p->id,
+                'name' => $p->name,
+                'sku' => $p->sku ?: '',
+                'barcode' => $p->barcode ?: '',
+                'hsn' => $hsn,
+                'price' => $price,
+                'tax_rate' => (float) ($p->taxMaster->rate ?? 0),
+                'current_stock' => (float) $p->current_stock,
+                'unit_symbol' => $p->unit->symbol ?? 'PCS',
+                'has_components' => (bool) ($p->has_inventory_components && $components->isNotEmpty()),
+                'components_count' => $components->count(),
+                'components' => $components,
+            ];
+        });
+
+        return response()->json($items);
     }
 }
