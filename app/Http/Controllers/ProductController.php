@@ -181,22 +181,36 @@ class ProductController extends Controller
         $limit = (int) $request->get('limit', 25);
         $limit = min(max($limit, 5), 50);
 
-        $productsQuery = Product::with(['taxMaster', 'unit', 'inventoryComponents.componentProduct.unit'])
+        $productsQuery = Product::with([
+            'taxMaster', 
+            'unit', 
+            'inventoryComponents.componentProduct.unit',
+            'salesInvoiceItems' => fn($q) => $q->select('id', 'product_id', 'description')->whereNotNull('description')->where('description', '!=', ''),
+            'purchaseInvoiceItems' => fn($q) => $q->select('id', 'product_id', 'description')->whereNotNull('description')->where('description', '!=', ''),
+        ])
             ->where('company_id', $company->id)
             ->where('is_active', true);
 
         if ($query !== '') {
             $words = array_filter(preg_split('/\s+/', trim($query)));
-            if (count($words) > 1) {
-                $productsQuery->where(function ($q) use ($words, $query) {
-                    $q->where(function ($sub) use ($query) {
-                        $sub->where('name', 'like', "%{$query}%")
-                            ->orWhere('sku', 'like', "%{$query}%")
-                            ->orWhere('barcode', 'like', "%{$query}%")
-                            ->orWhere('hsn_code', 'like', "%{$query}%")
-                            ->orWhere('sac_code', 'like', "%{$query}%")
-                            ->orWhere('description', 'like', "%{$query}%");
-                    })->orWhere(function ($sub) use ($words) {
+            $productsQuery->where(function ($b) use ($query, $words) {
+                // 1. Direct phrase match on product fields or invoice item descriptions
+                $b->where('name', 'like', "%{$query}%")
+                  ->orWhere('sku', 'like', "%{$query}%")
+                  ->orWhere('barcode', 'like', "%{$query}%")
+                  ->orWhere('hsn_code', 'like', "%{$query}%")
+                  ->orWhere('sac_code', 'like', "%{$query}%")
+                  ->orWhere('description', 'like', "%{$query}%")
+                  ->orWhereHas('salesInvoiceItems', function ($si) use ($query) {
+                      $si->where('description', 'like', "%{$query}%");
+                  })
+                  ->orWhereHas('purchaseInvoiceItems', function ($pi) use ($query) {
+                      $pi->where('description', 'like', "%{$query}%");
+                  });
+
+                // 2. Keyword-based multi-term matching
+                if (count($words) > 1) {
+                    $b->orWhere(function ($sub) use ($words) {
                         foreach ($words as $word) {
                             $sub->where(function ($w) use ($word) {
                                 $w->where('name', 'like', "%{$word}%")
@@ -204,28 +218,25 @@ class ProductController extends Controller
                                   ->orWhere('barcode', 'like', "%{$word}%")
                                   ->orWhere('hsn_code', 'like', "%{$word}%")
                                   ->orWhere('sac_code', 'like', "%{$word}%")
-                                  ->orWhere('description', 'like', "%{$word}%");
+                                  ->orWhere('description', 'like', "%{$word}%")
+                                  ->orWhereHas('salesInvoiceItems', function ($si) use ($word) {
+                                      $si->where('description', 'like', "%{$word}%");
+                                  })
+                                  ->orWhereHas('purchaseInvoiceItems', function ($pi) use ($word) {
+                                      $pi->where('description', 'like', "%{$word}%");
+                                  });
                             });
                         }
                     });
-                });
-            } else {
-                $productsQuery->where(function ($b) use ($query) {
-                    $b->where('name', 'like', "%{$query}%")
-                      ->orWhere('sku', 'like', "%{$query}%")
-                      ->orWhere('barcode', 'like', "%{$query}%")
-                      ->orWhere('hsn_code', 'like', "%{$query}%")
-                      ->orWhere('sac_code', 'like', "%{$query}%")
-                      ->orWhere('description', 'like', "%{$query}%");
-                });
-            }
+                }
+            });
         }
 
         $products = $productsQuery->orderBy('name')
             ->limit($limit)
             ->get();
 
-        $items = $products->map(function (Product $p) use ($type) {
+        $items = $products->map(function (Product $p) use ($type, $query) {
             $price = $type === 'purchase' ? (float) $p->purchase_price : (float) $p->selling_price;
             $hsn = $p->hsn_code ?: $p->sac_code ?: '';
 
@@ -238,10 +249,43 @@ class ProductController extends Controller
                 ];
             })->values();
 
+            // Find best matching description to display to user
+            $displayDescription = $p->description ?: '';
+            if ($query !== '') {
+                $words = array_filter(preg_split('/\s+/', trim($query)));
+                if ($p->description && stripos($p->description, $query) !== false) {
+                    $displayDescription = $p->description;
+                } else {
+                    $matchedSii = $p->salesInvoiceItems?->first(function ($sii) use ($query, $words) {
+                        if (!$sii->description) return false;
+                        if (stripos($sii->description, $query) !== false) return true;
+                        foreach ($words as $w) {
+                            if (stripos($sii->description, $w) !== false) return true;
+                        }
+                        return false;
+                    });
+                    if ($matchedSii) {
+                        $displayDescription = $matchedSii->description;
+                    } else {
+                        $matchedPii = $p->purchaseInvoiceItems?->first(function ($pii) use ($query, $words) {
+                            if (!$pii->description) return false;
+                            if (stripos($pii->description, $query) !== false) return true;
+                            foreach ($words as $w) {
+                                if (stripos($pii->description, $w) !== false) return true;
+                            }
+                            return false;
+                        });
+                        if ($matchedPii) {
+                            $displayDescription = $matchedPii->description;
+                        }
+                    }
+                }
+            }
+
             return [
                 'id' => $p->id,
                 'name' => $p->name,
-                'description' => $p->description ?: '',
+                'description' => $displayDescription,
                 'sku' => $p->sku ?: '',
                 'barcode' => $p->barcode ?: '',
                 'hsn' => $hsn,

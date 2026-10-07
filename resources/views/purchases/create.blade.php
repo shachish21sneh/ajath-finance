@@ -159,7 +159,7 @@
                                                         <!-- Col 1: Product Name -->
                                                         <div class="pe-2 overflow-hidden d-flex align-items-center gap-1.5">
                                                             <span class="fw-semibold text-truncate item-name text-dark" style="font-size: 0.8125rem;" x-text="prod.name"></span>
-                                                            <template x-if="prod.description && item.searchQuery && prod.description.toLowerCase().includes(item.searchQuery.toLowerCase().trim()) && !prod.name.toLowerCase().includes(item.searchQuery.toLowerCase().trim())">
+                                                            <template x-if="prod.description && item.searchQuery && !prod.name.toLowerCase().includes(item.searchQuery.toLowerCase().trim())">
                                                                 <span class="text-muted fst-italic text-truncate flex-shrink-1" style="font-size: 0.68rem;" x-text="'· ' + prod.description"></span>
                                                             </template>
                                                         </div>

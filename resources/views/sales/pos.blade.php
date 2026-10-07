@@ -205,7 +205,9 @@ function posBilling() {
                 (p.barcode && p.barcode.toLowerCase() === query) ||
                 (p.sku && p.sku.toLowerCase() === query) ||
                 (p.name && p.name.toLowerCase().includes(query)) ||
-                (p.description && p.description.toLowerCase().includes(query))
+                (p.description && p.description.toLowerCase().includes(query)) ||
+                (p.sales_invoice_items && p.sales_invoice_items.some(sii => sii.description && sii.description.toLowerCase().includes(query))) ||
+                (p.purchase_invoice_items && p.purchase_invoice_items.some(pii => pii.description && pii.description.toLowerCase().includes(query)))
             );
 
             if (found) {

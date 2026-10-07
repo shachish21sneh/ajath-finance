@@ -89,6 +89,16 @@ class Product extends Model
         return $this->hasMany(StockMovement::class);
     }
 
+    public function salesInvoiceItems(): HasMany
+    {
+        return $this->hasMany(SalesInvoiceItem::class, 'product_id');
+    }
+
+    public function purchaseInvoiceItems(): HasMany
+    {
+        return $this->hasMany(PurchaseInvoiceItem::class, 'product_id');
+    }
+
     public function scopeGoods(Builder $query): Builder
     {
         return $query->where('item_type', 'goods');

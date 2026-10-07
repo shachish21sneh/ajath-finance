@@ -164,7 +164,7 @@
                                                                     <i class="fa-solid fa-boxes-stacked me-1"></i>Kit
                                                                 </span>
                                                             </template>
-                                                            <template x-if="prod.description && item.searchQuery && prod.description.toLowerCase().includes(item.searchQuery.toLowerCase().trim()) && !prod.name.toLowerCase().includes(item.searchQuery.toLowerCase().trim())">
+                                                            <template x-if="prod.description && item.searchQuery && !prod.name.toLowerCase().includes(item.searchQuery.toLowerCase().trim())">
                                                                 <span class="text-muted fst-italic text-truncate flex-shrink-1" style="font-size: 0.68rem;" x-text="'· ' + prod.description"></span>
                                                             </template>
                                                         </div>

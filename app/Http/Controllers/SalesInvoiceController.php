@@ -98,7 +98,13 @@ class SalesInvoiceController extends Controller
         $invoiceNo = $this->invoicingService->generateInvoiceNumber($company, $fy, 'pos');
         $customers = Ledger::customers()->where('company_id', $company->id)->orderBy('name')->get();
         $cashLedger = Ledger::where('company_id', $company->id)->where('party_type', 'cash')->first();
-        $products = Product::with(['taxMaster', 'unit', 'inventoryComponents.componentProduct.unit'])
+        $products = Product::with([
+            'taxMaster', 
+            'unit', 
+            'inventoryComponents.componentProduct.unit',
+            'salesInvoiceItems' => fn($q) => $q->select('id', 'product_id', 'description')->whereNotNull('description')->where('description', '!=', ''),
+            'purchaseInvoiceItems' => fn($q) => $q->select('id', 'product_id', 'description')->whereNotNull('description')->where('description', '!=', ''),
+        ])
             ->where('company_id', $company->id)
             ->where('is_active', true)
             ->orderBy('name')

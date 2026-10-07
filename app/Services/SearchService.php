@@ -43,7 +43,10 @@ class SearchService
         $invoices = SalesInvoice::where('company_id', $company->id)
             ->where(function ($b) use ($q) {
                 $b->where('invoice_no', 'like', "%{$q}%")
-                  ->orWhere('notes', 'like', "%{$q}%");
+                  ->orWhere('notes', 'like', "%{$q}%")
+                  ->orWhereHas('items', function ($iq) use ($q) {
+                      $iq->where('description', 'like', "%{$q}%");
+                  });
             })
             ->take(5)
             ->get();
@@ -79,22 +82,48 @@ class SearchService
         }
 
         // 4. Search Products
-        $products = Product::where('company_id', $company->id)
+        $products = Product::with([
+            'unit',
+            'salesInvoiceItems' => fn($sq) => $sq->select('id', 'product_id', 'description')->whereNotNull('description')->where('description', '!=', ''),
+            'purchaseInvoiceItems' => fn($pq) => $pq->select('id', 'product_id', 'description')->whereNotNull('description')->where('description', '!=', ''),
+        ])
+            ->where('company_id', $company->id)
             ->where(function ($b) use ($q) {
                 $b->where('name', 'like', "%{$q}%")
                   ->orWhere('sku', 'like', "%{$q}%")
                   ->orWhere('barcode', 'like', "%{$q}%")
                   ->orWhere('hsn_code', 'like', "%{$q}%")
-                  ->orWhere('description', 'like', "%{$q}%");
+                  ->orWhere('description', 'like', "%{$q}%")
+                  ->orWhereHas('salesInvoiceItems', function ($si) use ($q) {
+                      $si->where('description', 'like', "%{$q}%");
+                  })
+                  ->orWhereHas('purchaseInvoiceItems', function ($pi) use ($q) {
+                      $pi->where('description', 'like', "%{$q}%");
+                  });
             })
             ->take(5)
             ->get();
 
         foreach ($products as $p) {
+            $descSnippet = '';
+            if ($p->description && stripos($p->description, $q) !== false) {
+                $descSnippet = $p->description;
+            } else {
+                $matchedSii = $p->salesInvoiceItems?->first(fn($sii) => $sii->description && stripos($sii->description, $q) !== false);
+                if ($matchedSii) {
+                    $descSnippet = $matchedSii->description;
+                } else {
+                    $matchedPii = $p->purchaseInvoiceItems?->first(fn($pii) => $pii->description && stripos($pii->description, $q) !== false);
+                    if ($matchedPii) {
+                        $descSnippet = $matchedPii->description;
+                    }
+                }
+            }
+
             $results[] = [
                 'category' => 'Products',
-                'title' => $p->name,
-                'subtitle' => "Stock: {$p->current_stock} | Rate: ₹ " . number_format($p->selling_price, 2) . " | HSN: " . ($p->hsn_code ?: 'N/A'),
+                'title' => $p->name . ($descSnippet ? " ({$descSnippet})" : ''),
+                'subtitle' => "Stock: {$p->current_stock} " . ($p->unit->symbol ?? 'PCS') . " | Rate: ₹ " . number_format($p->selling_price, 2) . " | HSN: " . ($p->hsn_code ?: 'N/A'),
                 'url' => route('products.edit', $p->id),
                 'icon' => 'fa-box',
             ];
