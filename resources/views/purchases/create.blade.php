@@ -145,7 +145,7 @@
                                             <div class="product-combobox-grid-header">
                                                 <span>Item / Product</span>
                                                 <span class="text-center">Stock</span>
-                                                <span class="text-end">Buying Rate</span>
+                                                <span class="text-end">Rate (GST)</span>
                                             </div>
 
                                             <!-- Results Container -->
@@ -184,9 +184,10 @@
                                                             </template>
                                                         </div>
 
-                                                        <!-- Col 3: Buying Price -->
-                                                        <div class="text-end ps-1">
-                                                            <div class="fw-bold text-dark num-align" style="font-size: 0.8125rem;" x-text="'₹ ' + formatNumber(prod.price)"></div>
+                                                        <!-- Col 3: Buying Price & GST -->
+                                                        <div class="text-end ps-1 text-nowrap">
+                                                            <span class="fw-bold text-dark num-align" style="font-size: 0.8125rem;" x-text="'₹ ' + formatNumber(prod.price)"></span>
+                                                            <span class="text-muted ms-1" style="font-size: 0.72rem; font-weight: 500;" x-text="'(' + (prod.tax_rate || 0) + '%)'"></span>
                                                         </div>
                                                     </div>
                                                 </template>
