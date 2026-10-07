@@ -84,7 +84,8 @@ class SearchService
                 $b->where('name', 'like', "%{$q}%")
                   ->orWhere('sku', 'like', "%{$q}%")
                   ->orWhere('barcode', 'like', "%{$q}%")
-                  ->orWhere('hsn_code', 'like', "%{$q}%");
+                  ->orWhere('hsn_code', 'like', "%{$q}%")
+                  ->orWhere('description', 'like', "%{$q}%");
             })
             ->take(5)
             ->get();

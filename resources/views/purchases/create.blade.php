@@ -116,7 +116,7 @@
                                                     <input type="text" 
                                                            :id="`purchase-product-search-${index}`"
                                                            class="form-control product-combobox-search-input border-start-0" 
-                                                           placeholder="Search product by name, SKU, HSN, or barcode..."
+                                                           placeholder="Search product by name, description, SKU, HSN..."
                                                            x-model="item.searchQuery"
                                                            @input="onProductSearchInput(index)"
                                                            @keydown.down.prevent="onSearchKeyDown($event, index)"
@@ -153,11 +153,15 @@
                                                 <template x-for="(prod, pIdx) in item.results" :key="prod.id">
                                                     <div class="product-combobox-row"
                                                          :class="{'is-selected': item.highlightIndex === pIdx}"
+                                                         :title="prod.description ? (prod.name + ' — ' + prod.description) : prod.name"
                                                          @mouseenter="item.highlightIndex = pIdx"
                                                          @click="selectProduct(index, prod)">
                                                         <!-- Col 1: Product Name -->
                                                         <div class="pe-2 overflow-hidden d-flex align-items-center gap-1.5">
                                                             <span class="fw-semibold text-truncate item-name text-dark" style="font-size: 0.8125rem;" x-text="prod.name"></span>
+                                                            <template x-if="prod.description && item.searchQuery && prod.description.toLowerCase().includes(item.searchQuery.toLowerCase().trim()) && !prod.name.toLowerCase().includes(item.searchQuery.toLowerCase().trim())">
+                                                                <span class="text-muted fst-italic text-truncate flex-shrink-1" style="font-size: 0.68rem;" x-text="'· ' + prod.description"></span>
+                                                            </template>
                                                         </div>
 
                                                         <!-- Col 2: Stock Status -->
@@ -489,7 +493,7 @@ function purchaseForm() {
             this.$nextTick(() => {
                 const list = document.getElementById(`purchase-dropdown-list-${index}`);
                 if (!list) return;
-                const items = list.querySelectorAll('.product-combobox-item');
+                const items = list.querySelectorAll('.product-combobox-row');
                 const target = items[this.items[index].highlightIndex];
                 if (target) {
                     target.scrollIntoView({ block: 'nearest' });

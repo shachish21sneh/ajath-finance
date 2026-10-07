@@ -116,7 +116,7 @@
                                                     <input type="text" 
                                                            :id="`product-search-input-${index}`"
                                                            class="form-control product-combobox-search-input border-start-0" 
-                                                           placeholder="Search product by name, SKU, HSN, or barcode..."
+                                                           placeholder="Search product by name, description, SKU, HSN..."
                                                            x-model="item.searchQuery"
                                                            @input="onProductSearchInput(index)"
                                                            @keydown.down.prevent="onSearchKeyDown($event, index)"
@@ -153,6 +153,7 @@
                                                 <template x-for="(prod, pIdx) in item.results" :key="prod.id">
                                                     <div class="product-combobox-row"
                                                          :class="{'is-selected': item.highlightIndex === pIdx}"
+                                                         :title="prod.description ? (prod.name + ' — ' + prod.description) : prod.name"
                                                          @mouseenter="item.highlightIndex = pIdx"
                                                          @click="selectProduct(index, prod)">
                                                         <!-- Col 1: Product Name & Kit -->
@@ -162,6 +163,9 @@
                                                                 <span class="product-badge-kit flex-shrink-0" style="font-size: 0.62rem; padding: 0.05rem 0.35rem;">
                                                                     <i class="fa-solid fa-boxes-stacked me-1"></i>Kit
                                                                 </span>
+                                                            </template>
+                                                            <template x-if="prod.description && item.searchQuery && prod.description.toLowerCase().includes(item.searchQuery.toLowerCase().trim()) && !prod.name.toLowerCase().includes(item.searchQuery.toLowerCase().trim())">
+                                                                <span class="text-muted fst-italic text-truncate flex-shrink-1" style="font-size: 0.68rem;" x-text="'· ' + prod.description"></span>
                                                             </template>
                                                         </div>
 
@@ -560,7 +564,7 @@ function invoiceForm() {
             this.$nextTick(() => {
                 const list = document.getElementById(`product-dropdown-list-${index}`);
                 if (!list) return;
-                const items = list.querySelectorAll('.product-combobox-item');
+                const items = list.querySelectorAll('.product-combobox-row');
                 const target = items[this.items[index].highlightIndex];
                 if (target) {
                     target.scrollIntoView({ block: 'nearest' });

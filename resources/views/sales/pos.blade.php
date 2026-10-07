@@ -12,7 +12,7 @@
                 <div class="col-md-7">
                     <div class="input-group">
                         <span class="input-group-text bg-white border-end-0 text-primary"><i class="fa-solid fa-barcode"></i></span>
-                        <input type="text" id="posBarcodeScanner" class="form-control border-start-0" placeholder="Scan barcode or type SKU / item name..." x-model="searchQuery" @keydown.enter="handleBarcodeScan()">
+                        <input type="text" id="posBarcodeScanner" class="form-control border-start-0" placeholder="Scan barcode or type SKU, name, description..." x-model="searchQuery" @keydown.enter="handleBarcodeScan()">
                     </div>
                 </div>
                 <div class="col-md-5">
@@ -204,7 +204,8 @@ function posBilling() {
             const found = this.productsList.find(p =>
                 (p.barcode && p.barcode.toLowerCase() === query) ||
                 (p.sku && p.sku.toLowerCase() === query) ||
-                p.name.toLowerCase().includes(query)
+                (p.name && p.name.toLowerCase().includes(query)) ||
+                (p.description && p.description.toLowerCase().includes(query))
             );
 
             if (found) {

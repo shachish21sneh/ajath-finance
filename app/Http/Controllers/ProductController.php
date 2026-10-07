@@ -186,13 +186,39 @@ class ProductController extends Controller
             ->where('is_active', true);
 
         if ($query !== '') {
-            $productsQuery->where(function ($b) use ($query) {
-                $b->where('name', 'like', "%{$query}%")
-                  ->orWhere('sku', 'like', "%{$query}%")
-                  ->orWhere('barcode', 'like', "%{$query}%")
-                  ->orWhere('hsn_code', 'like', "%{$query}%")
-                  ->orWhere('sac_code', 'like', "%{$query}%");
-            });
+            $words = array_filter(preg_split('/\s+/', trim($query)));
+            if (count($words) > 1) {
+                $productsQuery->where(function ($q) use ($words, $query) {
+                    $q->where(function ($sub) use ($query) {
+                        $sub->where('name', 'like', "%{$query}%")
+                            ->orWhere('sku', 'like', "%{$query}%")
+                            ->orWhere('barcode', 'like', "%{$query}%")
+                            ->orWhere('hsn_code', 'like', "%{$query}%")
+                            ->orWhere('sac_code', 'like', "%{$query}%")
+                            ->orWhere('description', 'like', "%{$query}%");
+                    })->orWhere(function ($sub) use ($words) {
+                        foreach ($words as $word) {
+                            $sub->where(function ($w) use ($word) {
+                                $w->where('name', 'like', "%{$word}%")
+                                  ->orWhere('sku', 'like', "%{$word}%")
+                                  ->orWhere('barcode', 'like', "%{$word}%")
+                                  ->orWhere('hsn_code', 'like', "%{$word}%")
+                                  ->orWhere('sac_code', 'like', "%{$word}%")
+                                  ->orWhere('description', 'like', "%{$word}%");
+                            });
+                        }
+                    });
+                });
+            } else {
+                $productsQuery->where(function ($b) use ($query) {
+                    $b->where('name', 'like', "%{$query}%")
+                      ->orWhere('sku', 'like', "%{$query}%")
+                      ->orWhere('barcode', 'like', "%{$query}%")
+                      ->orWhere('hsn_code', 'like', "%{$query}%")
+                      ->orWhere('sac_code', 'like', "%{$query}%")
+                      ->orWhere('description', 'like', "%{$query}%");
+                });
+            }
         }
 
         $products = $productsQuery->orderBy('name')
@@ -215,6 +241,7 @@ class ProductController extends Controller
             return [
                 'id' => $p->id,
                 'name' => $p->name,
+                'description' => $p->description ?: '',
                 'sku' => $p->sku ?: '',
                 'barcode' => $p->barcode ?: '',
                 'hsn' => $hsn,
