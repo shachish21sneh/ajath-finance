@@ -25,12 +25,21 @@
                 <div class="col-md-4 position-relative">
                     <div class="d-flex align-items-center justify-content-between mb-1">
                         <label class="form-label small fw-semibold mb-0">Customer / Client *</label>
-                        <button type="button" 
-                                class="btn btn-sm btn-link p-0 text-decoration-none fw-semibold text-primary d-inline-flex align-items-center" 
-                                @click="openCustomerModal()" 
-                                title="Add new customer">
-                            <i class="fa-solid fa-plus-circle me-1"></i> Add Customer
-                        </button>
+                        <div class="d-flex align-items-center gap-2">
+                            <button type="button" 
+                                    class="btn btn-sm btn-link p-0 text-decoration-none fw-semibold text-secondary d-inline-flex align-items-center" 
+                                    @click="openShipToModal()" 
+                                    title="Specify a different shipping address for this bill">
+                                <i class="fa-solid fa-truck-fast me-1 text-primary"></i> 
+                                <span x-text="hasCustomShipTo ? 'Edit Ship To' : '+ Add Ship To'"></span>
+                            </button>
+                            <button type="button" 
+                                    class="btn btn-sm btn-link p-0 text-decoration-none fw-semibold text-primary d-inline-flex align-items-center" 
+                                    @click="openCustomerModal()" 
+                                    title="Add new customer">
+                                <i class="fa-solid fa-plus-circle me-1"></i> Add Customer
+                            </button>
+                        </div>
                     </div>
 
                     <!-- Hidden input for form submit -->
@@ -151,6 +160,48 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Shipping Address Indicator / Quick Action -->
+                    <div class="mt-1 d-flex align-items-center justify-content-between" style="font-size: 0.72rem;">
+                        <div class="text-truncate me-1">
+                            <template x-if="hasCustomShipTo">
+                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle fw-medium text-truncate d-inline-flex align-items-center" :title="shipTo.name + (shipTo.city ? ' - ' + shipTo.city : '')">
+                                    <i class="fa-solid fa-truck-ramp-box me-1"></i>
+                                    <span>Ship to: <strong x-text="shipTo.name + (shipTo.city ? ' (' + shipTo.city + ')' : '')"></strong></span>
+                                </span>
+                            </template>
+                            <template x-if="!hasCustomShipTo">
+                                <span class="text-muted">
+                                    <i class="fa-solid fa-location-dot me-1 opacity-75"></i> Ship to: Same as billing address
+                                </span>
+                            </template>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <template x-if="hasCustomShipTo">
+                                <span class="d-inline-flex gap-1.5 align-items-center">
+                                    <a href="javascript:void(0)" class="text-primary text-decoration-none fw-semibold" @click="openShipToModal()">Edit</a>
+                                    <span class="text-muted">|</span>
+                                    <a href="javascript:void(0)" class="text-danger text-decoration-none fw-semibold" @click="resetShipTo()" title="Reset to billing address">Reset</a>
+                                </span>
+                            </template>
+                            <template x-if="!hasCustomShipTo">
+                                <a href="javascript:void(0)" class="text-primary text-decoration-none fw-semibold" @click="openShipToModal()">
+                                    + Ship To
+                                </a>
+                            </template>
+                        </div>
+                    </div>
+
+                    <!-- Hidden inputs for Shipping Address (saved only with this bill, not master) -->
+                    <input type="hidden" name="shipping_name" :value="hasCustomShipTo ? shipTo.name : ''">
+                    <input type="hidden" name="shipping_phone" :value="hasCustomShipTo ? shipTo.phone : ''">
+                    <input type="hidden" name="shipping_email" :value="hasCustomShipTo ? shipTo.email : ''">
+                    <input type="hidden" name="shipping_gstin" :value="hasCustomShipTo ? shipTo.gstin : ''">
+                    <input type="hidden" name="shipping_address" :value="hasCustomShipTo ? shipTo.address : ''">
+                    <input type="hidden" name="shipping_city" :value="hasCustomShipTo ? shipTo.city : ''">
+                    <input type="hidden" name="shipping_state" :value="hasCustomShipTo ? shipTo.state : ''">
+                    <input type="hidden" name="shipping_state_code" :value="hasCustomShipTo ? shipTo.state_code : ''">
+                    <input type="hidden" name="shipping_pincode" :value="hasCustomShipTo ? shipTo.pincode : ''">
                 </div>
                 <div class="col-md-2">
                     <label class="form-label small fw-semibold">Invoice Number</label>
@@ -551,6 +602,83 @@
             </div>
         </div>
     </div>
+
+    <!-- Ship To Address Modal (Saved only for this bill, never creates master customer) -->
+    <div class="modal fade" id="shipToModal" tabindex="-1" aria-labelledby="shipToModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content card-modern border-0 shadow">
+                <div class="modal-header border-bottom py-2.5 px-3 bg-light">
+                    <h5 class="modal-title fs-6 fw-bold mb-0 text-dark" id="shipToModalLabel">
+                        <i class="fa-solid fa-truck text-primary me-2"></i> Shipping / Consignee Address (For This Bill Only)
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form class="no-auto-save" @submit.prevent="saveShipTo()">
+                    <div class="modal-body p-3">
+                        <div class="alert alert-info py-2 px-3 small mb-3 d-flex align-items-center justify-content-between flex-wrap gap-2">
+                            <div>
+                                <i class="fa-solid fa-circle-info me-1"></i>
+                                <span>These shipping details are associated <strong>with this bill only</strong> and will not modify or create customer masters.</span>
+                            </div>
+                            <button type="button" class="btn btn-xs btn-outline-primary" @click="copyBillingToShipping()">
+                                <i class="fa-solid fa-clone me-1"></i> Copy from Selected Customer
+                            </button>
+                        </div>
+                        
+                        <div class="row g-2.5">
+                            <div class="col-md-7">
+                                <label class="form-label small fw-semibold">Consignee / Recipient Name *</label>
+                                <input type="text" class="form-control form-control-sm" x-model="shipTo.name" required placeholder="e.g. Apex Tech Solutions (Warehouse 2)" id="shipto-name-input">
+                            </div>
+                            <div class="col-md-5">
+                                <label class="form-label small fw-semibold">Phone / Mobile</label>
+                                <input type="text" class="form-control form-control-sm" x-model="shipTo.phone" placeholder="+91 98765 43210">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">GSTIN (15 Digits)</label>
+                                <input type="text" class="form-control form-control-sm text-uppercase" x-model="shipTo.gstin" @input="onShipToGstinInput()" maxlength="15" placeholder="e.g. 07AAAAA0000A1Z5">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Email Address</label>
+                                <input type="email" class="form-control form-control-sm" x-model="shipTo.email" placeholder="shipping@company.com">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label small fw-semibold">Shipping / Delivery Address *</label>
+                                <input type="text" class="form-control form-control-sm" x-model="shipTo.address" required placeholder="Site, Warehouse, Street, Area...">
+                            </div>
+                            <div class="col-md-5">
+                                <label class="form-label small fw-semibold">City</label>
+                                <input type="text" class="form-control form-control-sm" x-model="shipTo.city" placeholder="Gurugram">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-semibold">State *</label>
+                                <input type="text" class="form-control form-control-sm" x-model="shipTo.state" required placeholder="Haryana">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small fw-semibold">State Code *</label>
+                                <input type="text" class="form-control form-control-sm text-center" x-model="shipTo.state_code" required maxlength="2" placeholder="06">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-semibold">Pincode</label>
+                                <input type="text" class="form-control form-control-sm" x-model="shipTo.pincode" placeholder="122001">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-top py-2 px-3 bg-light d-flex justify-content-between">
+                        <button type="button" class="btn btn-sm btn-outline-danger" @click="resetShipTo(); bootstrap.Modal.getInstance(document.getElementById('shipToModal')).hide();">
+                            <i class="fa-solid fa-rotate-left me-1"></i> Use Billing Address
+                        </button>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-sm btn-light border" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-sm btn-primary fw-semibold px-3">
+                                <i class="fa-solid fa-check me-1"></i> Apply Shipping to Bill
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
 @endsection
 
@@ -568,6 +696,9 @@ function invoiceForm() {
                 'gstin' => $c->gstin ?? '',
                 'phone' => $c->phone ?? '',
                 'city' => $c->city ?? '',
+                'address' => $c->address ?? '',
+                'pincode' => $c->pincode ?? '',
+                'email' => $c->email ?? '',
                 'label' => $label,
             ];
         })) !!},
@@ -577,6 +708,18 @@ function invoiceForm() {
         customerSearchQuery: '',
         filteredCustomers: [],
         customerHighlightIndex: 0,
+        hasCustomShipTo: {{ old('shipping_name') ? 'true' : 'false' }},
+        shipTo: {
+            name: '{{ old('shipping_name', '') }}',
+            phone: '{{ old('shipping_phone', '') }}',
+            email: '{{ old('shipping_email', '') }}',
+            gstin: '{{ old('shipping_gstin', '') }}',
+            address: '{{ old('shipping_address', '') }}',
+            city: '{{ old('shipping_city', '') }}',
+            state: '{{ old('shipping_state', $company->state ?? 'Delhi') }}',
+            state_code: '{{ old('shipping_state_code', $company->state_code ?? '07') }}',
+            pincode: '{{ old('shipping_pincode', '') }}'
+        },
         quickCust: {
             name: '',
             phone: '',
@@ -1091,6 +1234,88 @@ function invoiceForm() {
         },
         onCustomerChange() {
             // Customer selection trigger
+        },
+        openShipToModal() {
+            this.isCustomerOpen = false;
+            if (!this.hasCustomShipTo) {
+                this.copyBillingToShipping();
+            }
+
+            const modalEl = document.getElementById('shipToModal');
+            if (modalEl) {
+                const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+                modal.show();
+                this.$nextTick(() => {
+                    setTimeout(() => {
+                        const input = document.getElementById('shipto-name-input');
+                        if (input) input.focus();
+                    }, 150);
+                });
+            }
+        },
+        copyBillingToShipping() {
+            let cust = null;
+            if (this.customerId) {
+                cust = this.customers.find(c => String(c.id) === String(this.customerId));
+            }
+            if (cust) {
+                this.shipTo.name = cust.name || '';
+                this.shipTo.phone = cust.phone || '';
+                this.shipTo.email = cust.email || '';
+                this.shipTo.gstin = cust.gstin || '';
+                this.shipTo.address = cust.address || '';
+                this.shipTo.city = cust.city || '';
+                this.shipTo.state = cust.state || '{{ $company->state ?? 'Delhi' }}';
+                this.shipTo.state_code = cust.state_code || '{{ $company->state_code ?? '07' }}';
+                this.shipTo.pincode = cust.pincode || '';
+            } else {
+                this.shipTo.state = '{{ $company->state ?? 'Delhi' }}';
+                this.shipTo.state_code = '{{ $company->state_code ?? '07' }}';
+            }
+        },
+        onShipToGstinInput() {
+            const g = (this.shipTo.gstin || '').trim().toUpperCase();
+            this.shipTo.gstin = g;
+            if (g.length >= 2) {
+                const code = g.substring(0, 2);
+                const map = {
+                    '01': 'Jammu & Kashmir', '02': 'Himachal Pradesh', '03': 'Punjab', '04': 'Chandigarh',
+                    '05': 'Uttarakhand', '06': 'Haryana', '07': 'Delhi', '08': 'Rajasthan', '09': 'Uttar Pradesh',
+                    '10': 'Bihar', '11': 'Sikkim', '12': 'Arunachal Pradesh', '13': 'Nagaland', '14': 'Manipur',
+                    '15': 'Mizoram', '16': 'Tripura', '17': 'Meghalaya', '18': 'Assam', '19': 'West Bengal',
+                    '20': 'Jharkhand', '21': 'Odisha', '22': 'Chhattisgarh', '23': 'Madhya Pradesh', '24': 'Gujarat',
+                    '27': 'Maharashtra', '29': 'Karnataka', '30': 'Goa', '32': 'Kerala', '33': 'Tamil Nadu',
+                    '36': 'Telangana', '37': 'Andhra Pradesh'
+                };
+                if (map[code]) {
+                    this.shipTo.state_code = code;
+                    this.shipTo.state = map[code];
+                }
+            }
+        },
+        saveShipTo() {
+            if (!this.shipTo.name.trim()) {
+                alert('Please enter consignee / recipient name');
+                return;
+            }
+            this.hasCustomShipTo = true;
+            const modalEl = document.getElementById('shipToModal');
+            if (modalEl) {
+                const modal = bootstrap.Modal.getInstance(modalEl);
+                if (modal) modal.hide();
+            }
+        },
+        resetShipTo() {
+            this.hasCustomShipTo = false;
+            this.shipTo.name = '';
+            this.shipTo.phone = '';
+            this.shipTo.email = '';
+            this.shipTo.gstin = '';
+            this.shipTo.address = '';
+            this.shipTo.city = '';
+            this.shipTo.state = '{{ $company->state ?? 'Delhi' }}';
+            this.shipTo.state_code = '{{ $company->state_code ?? '07' }}';
+            this.shipTo.pincode = '';
         },
         submitForm() {
             if (!this.customerId) {

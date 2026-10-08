@@ -64,6 +64,15 @@ class SalesInvoiceController extends Controller
             'items.*.unit_price' => ['required', 'numeric', 'min:0'],
             'items.*.discount_amount' => ['nullable', 'numeric'],
             'items.*.gst_rate' => ['required', 'numeric'],
+            'shipping_name' => ['nullable', 'string', 'max:255'],
+            'shipping_phone' => ['nullable', 'string', 'max:50'],
+            'shipping_email' => ['nullable', 'email', 'max:255'],
+            'shipping_gstin' => ['nullable', 'string', 'max:20'],
+            'shipping_address' => ['nullable', 'string'],
+            'shipping_city' => ['nullable', 'string', 'max:100'],
+            'shipping_state' => ['nullable', 'string', 'max:100'],
+            'shipping_state_code' => ['nullable', 'string', 'max:10'],
+            'shipping_pincode' => ['nullable', 'string', 'max:20'],
         ]);
 
         $data['company_id'] = $company->id;

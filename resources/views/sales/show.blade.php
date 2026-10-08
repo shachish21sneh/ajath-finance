@@ -66,13 +66,56 @@
         </div>
     </div>
 
-    <!-- Bill To / Customer Details -->
-    <div class="p-3 bg-light rounded-3 mb-4 small">
-        <span class="text-muted text-uppercase fw-bold" style="font-size: 0.7rem;">Billed To / Buyer Details:</span>
-        <div class="fw-bold fs-6 text-main mt-1">{{ $invoice->customer->name }}</div>
-        <div>{{ $invoice->customer->address ?: 'Address on file' }}</div>
-        <div><strong>GSTIN / UIN:</strong> {{ $invoice->customer->gstin ?: 'Unregistered Consumer (B2C)' }}</div>
-        <div><strong>State & Code:</strong> {{ $invoice->customer->state }} ({{ $invoice->customer->state_code ?: $invoice->company->state_code }})</div>
+    <!-- Bill To & Ship To Details -->
+    <div class="row g-3 mb-4">
+        <!-- Billed To / Buyer Details -->
+        <div class="col-md-6">
+            <div class="p-3 bg-light rounded-3 h-100 small border">
+                <span class="text-muted text-uppercase fw-bold" style="font-size: 0.7rem;">Billed To / Buyer Details:</span>
+                <div class="fw-bold fs-6 text-main mt-1">{{ $invoice->customer->name }}</div>
+                <div>{{ $invoice->customer->address ?: 'Address on file' }}</div>
+                @if($invoice->customer->city || $invoice->customer->pincode)
+                    <div>{{ collect([$invoice->customer->city, $invoice->customer->pincode])->filter()->implode(' - ') }}</div>
+                @endif
+                <div><strong>GSTIN / UIN:</strong> {{ $invoice->customer->gstin ?: 'Unregistered Consumer (B2C)' }}</div>
+                <div><strong>State & Code:</strong> {{ $invoice->customer->state }} ({{ $invoice->customer->state_code ?: $invoice->company->state_code }})</div>
+                @if($invoice->customer->phone)
+                    <div><strong>Phone:</strong> {{ $invoice->customer->phone }}</div>
+                @endif
+            </div>
+        </div>
+
+        <!-- Shipped To / Consignee Details -->
+        <div class="col-md-6">
+            <div class="p-3 bg-light rounded-3 h-100 small border">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="text-muted text-uppercase fw-bold" style="font-size: 0.7rem;">Shipped To / Consignee Details:</span>
+                    @if($invoice->hasCustomShippingAddress())
+                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle" style="font-size: 0.65rem;">Different Consignee</span>
+                    @endif
+                </div>
+                @php
+                    $shipName = $invoice->shipping_name ?: $invoice->customer->name;
+                    $shipAddress = $invoice->shipping_address ?: ($invoice->customer->address ?: 'Same as billing address');
+                    $shipCity = $invoice->shipping_city ?: $invoice->customer->city;
+                    $shipPincode = $invoice->shipping_pincode ?: $invoice->customer->pincode;
+                    $shipState = $invoice->shipping_state ?: $invoice->customer->state;
+                    $shipStateCode = $invoice->shipping_state_code ?: ($invoice->customer->state_code ?: $invoice->company->state_code);
+                    $shipGstin = $invoice->shipping_gstin ?: ($invoice->customer->gstin ?: 'Unregistered Consumer (B2C)');
+                    $shipPhone = $invoice->shipping_phone ?: $invoice->customer->phone;
+                @endphp
+                <div class="fw-bold fs-6 text-main mt-1">{{ $shipName }}</div>
+                <div>{{ $shipAddress }}</div>
+                @if($shipCity || $shipPincode)
+                    <div>{{ collect([$shipCity, $shipPincode])->filter()->implode(' - ') }}</div>
+                @endif
+                <div><strong>GSTIN / UIN:</strong> {{ $shipGstin }}</div>
+                <div><strong>State & Code:</strong> {{ $shipState }} ({{ $shipStateCode }})</div>
+                @if($shipPhone)
+                    <div><strong>Phone:</strong> {{ $shipPhone }}</div>
+                @endif
+            </div>
+        </div>
     </div>
 
     <!-- Items Table -->

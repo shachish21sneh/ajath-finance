@@ -16,6 +16,15 @@ class SalesInvoice extends Model
         'financial_year_id',
         'voucher_id',
         'customer_ledger_id',
+        'shipping_name',
+        'shipping_phone',
+        'shipping_email',
+        'shipping_gstin',
+        'shipping_address',
+        'shipping_city',
+        'shipping_state',
+        'shipping_state_code',
+        'shipping_pincode',
         'invoice_type',
         'invoice_no',
         'invoice_date',
@@ -86,5 +95,10 @@ class SalesInvoice extends Model
     public function isPos(): bool
     {
         return $this->invoice_type === 'pos';
+    }
+
+    public function hasCustomShippingAddress(): bool
+    {
+        return !empty($this->shipping_name) || !empty($this->shipping_address);
     }
 }
