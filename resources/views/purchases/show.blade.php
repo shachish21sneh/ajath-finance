@@ -57,50 +57,6 @@
     </div>
 </div>
 
-<!-- Payment & Vendor Notes (View Only - Excluded from Print Bill) -->
-<div class="card card-modern p-4 mb-4 mx-auto no-print shadow-sm" style="max-width: 900px;">
-    <div class="d-flex align-items-center justify-content-between mb-3 border-bottom pb-2">
-        <h6 class="fw-bold mb-0 text-main d-flex align-items-center gap-2">
-            <i class="fa-solid fa-receipt text-primary"></i> Payment & Vendor Notes
-        </h6>
-        <span class="badge bg-light border text-muted small fw-normal">
-            <i class="fa-solid fa-eye-slash text-secondary me-1"></i> Screen view only &bull; Not in print bill
-        </span>
-    </div>
-    <div class="row g-3">
-        <div class="col-md-4">
-            <label class="form-label small fw-semibold text-muted mb-1">Amount Paid (₹)</label>
-            <div class="form-control bg-light fw-bold text-success">
-                ₹ {{ number_format((float)($purchase->paid_amount ?? 0), 2) }}
-            </div>
-            @if((float)($purchase->due_amount ?? 0) > 0)
-                <div class="small text-danger mt-1">
-                    <i class="fa-solid fa-circle-exclamation me-1"></i> Balance Payable: <strong>₹ {{ number_format((float)$purchase->due_amount, 2) }}</strong>
-                </div>
-            @endif
-        </div>
-        <div class="col-md-4">
-            <label class="form-label small fw-semibold text-muted mb-1">Payment Status</label>
-            <div class="form-control bg-light">
-                @php
-                    $statusBadge = match($purchase->payment_status) {
-                        'paid' => 'bg-success text-white',
-                        'partial' => 'bg-warning text-dark',
-                        default => 'bg-danger text-white',
-                    };
-                @endphp
-                <span class="badge {{ $statusBadge }} px-2.5 py-1 text-uppercase fw-semibold">{{ $purchase->payment_status }}</span>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <label class="form-label small fw-semibold text-muted mb-1">Purchase Notes / Remarks</label>
-            <div class="form-control bg-light text-muted" style="min-height: 38px;">
-                {{ $purchase->notes ?: '—' }}
-            </div>
-        </div>
-    </div>
-</div>
-
 <div class="card card-modern p-4 p-md-5 print-invoice-sheet mx-auto shadow-sm" style="max-width: 900px;">
     <!-- Header -->
     <div class="row align-items-start border-bottom pb-4 mb-4">
@@ -208,6 +164,50 @@
 
     <div class="border-top pt-3 small text-muted text-center">
         Recorded into inventory ledger &bull; Voucher Ref #{{ $purchase->voucher->voucher_no ?? 'N/A' }}
+    </div>
+</div>
+
+<!-- Payment & Vendor Notes (View Only - Excluded from Print Bill) -->
+<div class="card card-modern p-4 mt-4 mx-auto no-print shadow-sm" style="max-width: 900px;">
+    <div class="d-flex align-items-center justify-content-between mb-3 border-bottom pb-2">
+        <h6 class="fw-bold mb-0 text-main d-flex align-items-center gap-2">
+            <i class="fa-solid fa-receipt text-primary"></i> Payment & Vendor Notes
+        </h6>
+        <span class="badge bg-light border text-muted small fw-normal">
+            <i class="fa-solid fa-eye-slash text-secondary me-1"></i> Screen view only &bull; Not in print bill
+        </span>
+    </div>
+    <div class="row g-3">
+        <div class="col-md-4">
+            <label class="form-label small fw-semibold text-muted mb-1">Amount Paid (₹)</label>
+            <div class="form-control bg-light fw-bold text-success">
+                ₹ {{ number_format((float)($purchase->paid_amount ?? 0), 2) }}
+            </div>
+            @if((float)($purchase->due_amount ?? 0) > 0)
+                <div class="small text-danger mt-1">
+                    <i class="fa-solid fa-circle-exclamation me-1"></i> Balance Payable: <strong>₹ {{ number_format((float)$purchase->due_amount, 2) }}</strong>
+                </div>
+            @endif
+        </div>
+        <div class="col-md-4">
+            <label class="form-label small fw-semibold text-muted mb-1">Payment Status</label>
+            <div class="form-control bg-light">
+                @php
+                    $statusBadge = match($purchase->payment_status) {
+                        'paid' => 'bg-success text-white',
+                        'partial' => 'bg-warning text-dark',
+                        default => 'bg-danger text-white',
+                    };
+                @endphp
+                <span class="badge {{ $statusBadge }} px-2.5 py-1 text-uppercase fw-semibold">{{ $purchase->payment_status }}</span>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label small fw-semibold text-muted mb-1">Purchase Notes / Remarks</label>
+            <div class="form-control bg-light text-muted" style="min-height: 38px;">
+                {{ $purchase->notes ?: '—' }}
+            </div>
+        </div>
     </div>
 </div>
 @endsection

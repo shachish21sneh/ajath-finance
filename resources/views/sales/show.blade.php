@@ -80,56 +80,6 @@
     </div>
 </div>
 
-<!-- Payment Settlement & Notes (View Only - Excluded from Print Invoice) -->
-<div class="card card-modern p-4 mb-4 mx-auto no-print shadow-sm" style="max-width: 950px;">
-    <div class="d-flex align-items-center justify-content-between mb-3 border-bottom pb-2">
-        <h6 class="fw-bold mb-0 text-main d-flex align-items-center gap-2">
-            <i class="fa-solid fa-receipt text-primary"></i> Payment Settlement & Notes
-        </h6>
-        <span class="badge bg-light border text-muted small fw-normal">
-            <i class="fa-solid fa-eye-slash text-secondary me-1"></i> Screen view only &bull; Not in print invoice
-        </span>
-    </div>
-    <div class="row g-3">
-        <div class="col-md-4">
-            <label class="form-label small fw-semibold text-muted mb-1">Payment Method</label>
-            <div class="form-control bg-light text-capitalize fw-semibold">
-                @php
-                    $mKey = strtolower($invoice->payment_method ?? 'cash');
-                    $methodLabels = [
-                        'cash' => 'Cash',
-                        'bank_transfer' => 'Bank Transfer / NEFT',
-                        'upi' => 'UPI / Online',
-                        'credit' => 'Credit (On Account)',
-                    ];
-                @endphp
-                {{ $methodLabels[$mKey] ?? ucwords(str_replace('_', ' ', $invoice->payment_method ?? 'Cash')) }}
-            </div>
-        </div>
-        <div class="col-md-4">
-            <label class="form-label small fw-semibold text-muted mb-1">Amount Received / Paid Now (₹)</label>
-            <div class="form-control bg-light fw-bold text-success">
-                ₹ {{ number_format((float)($invoice->paid_amount ?? 0), 2) }}
-            </div>
-            @if((float)($invoice->due_amount ?? 0) > 0)
-                <div class="small text-danger mt-1">
-                    <i class="fa-solid fa-circle-exclamation me-1"></i> Balance Due: <strong>₹ {{ number_format((float)$invoice->due_amount, 2) }}</strong>
-                </div>
-            @endif
-        </div>
-        <div class="col-md-4">
-            <label class="form-label small fw-semibold text-muted mb-1">Internal Notes</label>
-            <div class="form-control bg-light text-muted" style="min-height: 38px;">
-                {{ $invoice->notes ?: '—' }}
-            </div>
-        </div>
-        <div class="col-12">
-            <label class="form-label small fw-semibold text-muted mb-1">Invoice Terms & Conditions</label>
-            <div class="form-control bg-light text-muted" style="white-space: pre-line; min-height: 54px;">{{ $invoice->terms_conditions ?: '—' }}</div>
-        </div>
-    </div>
-</div>
-
 <div class="card card-modern p-4 p-md-5 print-invoice-sheet mx-auto shadow-sm" style="max-width: 950px; background: #ffffff; color: #1e293b;">
     <!-- Invoice Title Header -->
     <div class="text-center border-bottom pb-2 mb-3">
@@ -464,6 +414,56 @@
         <div class="col-6 text-end">
             <div class="small fw-bold mb-5">For {{ $invoice->company->name }}</div>
             <div class="border-top d-inline-block pt-1 px-4 small text-muted">Authorized Signatory</div>
+        </div>
+    </div>
+</div>
+
+<!-- Payment Settlement & Notes (View Only - Excluded from Print Invoice) -->
+<div class="card card-modern p-4 mt-4 mx-auto no-print shadow-sm" style="max-width: 950px;">
+    <div class="d-flex align-items-center justify-content-between mb-3 border-bottom pb-2">
+        <h6 class="fw-bold mb-0 text-main d-flex align-items-center gap-2">
+            <i class="fa-solid fa-receipt text-primary"></i> Payment Settlement & Notes
+        </h6>
+        <span class="badge bg-light border text-muted small fw-normal">
+            <i class="fa-solid fa-eye-slash text-secondary me-1"></i> Screen view only &bull; Not in print invoice
+        </span>
+    </div>
+    <div class="row g-3">
+        <div class="col-md-4">
+            <label class="form-label small fw-semibold text-muted mb-1">Payment Method</label>
+            <div class="form-control bg-light text-capitalize fw-semibold">
+                @php
+                    $mKey = strtolower($invoice->payment_method ?? 'cash');
+                    $methodLabels = [
+                        'cash' => 'Cash',
+                        'bank_transfer' => 'Bank Transfer / NEFT',
+                        'upi' => 'UPI / Online',
+                        'credit' => 'Credit (On Account)',
+                    ];
+                @endphp
+                {{ $methodLabels[$mKey] ?? ucwords(str_replace('_', ' ', $invoice->payment_method ?? 'Cash')) }}
+            </div>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label small fw-semibold text-muted mb-1">Amount Received / Paid Now (₹)</label>
+            <div class="form-control bg-light fw-bold text-success">
+                ₹ {{ number_format((float)($invoice->paid_amount ?? 0), 2) }}
+            </div>
+            @if((float)($invoice->due_amount ?? 0) > 0)
+                <div class="small text-danger mt-1">
+                    <i class="fa-solid fa-circle-exclamation me-1"></i> Balance Due: <strong>₹ {{ number_format((float)$invoice->due_amount, 2) }}</strong>
+                </div>
+            @endif
+        </div>
+        <div class="col-md-4">
+            <label class="form-label small fw-semibold text-muted mb-1">Internal Notes</label>
+            <div class="form-control bg-light text-muted" style="min-height: 38px;">
+                {{ $invoice->notes ?: '—' }}
+            </div>
+        </div>
+        <div class="col-12">
+            <label class="form-label small fw-semibold text-muted mb-1">Invoice Terms & Conditions</label>
+            <div class="form-control bg-light text-muted" style="white-space: pre-line; min-height: 54px;">{{ $invoice->terms_conditions ?: '—' }}</div>
         </div>
     </div>
 </div>
