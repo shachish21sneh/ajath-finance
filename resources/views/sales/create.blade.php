@@ -25,19 +25,21 @@
                 <div class="col-md-4 position-relative">
                     <div class="d-flex align-items-center justify-content-between mb-1">
                         <label class="form-label small fw-semibold mb-0">Customer / Client *</label>
-                        <div class="d-flex align-items-center gap-2">
+                        <div class="d-flex align-items-center gap-1.5">
                             <button type="button" 
-                                    class="btn btn-sm btn-link p-0 text-decoration-none fw-semibold text-secondary d-inline-flex align-items-center" 
+                                    class="btn btn-sm py-0 px-2 rounded d-inline-flex align-items-center justify-content-center"
+                                    :class="hasCustomShipTo ? 'btn-primary text-white shadow-sm' : 'btn-light border text-primary'" 
+                                    style="height: 26px; min-width: 28px;"
                                     @click="openShipToModal()" 
-                                    title="Specify a different shipping address for this bill">
-                                <i class="fa-solid fa-truck-fast me-1 text-primary"></i> 
-                                <span x-text="hasCustomShipTo ? 'Edit Ship To' : '+ Add Ship To'"></span>
+                                    :title="hasCustomShipTo ? 'Edit Ship To Address' : 'Add Ship To Address'">
+                                <i class="fa-solid fa-truck-fast" style="font-size: 0.75rem;"></i>
                             </button>
                             <button type="button" 
-                                    class="btn btn-sm btn-link p-0 text-decoration-none fw-semibold text-primary d-inline-flex align-items-center" 
+                                    class="btn btn-sm btn-light border py-0 px-2 text-primary rounded d-inline-flex align-items-center justify-content-center" 
+                                    style="height: 26px; min-width: 28px;"
                                     @click="openCustomerModal()" 
-                                    title="Add new customer">
-                                <i class="fa-solid fa-plus-circle me-1"></i> Add Customer
+                                    title="Add New Customer">
+                                <i class="fa-solid fa-user-plus" style="font-size: 0.75rem;"></i>
                             </button>
                         </div>
                     </div>
