@@ -28,7 +28,7 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach($customers as $c)
+                @forelse($customers as $c)
                     <tr>
                         <td>
                             <a href="{{ route('ledgers.statement', $c->id) }}" class="fw-bold text-decoration-none text-main">
@@ -65,17 +65,17 @@
                             </a>
                         </td>
                     </tr>
-                @endforeach
+                @empty
+                    <tr>
+                        <td colspan="7" class="text-center py-4 text-muted">No customers found.</td>
+                    </tr>
+                @endforelse
             </tbody>
         </table>
     </div>
+
+    <div class="mt-3">
+        {{ $customers->links() }}
+    </div>
 </div>
 @endsection
-
-@push('scripts')
-<script>
-$(document).ready(function() {
-    $('#customersTable').DataTable({ pageLength: 25 });
-});
-</script>
-@endpush

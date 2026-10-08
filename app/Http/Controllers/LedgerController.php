@@ -30,7 +30,7 @@ class LedgerController extends Controller
             $query->where('party_type', $request->party_type);
         }
 
-        $ledgers = $query->orderBy('name')->get();
+        $ledgers = $query->orderBy('name')->paginate(25)->withQueryString();
         $groups = LedgerGroup::orderBy('name')->get();
 
         return view('masters.ledgers.index', compact('ledgers', 'groups', 'company'));

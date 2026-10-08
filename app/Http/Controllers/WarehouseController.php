@@ -14,7 +14,7 @@ class WarehouseController extends Controller
     public function index(): View
     {
         $company = AccountingHelper::getActiveCompany();
-        $warehouses = Warehouse::where('company_id', $company->id)->get();
+        $warehouses = Warehouse::where('company_id', $company->id)->paginate(15);
         return view('masters.warehouses.index', compact('warehouses', 'company'));
     }
 

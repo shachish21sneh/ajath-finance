@@ -29,7 +29,7 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach($products as $p)
+                @forelse($products as $p)
                     <tr>
                         <td>
                             <div class="fw-bold text-main">{{ $p->name }}</div>
@@ -131,17 +131,17 @@
                             </a>
                         </td>
                     </tr>
-                @endforeach
+                @empty
+                    <tr>
+                        <td colspan="8" class="text-center py-4 text-muted">No products found.</td>
+                    </tr>
+                @endforelse
             </tbody>
         </table>
     </div>
+
+    <div class="mt-3">
+        {{ $products->links() }}
+    </div>
 </div>
 @endsection
-
-@push('scripts')
-<script>
-$(document).ready(function() {
-    $('#productsTable').DataTable({ pageLength: 25 });
-});
-</script>
-@endpush

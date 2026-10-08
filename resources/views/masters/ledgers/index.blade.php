@@ -40,7 +40,7 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach($ledgers as $l)
+                @forelse($ledgers as $l)
                     <tr>
                         <td>
                             <a href="{{ route('ledgers.statement', $l->id) }}" class="fw-bold text-decoration-none text-main">
@@ -82,20 +82,17 @@
                             </a>
                         </td>
                     </tr>
-                @endforeach
+                @empty
+                    <tr>
+                        <td colspan="7" class="text-center py-4 text-muted">No accounts / ledgers found.</td>
+                    </tr>
+                @endforelse
             </tbody>
         </table>
     </div>
+
+    <div class="mt-3">
+        {{ $ledgers->withQueryString()->links() }}
+    </div>
 </div>
 @endsection
-
-@push('scripts')
-<script>
-$(document).ready(function() {
-    $('#ledgersTable').DataTable({
-        pageLength: 25,
-        order: [[0, 'asc']]
-    });
-});
-</script>
-@endpush

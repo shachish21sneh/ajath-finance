@@ -7,6 +7,7 @@ use App\Repositories\Contracts\CompanyRepositoryInterface;
 use App\Repositories\Contracts\LedgerRepositoryInterface;
 use App\Repositories\Eloquent\CompanyRepository;
 use App\Repositories\Eloquent\LedgerRepository;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -26,6 +27,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Paginator::useBootstrapFive();
+
         // Share active company and active financial year with all blade views
         View::composer('*', function ($view) {
             $company = AccountingHelper::getActiveCompany();

@@ -14,7 +14,7 @@
 </div>
 
 <div class="row g-4">
-    @foreach($companies as $c)
+    @forelse($companies as $c)
         <div class="col-md-6 col-xl-4">
             <div class="card card-modern p-4 h-100 position-relative {{ ($currentCompany?->id == $c->id) ? 'border-primary border-2' : '' }}">
                 @if($currentCompany?->id == $c->id)
@@ -62,6 +62,12 @@
                 </div>
             </div>
         </div>
-    @endforeach
+    @empty
+        <div class="col-12 text-center py-5 text-muted">No companies found.</div>
+    @endforelse
+</div>
+
+<div class="mt-4">
+    {{ $companies->links() }}
 </div>
 @endsection

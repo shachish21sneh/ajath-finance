@@ -14,7 +14,7 @@
 </div>
 
 <div class="row g-4">
-    @foreach($warehouses as $wh)
+    @forelse($warehouses as $wh)
         <div class="col-md-6 col-xl-4">
             <div class="card card-modern p-4 h-100 position-relative {{ $wh->is_default ? 'border-primary border-2' : '' }}">
                 @if($wh->is_default)
@@ -32,7 +32,13 @@
                 <p class="text-muted small mb-0"><i class="fa-solid fa-location-dot me-1"></i> {{ $wh->address ?: 'No physical address configured.' }}</p>
             </div>
         </div>
-    @endforeach
+    @empty
+        <div class="col-12 text-center py-5 text-muted">No warehouses / godowns found.</div>
+    @endforelse
+</div>
+
+<div class="mt-4">
+    {{ $warehouses->links() }}
 </div>
 
 <!-- Add Warehouse Modal -->

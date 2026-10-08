@@ -26,7 +26,7 @@ class ProductController extends Controller
         $products = Product::with(['stockGroup', 'unit', 'taxMaster', 'inventoryComponents.componentProduct.unit'])
             ->where('company_id', $company->id)
             ->orderBy('name')
-            ->get();
+            ->paginate(20);
 
         return view('masters.products.index', compact('products', 'company'));
     }

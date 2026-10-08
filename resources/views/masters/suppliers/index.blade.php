@@ -27,7 +27,7 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach($suppliers as $s)
+                @forelse($suppliers as $s)
                     <tr>
                         <td>
                             <a href="{{ route('ledgers.statement', $s->id) }}" class="fw-bold text-decoration-none text-main">
@@ -60,17 +60,17 @@
                             </a>
                         </td>
                     </tr>
-                @endforeach
+                @empty
+                    <tr>
+                        <td colspan="6" class="text-center py-4 text-muted">No suppliers found.</td>
+                    </tr>
+                @endforelse
             </tbody>
         </table>
     </div>
+
+    <div class="mt-3">
+        {{ $suppliers->links() }}
+    </div>
 </div>
 @endsection
-
-@push('scripts')
-<script>
-$(document).ready(function() {
-    $('#suppliersTable').DataTable({ pageLength: 25 });
-});
-</script>
-@endpush

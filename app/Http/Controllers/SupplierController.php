@@ -16,7 +16,7 @@ class SupplierController extends Controller
     public function index(): View
     {
         $company = AccountingHelper::getActiveCompany();
-        $suppliers = Ledger::suppliers()->where('company_id', $company->id)->orderBy('name')->get();
+        $suppliers = Ledger::suppliers()->where('company_id', $company->id)->orderBy('name')->paginate(20);
         return view('masters.suppliers.index', compact('suppliers', 'company'));
     }
 

@@ -16,7 +16,7 @@ class CustomerController extends Controller
     public function index(): View
     {
         $company = AccountingHelper::getActiveCompany();
-        $customers = Ledger::customers()->where('company_id', $company->id)->orderBy('name')->get();
+        $customers = Ledger::customers()->where('company_id', $company->id)->orderBy('name')->paginate(20);
         return view('masters.customers.index', compact('customers', 'company'));
     }
 

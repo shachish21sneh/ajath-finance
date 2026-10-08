@@ -27,7 +27,7 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach($users as $u)
+                @forelse($users as $u)
                     <tr>
                         <td>
                             <div class="d-flex align-items-center gap-2">
@@ -57,9 +57,17 @@
                             </a>
                         </td>
                     </tr>
-                @endforeach
+                @empty
+                    <tr>
+                        <td colspan="6" class="text-center py-4 text-muted">No users found.</td>
+                    </tr>
+                @endforelse
             </tbody>
         </table>
+    </div>
+
+    <div class="mt-3">
+        {{ $users->links() }}
     </div>
 </div>
 @endsection

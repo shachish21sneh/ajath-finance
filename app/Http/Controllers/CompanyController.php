@@ -13,7 +13,7 @@ class CompanyController extends Controller
 {
     public function index(): View
     {
-        $companies = Company::with('financialYears')->orderBy('name')->get();
+        $companies = Company::with('financialYears')->orderBy('name')->paginate(12);
         return view('companies.index', compact('companies'));
     }
 

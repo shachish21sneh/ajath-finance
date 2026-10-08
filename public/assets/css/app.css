@@ -1467,3 +1467,56 @@ body {
         print-color-adjust: exact !important;
     }
 }
+
+/* ==========================================================================
+   PAGINATION STYLING & MODERN CONTROLS
+   ========================================================================== */
+.pagination {
+    margin-bottom: 0;
+    gap: 3px;
+    align-items: center;
+}
+
+.pagination .page-item .page-link {
+    border-radius: 6px;
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+    padding: 0.35rem 0.75rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 1.5;
+    transition: all 0.15s ease-in-out;
+    background-color: var(--card-bg, #ffffff);
+}
+
+.pagination .page-item.active .page-link {
+    background-color: var(--primary-color, #4f46e5);
+    border-color: var(--primary-color, #4f46e5);
+    color: #ffffff !important;
+    box-shadow: 0 1px 3px rgba(79, 70, 229, 0.25);
+}
+
+.pagination .page-item:not(.active):not(.disabled) .page-link:hover {
+    background-color: #f1f5f9;
+    color: var(--primary-color, #4f46e5);
+    border-color: #cbd5e1;
+}
+
+.pagination .page-item.disabled .page-link {
+    color: #94a3b8;
+    background-color: #f8fafc;
+    border-color: var(--border-color, #e2e8f0);
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+/* Strict safeguard against any unconstrained pagination SVG arrows */
+nav svg, .pagination svg, [role="navigation"] svg {
+    width: 14px !important;
+    height: 14px !important;
+    max-width: 16px !important;
+    max-height: 16px !important;
+    display: inline-block !important;
+    vertical-align: middle !important;
+}
+
