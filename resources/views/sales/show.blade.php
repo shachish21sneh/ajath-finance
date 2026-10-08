@@ -2,6 +2,63 @@
 
 @section('title', 'Tax Invoice ' . $invoice->invoice_no)
 
+@push('styles')
+<style>
+@media print {
+    @page {
+        size: A4 portrait;
+        margin: 8mm 8mm 8mm 8mm;
+    }
+    body {
+        background: #ffffff !important;
+        color: #0f172a !important;
+        font-size: 11px !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+    .no-print, header, footer, .sidebar, .sidebar-backdrop, .quick-shortcuts-bar, .btn-trigger-print {
+        display: none !important;
+    }
+    .app-main, main {
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+    }
+    .print-invoice-sheet {
+        box-shadow: none !important;
+        border: none !important;
+        padding: 0 !important;
+        max-width: 100% !important;
+        width: 100% !important;
+        margin: 0 !important;
+    }
+    .invoice-party-row {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        gap: 12px !important;
+        margin-bottom: 12px !important;
+    }
+    .invoice-party-col {
+        flex: 0 0 50% !important;
+        width: 50% !important;
+        max-width: 50% !important;
+        display: block !important;
+    }
+    .invoice-hsn-row, .invoice-bank-row {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+    }
+    .bg-light {
+        background-color: #f8fafc !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+}
+</style>
+@endpush
+
 @section('content')
 <div class="d-flex align-items-center justify-content-between mb-4 no-print">
     <div class="d-flex align-items-center gap-3">
@@ -67,9 +124,9 @@
     </div>
 
     <!-- Bill To & Ship To Details -->
-    <div class="row g-3 mb-4">
+    <div class="row g-3 mb-3 invoice-party-row">
         <!-- Billed To / Buyer Details -->
-        <div class="col-md-6">
+        <div class="col-6 col-md-6 invoice-party-col">
             <div class="p-3 bg-light rounded-3 h-100 small border">
                 <span class="text-muted text-uppercase fw-bold" style="font-size: 0.7rem;">Billed To / Buyer Details:</span>
                 <div class="fw-bold fs-6 text-main mt-1">{{ $invoice->customer->name }}</div>
@@ -86,7 +143,7 @@
         </div>
 
         <!-- Shipped To / Consignee Details -->
-        <div class="col-md-6">
+        <div class="col-6 col-md-6 invoice-party-col">
             <div class="p-3 bg-light rounded-3 h-100 small border">
                 <div class="d-flex justify-content-between align-items-center">
                     <span class="text-muted text-uppercase fw-bold" style="font-size: 0.7rem;">Shipped To / Consignee Details:</span>
@@ -188,9 +245,9 @@
     </div>
 
     <!-- Taxes Calculation & Grand Total Breakdown -->
-    <div class="row g-4 mb-4">
+    <div class="row g-3 mb-3 invoice-hsn-row">
         <!-- HSN Summary Table -->
-        <div class="col-md-7 small">
+        <div class="col-7 col-md-7 small">
             <h6 class="fw-bold mb-2 small text-uppercase text-muted">GST Tax Computation Breakdown</h6>
             @php
                 $hsnBreakdown = [];
@@ -291,7 +348,7 @@
         </div>
 
         <!-- Grand Total Summary Box -->
-        <div class="col-md-5">
+        <div class="col-5 col-md-5">
             <div class="p-3 bg-light rounded-3 small">
                 <div class="d-flex justify-content-between py-1">
                     <span class="text-muted">Taxable Subtotal:</span>
@@ -326,8 +383,8 @@
     </div>
 
     <!-- Bank Details & Terms -->
-    <div class="row g-4 mb-4 small">
-        <div class="col-md-6">
+    <div class="row g-3 mb-3 small invoice-bank-row">
+        <div class="col-6 col-md-6">
             <h6 class="fw-bold text-uppercase mb-2 text-muted" style="font-size: 0.72rem;">Bank Account for Remittance (NEFT / RTGS)</h6>
             <div class="border p-3 rounded-3 bg-white">
                 <div><strong>Bank Name:</strong> HDFC Bank Ltd</div>
@@ -337,7 +394,7 @@
                 <div><strong>Branch:</strong> Connaught Place, New Delhi</div>
             </div>
         </div>
-        <div class="col-md-6">
+        <div class="col-6 col-md-6">
             <h6 class="fw-bold text-uppercase mb-2 text-muted" style="font-size: 0.72rem;">Terms & Conditions</h6>
             <div class="text-muted small">
                 {!! nl2br(e($invoice->terms_conditions)) !!}
