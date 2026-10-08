@@ -402,6 +402,11 @@ class SalesAndPurchaseTest extends TestCase
         $showRes->assertSee('Line 1: High efficiency monocrystalline module');
         $showRes->assertSee('Line 2: Serial #SN-2026-998877');
         $showRes->assertSee('Line 3: 10 Year Comprehensive Warranty');
+
+        // 4. Verify Payment Settlement & Notes is displayed on view page with no-print class
+        $showRes->assertSee('Payment Settlement & Notes', false);
+        $showRes->assertSee('Screen view only');
+        $showRes->assertSee('Cash');
     }
 }
 

@@ -2,6 +2,40 @@
 
 @section('title', 'Purchase Bill ' . $purchase->bill_no)
 
+@push('styles')
+<style>
+@media print {
+    @page {
+        size: A4 portrait;
+        margin: 8mm;
+    }
+    body {
+        background: #ffffff !important;
+        color: #0f172a !important;
+        font-size: 11px !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+    .no-print, header, footer, .sidebar, .sidebar-backdrop, .quick-shortcuts-bar, .btn-trigger-print {
+        display: none !important;
+    }
+    .app-main, main {
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+    }
+    .print-invoice-sheet {
+        box-shadow: none !important;
+        border: none !important;
+        padding: 0 !important;
+        max-width: 100% !important;
+        width: 100% !important;
+        margin: 0 !important;
+    }
+}
+</style>
+@endpush
+
 @section('content')
 <div class="d-flex align-items-center justify-content-between mb-4 no-print">
     <div class="d-flex align-items-center gap-3">
@@ -20,6 +54,50 @@
         <a href="{{ route('purchases.create') }}" class="btn btn-primary btn-sm">
             <i class="fa-solid fa-plus me-1"></i> New Purchase (F9)
         </a>
+    </div>
+</div>
+
+<!-- Payment & Vendor Notes (View Only - Excluded from Print Bill) -->
+<div class="card card-modern p-4 mb-4 mx-auto no-print shadow-sm" style="max-width: 900px;">
+    <div class="d-flex align-items-center justify-content-between mb-3 border-bottom pb-2">
+        <h6 class="fw-bold mb-0 text-main d-flex align-items-center gap-2">
+            <i class="fa-solid fa-receipt text-primary"></i> Payment & Vendor Notes
+        </h6>
+        <span class="badge bg-light border text-muted small fw-normal">
+            <i class="fa-solid fa-eye-slash text-secondary me-1"></i> Screen view only &bull; Not in print bill
+        </span>
+    </div>
+    <div class="row g-3">
+        <div class="col-md-4">
+            <label class="form-label small fw-semibold text-muted mb-1">Amount Paid (₹)</label>
+            <div class="form-control bg-light fw-bold text-success">
+                ₹ {{ number_format((float)($purchase->paid_amount ?? 0), 2) }}
+            </div>
+            @if((float)($purchase->due_amount ?? 0) > 0)
+                <div class="small text-danger mt-1">
+                    <i class="fa-solid fa-circle-exclamation me-1"></i> Balance Payable: <strong>₹ {{ number_format((float)$purchase->due_amount, 2) }}</strong>
+                </div>
+            @endif
+        </div>
+        <div class="col-md-4">
+            <label class="form-label small fw-semibold text-muted mb-1">Payment Status</label>
+            <div class="form-control bg-light">
+                @php
+                    $statusBadge = match($purchase->payment_status) {
+                        'paid' => 'bg-success text-white',
+                        'partial' => 'bg-warning text-dark',
+                        default => 'bg-danger text-white',
+                    };
+                @endphp
+                <span class="badge {{ $statusBadge }} px-2.5 py-1 text-uppercase fw-semibold">{{ $purchase->payment_status }}</span>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label small fw-semibold text-muted mb-1">Purchase Notes / Remarks</label>
+            <div class="form-control bg-light text-muted" style="min-height: 38px;">
+                {{ $purchase->notes ?: '—' }}
+            </div>
+        </div>
     </div>
 </div>
 
