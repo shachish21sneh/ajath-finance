@@ -352,4 +352,56 @@ class SalesAndPurchaseTest extends TestCase
         // Live stock should have increased by 3 additional units
         $this->assertEquals($stockBeforeUpdate + 3, (float) $product->fresh()->current_stock);
     }
+
+    public function test_multiline_item_description_in_sales_and_purchase_invoices(): void
+    {
+        $admin = User::where('email', 'admin@fuzurra.com')->first();
+        $this->actingAs($admin);
+        $company = Company::first();
+
+        // 1. Verify create form has textarea with @keydown.enter.stop
+        $createRes = $this->get('/sales/create');
+        $createRes->assertStatus(200);
+        $createRes->assertSee('<textarea', false);
+        $createRes->assertSee('@keydown.enter.stop', false);
+
+        // 2. Create invoice with multiline description
+        $customer = Ledger::where('company_id', $company->id)->where('party_type', 'customer')->first();
+        $product = Product::where('company_id', $company->id)->first();
+
+        $multilineDesc = "Line 1: High efficiency monocrystalline module\nLine 2: Serial #SN-2026-998877\nLine 3: 10 Year Comprehensive Warranty";
+
+        $postRes = $this->post('/sales', [
+            'customer_ledger_id' => $customer->id,
+            'invoice_date' => now()->toDateString(),
+            'payment_method' => 'cash',
+            'paid_amount' => 500,
+            'items' => [
+                [
+                    'product_id' => $product->id,
+                    'description' => $multilineDesc,
+                    'hsn_code' => $product->hsn_code,
+                    'quantity' => 2,
+                    'unit_price' => 250,
+                    'gst_rate' => 18,
+                ]
+            ]
+        ]);
+
+        $postRes->assertRedirect();
+        $invoiceId = str_replace(url('/sales') . '/', '', $postRes->headers->get('Location'));
+        $invoice = SalesInvoice::with('items')->find($invoiceId);
+        $this->assertNotNull($invoice);
+
+        $savedItem = $invoice->items->first();
+        $this->assertStringContainsString("Line 2: Serial #SN-2026-998877", $savedItem->description);
+
+        // 3. Verify show page displays multiline description with formatting
+        $showRes = $this->get('/sales/' . $invoice->id);
+        $showRes->assertStatus(200);
+        $showRes->assertSee('Line 1: High efficiency monocrystalline module');
+        $showRes->assertSee('Line 2: Serial #SN-2026-998877');
+        $showRes->assertSee('Line 3: 10 Year Comprehensive Warranty');
+    }
 }
+

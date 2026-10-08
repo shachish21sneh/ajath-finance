@@ -205,9 +205,9 @@
                                 $title = $productName ?: ($desc ?: 'Item');
                                 $hasSubtitle = $productName && $desc !== '' && $desc !== $productName;
                             @endphp
-                            <div class="fw-bold text-main">{{ $title }}</div>
+                            <div class="fw-bold text-main" style="white-space: pre-line;">{{ $title }}</div>
                             @if($hasSubtitle)
-                                <div class="text-muted fst-italic mt-0.5" style="font-size: 0.8125rem;">{{ $desc }}</div>
+                                <div class="text-muted fst-italic mt-0.5" style="font-size: 0.8125rem; white-space: pre-line;">{!! nl2br(e($desc)) !!}</div>
                             @endif
                             @if($item->product && $item->product->has_inventory_components && $item->product->inventoryComponents->isNotEmpty())
                                 <div class="mt-1" style="font-size: 0.72rem;">

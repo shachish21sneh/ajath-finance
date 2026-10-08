@@ -11,13 +11,14 @@
         </div>
         <div class="d-flex gap-2">
             <a href="{{ route('sales.index') }}" class="btn btn-sm btn-outline-secondary">Cancel</a>
-            <button type="button" class="btn btn-primary btn-sm fw-semibold px-4" @click="submitForm()">
-                <i class="fa-solid fa-check me-1"></i> Save & Generate Invoice (Ctrl+S)
+            <button type="button" class="btn btn-primary btn-sm fw-semibold px-4" @click="submitForm()" :disabled="isSubmitting">
+                <span x-show="!isSubmitting"><i class="fa-solid fa-check me-1"></i> Save & Generate Invoice (Ctrl+S)</span>
+                <span x-show="isSubmitting"><i class="fa-solid fa-spinner fa-spin me-1"></i> Saving...</span>
             </button>
         </div>
     </div>
 
-    <form id="salesInvoiceForm" class="keyboard-save-form" action="{{ route('sales.store') }}" method="POST">
+    <form id="salesInvoiceForm" class="keyboard-save-form" action="{{ route('sales.store') }}" method="POST" @submit="handleSubmit($event)" @keydown.enter="handleEnterKey($event)">
         @csrf
         <!-- Invoice Details Header -->
         <div class="card card-modern p-4 mb-4">
@@ -386,7 +387,14 @@
                                         </div>
                                     </div>
 
-                                    <input type="text" :name="`items[${index}][description]`" class="form-control form-control-sm mt-1" x-model="item.description" :placeholder="item.product_id ? 'Description / Details (optional)...' : 'Item description...'" :required="!item.product_id">
+                                    <textarea :name="`items[${index}][description]`" 
+                                              class="form-control form-control-sm mt-1" 
+                                              rows="2" 
+                                              x-model="item.description" 
+                                              :placeholder="item.product_id ? 'Description / Details / Serial Nos (optional)...' : 'Item description / details...'" 
+                                              :required="!item.product_id"
+                                              @keydown.enter.stop
+                                              style="resize: vertical; min-height: 48px; font-size: 0.8125rem; line-height: 1.35;"></textarea>
                                     <template x-if="item.components && item.components.length > 0">
                                         <div class="mt-1 p-2 bg-light rounded border border-info-subtle small" style="font-size: 0.72rem;">
                                             <span class="text-primary fw-semibold"><i class="fa-solid fa-boxes-stacked me-1"></i> Auto-Deducted Components:</span>
@@ -526,8 +534,9 @@
 
         <div class="d-flex justify-content-end gap-2">
             <a href="{{ route('sales.index') }}" class="btn btn-light border px-4">Cancel</a>
-            <button type="submit" class="btn btn-primary px-5 fw-semibold py-2">
-                <i class="fa-solid fa-check me-1"></i> Save & Generate Tax Invoice (Ctrl+S)
+            <button type="submit" class="btn btn-primary px-5 fw-semibold py-2" :disabled="isSubmitting">
+                <span x-show="!isSubmitting"><i class="fa-solid fa-check me-1"></i> Save & Generate Tax Invoice (Ctrl+S)</span>
+                <span x-show="isSubmitting"><i class="fa-solid fa-spinner fa-spin me-1"></i> Saving Invoice...</span>
             </button>
         </div>
     </form>
@@ -736,6 +745,7 @@ function invoiceForm() {
         },
         quickCustError: '',
         quickCustSubmitting: false,
+        isSubmitting: false,
         defaultWarehouseId: '{{ $warehouses->firstWhere('is_default', true)?->id ?? $warehouses->first()?->id ?? '' }}',
         searchDebounce: null,
         defaultProducts: [],
@@ -1319,12 +1329,40 @@ function invoiceForm() {
             this.shipTo.state_code = '{{ $company->state_code ?? '07' }}';
             this.shipTo.pincode = '';
         },
+        handleEnterKey(event) {
+            // Allow Enter to work naturally inside textarea (newline)
+            if (event.target.tagName === 'TEXTAREA') {
+                return;
+            }
+            // Allow Enter inside dropdown search menus (handled by their own keydown handlers)
+            if (event.target.closest('.dropdown-menu')) {
+                return;
+            }
+            // Prevent accidental form submission when pressing Enter in standard inputs
+            event.preventDefault();
+        },
+        handleSubmit(event) {
+            if (!this.customerId) {
+                event.preventDefault();
+                this.openCustomerDropdown();
+                alert('Please select or add a Customer / Client.');
+                return false;
+            }
+            if (this.isSubmitting) {
+                event.preventDefault();
+                return false;
+            }
+            this.isSubmitting = true;
+            return true;
+        },
         submitForm() {
             if (!this.customerId) {
                 this.openCustomerDropdown();
                 alert('Please select or add a Customer / Client.');
                 return;
             }
+            if (this.isSubmitting) return;
+            this.isSubmitting = true;
             document.getElementById('salesInvoiceForm').submit();
         }
     };

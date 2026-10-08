@@ -13,13 +13,14 @@
             <a href="{{ route('purchases.show', $purchase->id) }}" class="btn btn-sm btn-outline-secondary">
                 <i class="fa-solid fa-arrow-left me-1"></i> Back to Bill
             </a>
-            <button type="button" class="btn btn-primary btn-sm fw-semibold px-4" @click="submitForm()">
-                <i class="fa-solid fa-check me-1"></i> Save Changes (Ctrl+S)
+            <button type="button" class="btn btn-primary btn-sm fw-semibold px-4" @click="submitForm()" :disabled="isSubmitting">
+                <span x-show="!isSubmitting"><i class="fa-solid fa-check me-1"></i> Save Changes (Ctrl+S)</span>
+                <span x-show="isSubmitting"><i class="fa-solid fa-spinner fa-spin me-1"></i> Saving...</span>
             </button>
         </div>
     </div>
 
-    <form id="purchaseForm" class="keyboard-save-form" action="{{ route('purchases.update', $purchase->id) }}" method="POST">
+    <form id="purchaseForm" class="keyboard-save-form" action="{{ route('purchases.update', $purchase->id) }}" method="POST" @submit="handleSubmit($event)" @keydown.enter="handleEnterKey($event)">
         @csrf
         @method('PUT')
         <!-- Supplier & Bill Meta -->
@@ -212,7 +213,14 @@
                                         </div>
                                     </div>
 
-                                    <input type="text" :name="`items[${index}][description]`" class="form-control form-control-sm mt-1" x-model="item.description" :placeholder="item.product_id ? 'Description / Details (optional)...' : 'Item description...'" :required="!item.product_id">
+                                    <textarea :name="`items[${index}][description]`" 
+                                              class="form-control form-control-sm mt-1" 
+                                              rows="2" 
+                                              x-model="item.description" 
+                                              :placeholder="item.product_id ? 'Description / Details / Serial Nos (optional)...' : 'Item description / details...'" 
+                                              :required="!item.product_id"
+                                              @keydown.enter.stop
+                                              style="resize: vertical; min-height: 48px; font-size: 0.8125rem; line-height: 1.35;"></textarea>
                                 </td>
                                 <td>
                                     <input type="text" :name="`items[${index}][hsn_code]`" class="form-control form-control-sm text-center" x-model="item.hsn_code" placeholder="HSN">
@@ -316,8 +324,9 @@
 
         <div class="d-flex justify-content-end gap-2">
             <a href="{{ route('purchases.show', $purchase->id) }}" class="btn btn-light border px-4">Cancel</a>
-            <button type="submit" class="btn btn-primary px-5 fw-semibold py-2">
-                <i class="fa-solid fa-check me-1"></i> Save Changes (Ctrl+S)
+            <button type="submit" class="btn btn-primary px-5 fw-semibold py-2" :disabled="isSubmitting">
+                <span x-show="!isSubmitting"><i class="fa-solid fa-check me-1"></i> Save Changes (Ctrl+S)</span>
+                <span x-show="isSubmitting"><i class="fa-solid fa-spinner fa-spin me-1"></i> Saving Changes...</span>
             </button>
         </div>
     </form>
@@ -328,6 +337,7 @@
 <script>
 function purchaseForm() {
     return {
+        isSubmitting: false,
         defaultWarehouseId: '{{ $warehouses->firstWhere('is_default', true)?->id ?? $warehouses->first()?->id ?? '' }}',
         searchDebounce: null,
         defaultProducts: [],
@@ -587,7 +597,26 @@ function purchaseForm() {
             item.tax_amount = tax;
             item.total_amount = taxable + tax;
         },
+        handleEnterKey(event) {
+            if (event.target.tagName === 'TEXTAREA') {
+                return;
+            }
+            if (event.target.closest('.dropdown-menu')) {
+                return;
+            }
+            event.preventDefault();
+        },
+        handleSubmit(event) {
+            if (this.isSubmitting) {
+                event.preventDefault();
+                return false;
+            }
+            this.isSubmitting = true;
+            return true;
+        },
         submitForm() {
+            if (this.isSubmitting) return;
+            this.isSubmitting = true;
             document.getElementById('purchaseForm').submit();
         }
     };

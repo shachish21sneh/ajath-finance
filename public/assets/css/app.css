@@ -1520,3 +1520,20 @@ nav svg, .pagination svg, [role="navigation"] svg {
     vertical-align: middle !important;
 }
 
+/* Invoice Line Item Description Textarea */
+.item-desc-textarea,
+textarea[name*="[description]"] {
+    font-size: 0.8125rem;
+    line-height: 1.35;
+    border-radius: 6px;
+    border-color: #cbd5e1;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.item-desc-textarea:focus,
+textarea[name*="[description]"]:focus {
+    border-color: var(--primary-color, #4f46e5);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
+}
+
+
