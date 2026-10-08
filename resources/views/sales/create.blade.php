@@ -22,16 +22,135 @@
         <!-- Invoice Details Header -->
         <div class="card card-modern p-4 mb-4">
             <div class="row g-3">
-                <div class="col-md-4">
-                    <label class="form-label small fw-semibold">Customer / Client *</label>
-                    <select name="customer_ledger_id" class="form-select" x-model="customerId" @change="onCustomerChange()" required>
-                        <option value="">-- Choose Customer --</option>
-                        @foreach($customers as $c)
-                            <option value="{{ $c->id }}" data-state-code="{{ $c->state_code }}" data-gstin="{{ $c->gstin }}">
-                                {{ $c->name }} ({{ $c->state }}) [GST: {{ $c->gstin ?: 'None' }}]
-                            </option>
-                        @endforeach
-                    </select>
+                <div class="col-md-4 position-relative">
+                    <div class="d-flex align-items-center justify-content-between mb-1">
+                        <label class="form-label small fw-semibold mb-0">Customer / Client *</label>
+                        <button type="button" 
+                                class="btn btn-sm btn-link p-0 text-decoration-none fw-semibold text-primary d-inline-flex align-items-center" 
+                                @click="openCustomerModal()" 
+                                title="Add new customer">
+                            <i class="fa-solid fa-plus-circle me-1"></i> Add Customer
+                        </button>
+                    </div>
+
+                    <!-- Hidden input for form submit -->
+                    <input type="hidden" name="customer_ledger_id" :value="customerId">
+
+                    <!-- Customer Combobox Input Trigger -->
+                    <div class="product-combobox-wrapper">
+                        <button type="button" 
+                                id="customer-combobox-trigger"
+                                class="product-combobox-trigger"
+                                :class="{'is-active': isCustomerOpen, 'border-primary': customerId}"
+                                style="height: 38px; min-height: 38px; font-size: 0.875rem;"
+                                @click="toggleCustomerDropdown()"
+                                :title="selectedCustomerLabel || '-- Choose Customer --'">
+                            <div class="d-flex align-items-center text-truncate me-2" style="min-width: 0; flex: 1 1 auto;">
+                                <span class="text-truncate" :class="customerId ? 'fw-semibold text-dark' : 'text-muted'" x-text="selectedCustomerLabel || '-- Choose Customer --'"></span>
+                            </div>
+                            <div class="d-flex align-items-center flex-shrink-0 ms-auto gap-1">
+                                <span x-show="customerId" 
+                                      @click.stop="clearCustomer()" 
+                                      class="product-clear-btn" 
+                                      title="Clear customer selection">
+                                    <i class="fa-solid fa-xmark"></i>
+                                </span>
+                                <i class="fa-solid fa-chevron-down text-muted small opacity-75"></i>
+                            </div>
+                        </button>
+
+                        <!-- Floating Customer Search Dropdown Menu -->
+                        <div x-show="isCustomerOpen" 
+                             @click.outside="closeCustomerDropdown()"
+                             class="product-combobox-menu w-100"
+                             style="min-width: 380px;"
+                             x-cloak>
+                            
+                            <!-- Live Search Bar -->
+                            <div class="product-combobox-search-box">
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text bg-white border-end-0 text-muted ps-2.5">
+                                        <i class="fa-solid fa-magnifying-glass text-primary"></i>
+                                    </span>
+                                    <input type="text" 
+                                           id="customer-search-input"
+                                           class="form-control product-combobox-search-input border-start-0" 
+                                           placeholder="Search customer by name, GSTIN, phone, state..."
+                                           x-model="customerSearchQuery"
+                                           @input="onCustomerSearchInput()"
+                                           @keydown.down.prevent="onCustomerKeyDown($event)"
+                                           @keydown.up.prevent="onCustomerKeyDown($event)"
+                                           @keydown.enter.prevent="onCustomerKeyDown($event)"
+                                           @keydown.escape.prevent="closeCustomerDropdown()"
+                                           autocomplete="off">
+                                    <button type="button" 
+                                            class="btn btn-light border border-start-0 text-muted" 
+                                            x-show="customerSearchQuery" 
+                                            @click="customerSearchQuery = ''; onCustomerSearchInput()">
+                                        <i class="fa-solid fa-xmark"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Table Header for Dropdown Results -->
+                            <div class="product-combobox-grid-header" style="grid-template-columns: 1fr auto;">
+                                <span>Customer / Client</span>
+                                <span class="text-end">State / GSTIN</span>
+                            </div>
+
+                            <!-- Results Container -->
+                            <div class="product-combobox-list" id="customer-dropdown-list" style="max-height: 250px;">
+                                <template x-for="(cust, cIdx) in filteredCustomers" :key="cust.id">
+                                    <div class="product-combobox-row d-flex justify-content-between align-items-center py-2 px-2.5 cursor-pointer"
+                                         :class="{'is-selected': customerHighlightIndex === cIdx}"
+                                         @mouseenter="customerHighlightIndex = cIdx"
+                                         @click="selectCustomer(cust)">
+                                        <div class="pe-2 overflow-hidden">
+                                            <div class="fw-semibold text-truncate text-dark item-name" style="font-size: 0.8125rem;" x-text="cust.name"></div>
+                                            <div class="text-muted small d-flex align-items-center gap-1.5" style="font-size: 0.7rem;">
+                                                <template x-if="cust.phone">
+                                                    <span><i class="fa-solid fa-phone me-0.5"></i><span x-text="cust.phone"></span></span>
+                                                </template>
+                                                <template x-if="cust.city">
+                                                    <span>• <span x-text="cust.city"></span></span>
+                                                </template>
+                                            </div>
+                                        </div>
+                                        <div class="text-end ps-1 flex-shrink-0">
+                                            <span class="badge bg-light text-dark border" style="font-size: 0.68rem;" x-text="cust.state || cust.state_code"></span>
+                                            <div class="text-muted" style="font-size: 0.68rem;" x-text="cust.gstin ? cust.gstin : 'Unregistered'"></div>
+                                        </div>
+                                    </div>
+                                </template>
+
+                                <!-- No results found -->
+                                <template x-if="filteredCustomers.length === 0">
+                                    <div class="p-3 text-center text-muted small">
+                                        <i class="fa-solid fa-user-slash mb-1.5 d-block opacity-40 fs-4"></i>
+                                        <span>No customer matching "<span class="fw-semibold text-dark" x-text="customerSearchQuery"></span>"</span>
+                                        <div class="mt-2.5">
+                                            <button type="button" class="btn btn-sm btn-primary" @click="openCustomerModal(customerSearchQuery)">
+                                                <i class="fa-solid fa-plus me-1"></i> Add "<span x-text="customerSearchQuery"></span>" as New Customer
+                                            </button>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+
+                            <!-- Dropdown Footer -->
+                            <div class="product-combobox-footer d-flex justify-content-between align-items-center">
+                                <button type="button" class="btn btn-sm btn-link text-decoration-none p-0 fw-semibold text-primary d-flex align-items-center" @click="openCustomerModal(customerSearchQuery)">
+                                    <i class="fa-solid fa-plus-circle me-1.5 fs-6"></i>
+                                    <span>+ Add New Customer</span>
+                                </button>
+                                <div class="d-flex align-items-center gap-1 text-muted" style="font-size: 0.68rem;">
+                                    <span class="badge bg-white text-secondary border">↑↓ Navigate</span>
+                                    <span class="badge bg-white text-secondary border">↵ Select</span>
+                                    <span class="badge bg-white text-secondary border">Esc Close</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="col-md-2">
                     <label class="form-label small fw-semibold">Invoice Number</label>
@@ -356,6 +475,79 @@
             </button>
         </div>
     </form>
+
+    <!-- Quick Add Customer Modal -->
+    <div class="modal fade" id="quickAddCustomerModal" tabindex="-1" aria-labelledby="quickAddCustomerModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content card-modern border-0 shadow">
+                <div class="modal-header border-bottom py-2.5 px-3 bg-light">
+                    <h5 class="modal-title fs-6 fw-bold mb-0 text-dark" id="quickAddCustomerModalLabel">
+                        <i class="fa-solid fa-user-plus text-primary me-2"></i> Register New Customer / Client
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form class="no-auto-save" @submit.prevent="submitQuickCustomer()">
+                    <div class="modal-body p-3">
+                        <div x-show="quickCustError" class="alert alert-danger py-2 px-3 small mb-3" x-text="quickCustError" x-cloak></div>
+                        
+                        <div class="row g-2.5">
+                            <div class="col-md-7">
+                                <label class="form-label small fw-semibold">Customer / Company Name *</label>
+                                <input type="text" class="form-control form-control-sm" x-model="quickCust.name" required placeholder="e.g. Apex Tech Solutions Pvt Ltd" id="quick-cust-name-input">
+                            </div>
+                            <div class="col-md-5">
+                                <label class="form-label small fw-semibold">Phone / Mobile</label>
+                                <input type="text" class="form-control form-control-sm" x-model="quickCust.phone" placeholder="+91 98765 43210">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">GSTIN (15 Digits)</label>
+                                <input type="text" class="form-control form-control-sm text-uppercase" x-model="quickCust.gstin" @input="onGstinInput()" maxlength="15" placeholder="e.g. 07AAAAA0000A1Z5">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Email Address</label>
+                                <input type="email" class="form-control form-control-sm" x-model="quickCust.email" placeholder="billing@company.com">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-semibold">State *</label>
+                                <input type="text" class="form-control form-control-sm" x-model="quickCust.state" required placeholder="Delhi">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small fw-semibold">State Code *</label>
+                                <input type="text" class="form-control form-control-sm text-center" x-model="quickCust.state_code" required maxlength="2" placeholder="07">
+                            </div>
+                            <div class="col-md-5">
+                                <label class="form-label small fw-semibold">City</label>
+                                <input type="text" class="form-control form-control-sm" x-model="quickCust.city" placeholder="New Delhi">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label small fw-semibold">Billing Address</label>
+                                <input type="text" class="form-control form-control-sm" x-model="quickCust.address" placeholder="Premises, Street, Area...">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Opening Balance (₹)</label>
+                                <input type="number" step="0.01" class="form-control form-control-sm" x-model="quickCust.opening_balance" placeholder="0.00">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Balance Type</label>
+                                <select class="form-select form-select-sm" x-model="quickCust.opening_balance_type">
+                                    <option value="Dr">Dr (Receivable from customer)</option>
+                                    <option value="Cr">Cr (Advance / Payable to customer)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-top py-2 px-3 bg-light">
+                        <button type="button" class="btn btn-sm btn-light border" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-sm btn-primary fw-semibold px-3" :disabled="quickCustSubmitting">
+                            <span x-show="quickCustSubmitting" class="spinner-border spinner-border-sm me-1" role="status"></span>
+                            <i class="fa-solid fa-check me-1" x-show="!quickCustSubmitting"></i>
+                            <span>Save & Select Customer</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
 @endsection
 
@@ -363,7 +555,39 @@
 <script>
 function invoiceForm() {
     return {
-        customerId: '',
+        customers: {!! json_encode($customers->map(function($c) {
+            $label = $c->name . ($c->state ? ' (' . $c->state . ')' : '') . ($c->gstin ? ' [GST: ' . $c->gstin . ']' : '');
+            return [
+                'id' => (string) $c->id,
+                'name' => $c->name,
+                'state' => $c->state ?? '',
+                'state_code' => $c->state_code ?? '',
+                'gstin' => $c->gstin ?? '',
+                'phone' => $c->phone ?? '',
+                'city' => $c->city ?? '',
+                'label' => $label,
+            ];
+        })) !!},
+        customerId: '{{ old('customer_ledger_id', '') }}',
+        selectedCustomerLabel: '',
+        isCustomerOpen: false,
+        customerSearchQuery: '',
+        filteredCustomers: [],
+        customerHighlightIndex: 0,
+        quickCust: {
+            name: '',
+            phone: '',
+            email: '',
+            gstin: '',
+            state: '{{ $company->state ?? 'Delhi' }}',
+            state_code: '{{ $company->state_code ?? '07' }}',
+            city: '{{ $company->city ?? 'Delhi' }}',
+            address: '',
+            opening_balance: '0.00',
+            opening_balance_type: 'Dr'
+        },
+        quickCustError: '',
+        quickCustSubmitting: false,
         defaultWarehouseId: '{{ $warehouses->firstWhere('is_default', true)?->id ?? $warehouses->first()?->id ?? '' }}',
         searchDebounce: null,
         defaultProducts: [],
@@ -390,6 +614,13 @@ function invoiceForm() {
             }
         ],
         init() {
+            this.filteredCustomers = [...this.customers];
+            if (this.customerId) {
+                const found = this.customers.find(c => String(c.id) === String(this.customerId));
+                if (found) {
+                    this.selectedCustomerLabel = found.label;
+                }
+            }
             this.fetchDefaultProducts();
         },
         fetchDefaultProducts() {
@@ -455,6 +686,7 @@ function invoiceForm() {
             }
         },
         openProductSearch(index) {
+            this.isCustomerOpen = false;
             // Close other rows' search menus
             this.items.forEach((it, i) => {
                 if (i !== index) it.isOpen = false;
@@ -663,10 +895,201 @@ function invoiceForm() {
             item.tax_amount = Math.round(((taxable * rate) / 100) * 100) / 100;
             item.total_amount = Math.round((taxable + item.tax_amount) * 100) / 100;
         },
+        toggleCustomerDropdown() {
+            this.isCustomerOpen = !this.isCustomerOpen;
+            if (this.isCustomerOpen) {
+                this.items.forEach(it => it.isOpen = false);
+                this.customerHighlightIndex = 0;
+                this.customerSearchQuery = '';
+                this.filteredCustomers = [...this.customers];
+                this.$nextTick(() => {
+                    const input = document.getElementById('customer-search-input');
+                    if (input) {
+                        input.focus();
+                        input.select();
+                    }
+                });
+            }
+        },
+        openCustomerDropdown() {
+            this.items.forEach(it => it.isOpen = false);
+            this.isCustomerOpen = true;
+            this.customerHighlightIndex = 0;
+            this.filteredCustomers = [...this.customers];
+            this.$nextTick(() => {
+                const input = document.getElementById('customer-search-input');
+                if (input) {
+                    input.focus();
+                    input.select();
+                }
+            });
+        },
+        closeCustomerDropdown() {
+            this.isCustomerOpen = false;
+        },
+        clearCustomer() {
+            this.customerId = '';
+            this.selectedCustomerLabel = '';
+            this.customerSearchQuery = '';
+            this.filteredCustomers = [...this.customers];
+            this.onCustomerChange();
+        },
+        selectCustomer(cust) {
+            if (!cust) return;
+            this.customerId = cust.id;
+            this.selectedCustomerLabel = cust.label || (cust.name + (cust.state ? ' (' + cust.state + ')' : ''));
+            this.isCustomerOpen = false;
+            this.customerSearchQuery = '';
+            this.onCustomerChange();
+        },
+        onCustomerSearchInput() {
+            const q = (this.customerSearchQuery || '').trim().toLowerCase();
+            if (!q) {
+                this.filteredCustomers = [...this.customers];
+            } else {
+                this.filteredCustomers = this.customers.filter(c => {
+                    const nameMatch = (c.name || '').toLowerCase().includes(q);
+                    const gstinMatch = (c.gstin || '').toLowerCase().includes(q);
+                    const phoneMatch = (c.phone || '').includes(q);
+                    const stateMatch = (c.state || '').toLowerCase().includes(q) || (c.state_code || '').includes(q);
+                    const cityMatch = (c.city || '').toLowerCase().includes(q);
+                    return nameMatch || gstinMatch || phoneMatch || stateMatch || cityMatch;
+                });
+            }
+            this.customerHighlightIndex = 0;
+        },
+        onCustomerKeyDown(event) {
+            if (event.key === 'ArrowDown') {
+                if (this.filteredCustomers.length > 0) {
+                    this.customerHighlightIndex = (this.customerHighlightIndex + 1) % this.filteredCustomers.length;
+                    this.scrollCustomerHighlightedIntoView();
+                }
+            } else if (event.key === 'ArrowUp') {
+                if (this.filteredCustomers.length > 0) {
+                    this.customerHighlightIndex = (this.customerHighlightIndex - 1 + this.filteredCustomers.length) % this.filteredCustomers.length;
+                    this.scrollCustomerHighlightedIntoView();
+                }
+            } else if (event.key === 'Enter') {
+                if (this.filteredCustomers.length > 0 && this.filteredCustomers[this.customerHighlightIndex]) {
+                    this.selectCustomer(this.filteredCustomers[this.customerHighlightIndex]);
+                } else if (this.customerSearchQuery.trim().length > 0) {
+                    this.openCustomerModal(this.customerSearchQuery.trim());
+                }
+            } else if (event.key === 'Escape') {
+                this.closeCustomerDropdown();
+            }
+        },
+        scrollCustomerHighlightedIntoView() {
+            this.$nextTick(() => {
+                const list = document.getElementById('customer-dropdown-list');
+                if (!list) return;
+                const rows = list.querySelectorAll('.product-combobox-row');
+                if (rows[this.customerHighlightIndex]) {
+                    rows[this.customerHighlightIndex].scrollIntoView({ block: 'nearest' });
+                }
+            });
+        },
+        openCustomerModal(prefillName = '') {
+            this.isCustomerOpen = false;
+            this.quickCustError = '';
+            this.quickCust.name = prefillName || '';
+            this.quickCust.phone = '';
+            this.quickCust.email = '';
+            this.quickCust.gstin = '';
+            this.quickCust.state = '{{ $company->state ?? 'Delhi' }}';
+            this.quickCust.state_code = '{{ $company->state_code ?? '07' }}';
+            this.quickCust.city = '{{ $company->city ?? 'Delhi' }}';
+            this.quickCust.address = '';
+            this.quickCust.opening_balance = '0.00';
+            this.quickCust.opening_balance_type = 'Dr';
+
+            const modalEl = document.getElementById('quickAddCustomerModal');
+            if (modalEl) {
+                const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+                modal.show();
+                this.$nextTick(() => {
+                    setTimeout(() => {
+                        const input = document.getElementById('quick-cust-name-input');
+                        if (input) input.focus();
+                    }, 150);
+                });
+            }
+        },
+        onGstinInput() {
+            const g = (this.quickCust.gstin || '').trim().toUpperCase();
+            this.quickCust.gstin = g;
+            if (g.length >= 2) {
+                const code = g.substring(0, 2);
+                const map = {
+                    '01': 'Jammu & Kashmir', '02': 'Himachal Pradesh', '03': 'Punjab', '04': 'Chandigarh',
+                    '05': 'Uttarakhand', '06': 'Haryana', '07': 'Delhi', '08': 'Rajasthan', '09': 'Uttar Pradesh',
+                    '10': 'Bihar', '11': 'Sikkim', '12': 'Arunachal Pradesh', '13': 'Nagaland', '14': 'Manipur',
+                    '15': 'Mizoram', '16': 'Tripura', '17': 'Meghalaya', '18': 'Assam', '19': 'West Bengal',
+                    '20': 'Jharkhand', '21': 'Odisha', '22': 'Chhattisgarh', '23': 'Madhya Pradesh', '24': 'Gujarat',
+                    '27': 'Maharashtra', '29': 'Karnataka', '30': 'Goa', '32': 'Kerala', '33': 'Tamil Nadu',
+                    '36': 'Telangana', '37': 'Andhra Pradesh'
+                };
+                if (map[code]) {
+                    this.quickCust.state_code = code;
+                    this.quickCust.state = map[code];
+                }
+            }
+        },
+        submitQuickCustomer() {
+            if (!this.quickCust.name.trim()) {
+                this.quickCustError = 'Please enter customer name.';
+                return;
+            }
+            this.quickCustSubmitting = true;
+            this.quickCustError = '';
+
+            fetch('{{ route('customers.store') }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify(this.quickCust)
+            })
+            .then(async res => {
+                const data = await res.json();
+                if (!res.ok) {
+                    const msg = data.errors ? Object.values(data.errors).flat().join(' ') : (data.message || 'Failed to save customer');
+                    throw new Error(msg);
+                }
+                return data;
+            })
+            .then(data => {
+                this.quickCustSubmitting = false;
+                if (data.customer) {
+                    data.customer.id = String(data.customer.id);
+                    this.customers.unshift(data.customer);
+                    this.filteredCustomers = [...this.customers];
+                    this.selectCustomer(data.customer);
+
+                    const modalEl = document.getElementById('quickAddCustomerModal');
+                    if (modalEl) {
+                        const modal = bootstrap.Modal.getInstance(modalEl);
+                        if (modal) modal.hide();
+                    }
+                }
+            })
+            .catch(err => {
+                this.quickCustSubmitting = false;
+                this.quickCustError = err.message || 'Error creating customer. Please check the input.';
+            });
+        },
         onCustomerChange() {
             // Customer selection trigger
         },
         submitForm() {
+            if (!this.customerId) {
+                this.openCustomerDropdown();
+                alert('Please select or add a Customer / Client.');
+                return;
+            }
             document.getElementById('salesInvoiceForm').submit();
         }
     };

@@ -284,4 +284,45 @@ class MastersCrudTest extends TestCase
         $delRes->assertRedirect(route('uqc.index'));
         $this->assertNull(UqcMaster::find($customUqc->id));
     }
+
+    public function test_quick_add_customer_ajax_and_sales_combobox(): void
+    {
+        // 1. Quick add customer via AJAX
+        $res = $this->postJson(route('customers.store'), [
+            'name' => 'Acme Test Client Pvt Ltd',
+            'phone' => '9812345678',
+            'email' => 'acme@test.com',
+            'gstin' => '07AAAAA1111A1Z1',
+            'state' => 'Delhi',
+            'state_code' => '07',
+            'city' => 'New Delhi',
+        ]);
+
+        $res->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+                'customer' => [
+                    'name' => 'Acme Test Client Pvt Ltd',
+                    'state' => 'Delhi',
+                    'state_code' => '07',
+                    'gstin' => '07AAAAA1111A1Z1',
+                ],
+            ]);
+
+        $createdId = $res->json('customer.id');
+        $this->assertNotNull($createdId);
+
+        // 2. Verify in DB
+        $ledger = \App\Models\Ledger::find($createdId);
+        $this->assertNotNull($ledger);
+        $this->assertEquals('Acme Test Client Pvt Ltd', $ledger->name);
+        $this->assertEquals('07', $ledger->state_code);
+
+        // 3. Verify sales/create page renders customer combobox & modal
+        $salesRes = $this->get(route('sales.create'));
+        $salesRes->assertStatus(200);
+        $salesRes->assertSee('customer-combobox-trigger');
+        $salesRes->assertSee('customer-search-input');
+        $salesRes->assertSee('quickAddCustomerModal');
+    }
 }
