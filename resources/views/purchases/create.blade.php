@@ -86,9 +86,9 @@
                                                 class="product-combobox-trigger"
                                                 :class="{'is-active': item.isOpen, 'border-primary': item.product_id}"
                                                 @click="openProductSearch(index)"
-                                                :title="item.selectedLabel || '-- Choose Product / Item --'">
+                                                :title="item.selectedLabel || '-- Choose Product --'">
                                             <div class="d-flex align-items-center text-truncate me-2" style="min-width: 0; flex: 1 1 auto;">
-                                                <span class="text-truncate" :class="item.selectedLabel ? 'fw-semibold text-dark' : 'text-muted'" x-text="item.selectedLabel || '-- Choose Product / Item --'"></span>
+                                                <span class="text-truncate" :class="item.selectedLabel ? 'fw-semibold text-dark' : 'text-muted'" x-text="item.selectedLabel || '-- Choose Product --'"></span>
                                             </div>
                                             <div class="d-flex align-items-center flex-shrink-0 ms-auto gap-1">
                                                 <span x-show="item.product_id || item.selectedLabel" 
@@ -199,11 +199,7 @@
                                             </div>
 
                                             <!-- Dropdown Footer -->
-                                            <div class="product-combobox-footer d-flex justify-content-between align-items-center">
-                                                <button type="button" class="btn btn-sm btn-link text-decoration-none p-0 fw-semibold text-primary d-flex align-items-center" @click="selectCustomItem(index)">
-                                                    <i class="fa-solid fa-plus-circle me-1.5 fs-6"></i>
-                                                    <span x-text="item.searchQuery ? `Use '${item.searchQuery}'` : 'Custom item'"></span>
-                                                </button>
+                                            <div class="product-combobox-footer d-flex justify-content-end align-items-center">
                                                 <div class="d-flex align-items-center gap-1 text-muted" style="font-size: 0.68rem;">
                                                     <span class="badge bg-white text-secondary border">↑↓ Navigate</span>
                                                     <span class="badge bg-white text-secondary border">↵ Select</span>
@@ -569,8 +565,6 @@ function purchaseForm() {
             } else if (event.key === 'Enter') {
                 if (item.results && item.results.length > 0 && item.results[item.highlightIndex]) {
                     this.selectProduct(index, item.results[item.highlightIndex]);
-                } else {
-                    this.selectCustomItem(index);
                 }
             } else if (event.key === 'Escape') {
                 this.closeProductSearch(index);
