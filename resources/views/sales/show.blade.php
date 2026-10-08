@@ -468,3 +468,16 @@
     </div>
 </div>
 @endsection
+
+@if(request()->has('print'))
+@push('scripts')
+<script>
+    window.addEventListener('load', function() {
+        setTimeout(function() {
+            window.print();
+        }, 350);
+    });
+</script>
+@endpush
+@endif
+

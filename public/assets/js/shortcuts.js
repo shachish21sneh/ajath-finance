@@ -283,4 +283,58 @@
                 });
         }, 250);
     };
+
+    // Direct Invoice / Bill Instant Print Helper
+    window.printInvoiceDirect = function (url, btn) {
+        let originalHtml = '';
+        if (btn) {
+            originalHtml = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-primary"></i>';
+            btn.disabled = true;
+        }
+
+        const iframe = document.createElement('iframe');
+        iframe.style.position = 'fixed';
+        iframe.style.right = '0';
+        iframe.style.bottom = '0';
+        iframe.style.width = '0';
+        iframe.style.height = '0';
+        iframe.style.border = '0';
+        iframe.style.opacity = '0';
+        iframe.src = url + (url.includes('?') ? '&' : '?') + 'direct_print=1';
+        document.body.appendChild(iframe);
+
+        let printed = false;
+        const restoreBtn = () => {
+            if (btn) {
+                btn.innerHTML = originalHtml;
+                btn.disabled = false;
+            }
+        };
+
+        iframe.onload = function () {
+            setTimeout(() => {
+                try {
+                    iframe.contentWindow.focus();
+                    iframe.contentWindow.print();
+                    printed = true;
+                    restoreBtn();
+                    setTimeout(() => {
+                        try { document.body.removeChild(iframe); } catch (e) {}
+                    }, 60000);
+                } catch (e) {
+                    console.warn('Iframe print error, falling back to window:', e);
+                    restoreBtn();
+                    window.open(url + (url.includes('?') ? '&' : '?') + 'print=1', '_blank');
+                }
+            }, 350);
+        };
+
+        setTimeout(() => {
+            if (!printed) {
+                restoreBtn();
+            }
+        }, 6000);
+    };
 })();
+

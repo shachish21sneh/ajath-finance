@@ -63,9 +63,12 @@
                         </td>
                         <td class="text-center">
                             <div class="d-inline-flex gap-1">
-                                <a href="{{ route('sales.show', $inv->id) }}" class="btn btn-sm btn-light border py-1 px-2" title="View / Print Invoice">
+                                <a href="{{ route('sales.show', $inv->id) }}" class="btn btn-sm btn-light border py-1 px-2" title="View Invoice">
                                     <i class="fa-solid fa-file-invoice text-primary"></i>
                                 </a>
+                                <button type="button" class="btn btn-sm btn-light border py-1 px-2 text-dark" title="Direct Print Invoice" onclick="printInvoiceDirect('{{ route('sales.show', $inv->id) }}', this)">
+                                    <i class="fa-solid fa-print text-dark"></i>
+                                </button>
                                 <a href="{{ route('sales.edit', $inv->id) }}" class="btn btn-sm btn-light border py-1 px-2 text-warning-emphasis" title="Edit Invoice">
                                     <i class="fa-solid fa-pen-to-square"></i>
                                 </a>

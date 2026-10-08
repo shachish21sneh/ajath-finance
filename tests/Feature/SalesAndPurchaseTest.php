@@ -407,6 +407,18 @@ class SalesAndPurchaseTest extends TestCase
         $showRes->assertSee('Payment Settlement & Notes', false);
         $showRes->assertSee('Screen view only');
         $showRes->assertSee('Cash');
+
+        // 5. Verify Sales Index has Direct Print action button
+        $indexRes = $this->get('/sales');
+        $indexRes->assertStatus(200);
+        $indexRes->assertSee('title="Direct Print Invoice"', false);
+        $indexRes->assertSee('printInvoiceDirect', false);
+
+        // 6. Verify Purchases Index has Direct Print action button
+        $purchIndexRes = $this->get('/purchases');
+        $purchIndexRes->assertStatus(200);
+        $purchIndexRes->assertSee('title="Direct Print Bill"', false);
+        $purchIndexRes->assertSee('printInvoiceDirect', false);
     }
 }
 
