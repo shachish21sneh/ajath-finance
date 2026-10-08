@@ -83,9 +83,11 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/sales/pos', [SalesInvoiceController::class, 'pos'])->name('sales.pos');
     Route::post('/sales/pos', [SalesInvoiceController::class, 'storePos'])->name('sales.pos.store');
     Route::get('/sales/{invoice}', [SalesInvoiceController::class, 'show'])->name('sales.show');
+    Route::get('/sales/{invoice}/edit', [SalesInvoiceController::class, 'edit'])->name('sales.edit');
+    Route::put('/sales/{invoice}', [SalesInvoiceController::class, 'update'])->name('sales.update');
 
     // Purchase Invoicing & Bills
-    Route::resource('purchases', PurchaseInvoiceController::class)->only(['index', 'create', 'store', 'show']);
+    Route::resource('purchases', PurchaseInvoiceController::class)->only(['index', 'create', 'store', 'show', 'edit', 'update']);
 
     // Banking & Cash
     Route::get('/banking', [BankingController::class, 'index'])->name('banking.index');

@@ -68,6 +68,9 @@
         <h4 class="fw-bold mb-0">Tax Invoice: {{ $invoice->invoice_no }}</h4>
     </div>
     <div class="d-flex gap-2">
+        <a href="{{ route('sales.edit', $invoice->id) }}" class="btn btn-warning btn-sm fw-semibold">
+            <i class="fa-solid fa-pen-to-square me-1"></i> Edit Invoice
+        </a>
         <button type="button" class="btn btn-outline-primary btn-sm btn-trigger-print" onclick="window.print()">
             <i class="fa-solid fa-print me-1"></i> Print Tax Invoice (Ctrl+P)
         </button>

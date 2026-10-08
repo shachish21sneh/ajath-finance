@@ -54,9 +54,14 @@
                             <span class="badge {{ $statusBadge }} text-capitalize">{{ $inv->payment_status }}</span>
                         </td>
                         <td class="text-center">
-                            <a href="{{ route('purchases.show', $inv->id) }}" class="btn btn-sm btn-light border py-1 px-2" title="View / Print Bill">
-                                <i class="fa-solid fa-eye text-primary"></i>
-                            </a>
+                            <div class="d-inline-flex gap-1">
+                                <a href="{{ route('purchases.show', $inv->id) }}" class="btn btn-sm btn-light border py-1 px-2" title="View / Print Bill">
+                                    <i class="fa-solid fa-eye text-primary"></i>
+                                </a>
+                                <a href="{{ route('purchases.edit', $inv->id) }}" class="btn btn-sm btn-light border py-1 px-2 text-warning-emphasis" title="Edit Purchase Bill">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                </a>
+                            </div>
                         </td>
                     </tr>
                 @empty

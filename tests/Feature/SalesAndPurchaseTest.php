@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Company;
 use App\Models\Ledger;
 use App\Models\Product;
+use App\Models\PurchaseInvoice;
 use App\Models\SalesInvoice;
 use App\Models\User;
 use Tests\TestCase;
@@ -188,5 +189,167 @@ class SalesAndPurchaseTest extends TestCase
         $showRes->assertStatus(200);
         $showRes->assertSee('Shipped To / Consignee Details:');
         $showRes->assertSee($customer->name);
+    }
+
+    public function test_can_edit_and_update_sales_invoice(): void
+    {
+        $admin = User::where('email', 'admin@fuzurra.com')->first();
+        $this->actingAs($admin);
+
+        $company = Company::first();
+        $customer = Ledger::where('company_id', $company->id)->where('party_type', 'customer')->first();
+        $product = Product::where('company_id', $company->id)->where('item_type', 'goods')->first();
+
+        // Create an initial invoice
+        $this->post('/sales', [
+            'customer_ledger_id' => $customer->id,
+            'invoice_date' => now()->toDateString(),
+            'payment_method' => 'cash',
+            'paid_amount' => 1000.00,
+            'items' => [
+                [
+                    'product_id' => $product->id,
+                    'description' => $product->name,
+                    'hsn_code' => $product->hsn_code,
+                    'quantity' => 2,
+                    'unit_price' => 500.00,
+                    'discount_amount' => 0,
+                    'gst_rate' => 18.00,
+                ]
+            ]
+        ]);
+
+        $invoice = SalesInvoice::latest('id')->first();
+        $this->assertNotNull($invoice);
+
+        // 1. Verify Edit button is visible on Index page
+        $indexRes = $this->get('/sales');
+        $indexRes->assertStatus(200);
+        $indexRes->assertSee(route('sales.edit', $invoice->id));
+
+        // 2. Verify Edit button is visible on Show page
+        $showRes = $this->get('/sales/' . $invoice->id);
+        $showRes->assertStatus(200);
+        $showRes->assertSee(route('sales.edit', $invoice->id));
+        $showRes->assertSee('Edit Invoice');
+
+        // 3. Verify Edit page renders 200 OK
+        $editRes = $this->get('/sales/' . $invoice->id . '/edit');
+        $editRes->assertStatus(200);
+        $editRes->assertSee('Edit GST Sales Tax Invoice: ' . $invoice->invoice_no);
+
+        // 4. Update the invoice with new quantity & custom shipping address
+        $stockBeforeUpdate = (float) $product->fresh()->current_stock;
+        $updatedRes = $this->put('/sales/' . $invoice->id, [
+            'customer_ledger_id' => $customer->id,
+            'invoice_date' => now()->toDateString(),
+            'payment_method' => 'bank_transfer',
+            'paid_amount' => 2500.00,
+            'shipping_name' => 'Consignee Site B',
+            'shipping_city' => 'Noida',
+            'shipping_state' => 'Uttar Pradesh',
+            'shipping_state_code' => '09',
+            'items' => [
+                [
+                    'product_id' => $product->id,
+                    'description' => $product->name . ' Updated',
+                    'hsn_code' => $product->hsn_code,
+                    'quantity' => 3, // Increased by 1 from 2
+                    'unit_price' => 700.00,
+                    'discount_amount' => 50.00,
+                    'gst_rate' => 18.00,
+                ]
+            ]
+        ]);
+
+        $updatedRes->assertRedirect(route('sales.show', $invoice->id));
+
+        $invoice->refresh();
+        $this->assertEquals('Consignee Site B', $invoice->shipping_name);
+        $this->assertEquals('bank_transfer', $invoice->payment_method);
+        $this->assertEquals(1, $invoice->items()->count());
+        $this->assertEquals(3, (float) $invoice->items()->first()->quantity);
+
+        // Net stock should have decreased by 1 additional unit
+        $this->assertEquals($stockBeforeUpdate - 1, (float) $product->fresh()->current_stock);
+    }
+
+    public function test_can_edit_and_update_purchase_invoice(): void
+    {
+        $admin = User::where('email', 'admin@fuzurra.com')->first();
+        $this->actingAs($admin);
+
+        $company = Company::first();
+        $supplier = Ledger::where('company_id', $company->id)->where('party_type', 'supplier')->first();
+        $product = Product::where('company_id', $company->id)->where('item_type', 'goods')->first();
+
+        // Create an initial purchase bill
+        $billNo = 'BILL-TEST-' . rand(1000, 9999);
+        $this->post('/purchases', [
+            'supplier_ledger_id' => $supplier->id,
+            'bill_no' => $billNo,
+            'bill_date' => now()->toDateString(),
+            'paid_amount' => 500.00,
+            'items' => [
+                [
+                    'product_id' => $product->id,
+                    'description' => $product->name,
+                    'hsn_code' => $product->hsn_code,
+                    'quantity' => 5,
+                    'unit_price' => 100.00,
+                    'discount_amount' => 0,
+                    'gst_rate' => 18.00,
+                ]
+            ]
+        ]);
+
+        $purchase = PurchaseInvoice::latest('id')->first();
+        $this->assertNotNull($purchase);
+
+        // 1. Verify Edit button is visible on Index page
+        $indexRes = $this->get('/purchases');
+        $indexRes->assertStatus(200);
+        $indexRes->assertSee(route('purchases.edit', $purchase->id));
+
+        // 2. Verify Edit button is visible on Show page
+        $showRes = $this->get('/purchases/' . $purchase->id);
+        $showRes->assertStatus(200);
+        $showRes->assertSee(route('purchases.edit', $purchase->id));
+        $showRes->assertSee('Edit Bill');
+
+        // 3. Verify Edit page renders 200 OK
+        $editRes = $this->get('/purchases/' . $purchase->id . '/edit');
+        $editRes->assertStatus(200);
+        $editRes->assertSee('Edit Vendor Purchase Bill: ' . $purchase->bill_no);
+
+        // 4. Update the bill with new quantity
+        $stockBeforeUpdate = (float) $product->fresh()->current_stock;
+        $updatedRes = $this->put('/purchases/' . $purchase->id, [
+            'supplier_ledger_id' => $supplier->id,
+            'bill_no' => $billNo,
+            'bill_date' => now()->toDateString(),
+            'paid_amount' => 800.00,
+            'notes' => 'Updated GRN reference',
+            'items' => [
+                [
+                    'product_id' => $product->id,
+                    'description' => $product->name,
+                    'hsn_code' => $product->hsn_code,
+                    'quantity' => 8, // Increased from 5 to 8 (+3 inward)
+                    'unit_price' => 100.00,
+                    'discount_amount' => 0,
+                    'gst_rate' => 18.00,
+                ]
+            ]
+        ]);
+
+        $updatedRes->assertRedirect(route('purchases.show', $purchase->id));
+
+        $purchase->refresh();
+        $this->assertEquals('Updated GRN reference', $purchase->notes);
+        $this->assertEquals(8, (float) $purchase->items()->first()->quantity);
+
+        // Live stock should have increased by 3 additional units
+        $this->assertEquals($stockBeforeUpdate + 3, (float) $product->fresh()->current_stock);
     }
 }

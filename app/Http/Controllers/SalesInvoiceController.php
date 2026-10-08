@@ -100,6 +100,70 @@ class SalesInvoiceController extends Controller
         return view('sales.show', compact('invoice'));
     }
 
+    public function edit(SalesInvoice $invoice): View
+    {
+        $company = AccountingHelper::getActiveCompany();
+        $fy = AccountingHelper::getActiveFinancialYear();
+
+        $invoice->load(['company', 'customer', 'items.product.unit', 'items.warehouse', 'voucher']);
+        $customers = Ledger::customers()->where('company_id', $company->id)->orderBy('name')->get();
+        $warehouses = Warehouse::where('company_id', $company->id)->get();
+
+        return view('sales.edit', compact('invoice', 'customers', 'warehouses', 'company', 'fy'));
+    }
+
+    public function update(Request $request, SalesInvoice $invoice): RedirectResponse
+    {
+        $company = AccountingHelper::getActiveCompany();
+        $fy = AccountingHelper::getActiveFinancialYear();
+
+        $data = $request->validate([
+            'customer_ledger_id' => ['required', 'exists:ledgers,id'],
+            'invoice_no' => ['nullable', 'string', 'max:50'],
+            'invoice_date' => ['required', 'date'],
+            'due_date' => ['nullable', 'date'],
+            'payment_method' => ['required', 'string'],
+            'paid_amount' => ['nullable', 'numeric'],
+            'notes' => ['nullable', 'string'],
+            'terms_conditions' => ['nullable', 'string'],
+            'items' => ['required', 'array', 'min:1'],
+            'items.*.product_id' => ['nullable', 'exists:products,id'],
+            'items.*.warehouse_id' => ['nullable', 'exists:warehouses,id'],
+            'items.*.description' => ['nullable', 'string', 'required_without:items.*.product_id'],
+            'items.*.hsn_code' => ['nullable', 'string'],
+            'items.*.quantity' => ['required', 'numeric', 'min:0.01'],
+            'items.*.unit_price' => ['required', 'numeric', 'min:0'],
+            'items.*.discount_amount' => ['nullable', 'numeric'],
+            'items.*.gst_rate' => ['required', 'numeric'],
+            'shipping_name' => ['nullable', 'string', 'max:255'],
+            'shipping_phone' => ['nullable', 'string', 'max:50'],
+            'shipping_email' => ['nullable', 'email', 'max:255'],
+            'shipping_gstin' => ['nullable', 'string', 'max:20'],
+            'shipping_address' => ['nullable', 'string'],
+            'shipping_city' => ['nullable', 'string', 'max:100'],
+            'shipping_state' => ['nullable', 'string', 'max:100'],
+            'shipping_state_code' => ['nullable', 'string', 'max:10'],
+            'shipping_pincode' => ['nullable', 'string', 'max:20'],
+        ]);
+
+        $data['company_id'] = $company->id;
+        $data['financial_year_id'] = $fy->id;
+
+        try {
+            $this->invoicingService->updateSalesInvoice($invoice, $data, $data['items']);
+
+            ActivityLog::log(
+                'Edit Invoice',
+                'Sales',
+                "Updated Tax Invoice #{$invoice->invoice_no} for amount ₹ " . number_format($invoice->grand_total, 2)
+            );
+
+            return redirect()->route('sales.show', $invoice->id)->with('success', "Invoice #{$invoice->invoice_no} updated successfully.");
+        } catch (\Exception $e) {
+            return back()->withInput()->with('error', $e->getMessage());
+        }
+    }
+
     public function pos(): View
     {
         $company = AccountingHelper::getActiveCompany();

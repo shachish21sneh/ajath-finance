@@ -86,4 +86,57 @@ class PurchaseInvoiceController extends Controller
         $purchase->load(['company', 'supplier', 'items.product.unit', 'voucher']);
         return view('purchases.show', compact('purchase'));
     }
+
+    public function edit(PurchaseInvoice $purchase): View
+    {
+        $company = AccountingHelper::getActiveCompany();
+        $fy = AccountingHelper::getActiveFinancialYear();
+
+        $purchase->load(['company', 'supplier', 'items.product.unit', 'items.warehouse', 'voucher']);
+        $suppliers = Ledger::suppliers()->where('company_id', $company->id)->orderBy('name')->get();
+        $warehouses = Warehouse::where('company_id', $company->id)->get();
+
+        return view('purchases.edit', compact('purchase', 'suppliers', 'warehouses', 'company', 'fy'));
+    }
+
+    public function update(Request $request, PurchaseInvoice $purchase): RedirectResponse
+    {
+        $company = AccountingHelper::getActiveCompany();
+        $fy = AccountingHelper::getActiveFinancialYear();
+
+        $data = $request->validate([
+            'supplier_ledger_id' => ['required', 'exists:ledgers,id'],
+            'bill_no' => ['required', 'string', 'max:50'],
+            'bill_date' => ['required', 'date'],
+            'due_date' => ['nullable', 'date'],
+            'paid_amount' => ['nullable', 'numeric'],
+            'notes' => ['nullable', 'string'],
+            'items' => ['required', 'array', 'min:1'],
+            'items.*.product_id' => ['nullable', 'exists:products,id'],
+            'items.*.warehouse_id' => ['nullable', 'exists:warehouses,id'],
+            'items.*.description' => ['nullable', 'string', 'required_without:items.*.product_id'],
+            'items.*.hsn_code' => ['nullable', 'string'],
+            'items.*.quantity' => ['required', 'numeric', 'min:0.01'],
+            'items.*.unit_price' => ['required', 'numeric', 'min:0'],
+            'items.*.discount_amount' => ['nullable', 'numeric'],
+            'items.*.gst_rate' => ['required', 'numeric'],
+        ]);
+
+        $data['company_id'] = $company->id;
+        $data['financial_year_id'] = $fy->id;
+
+        try {
+            $this->invoicingService->updatePurchaseInvoice($purchase, $data, $data['items']);
+
+            ActivityLog::log(
+                'Edit Purchase',
+                'Purchase',
+                "Updated Purchase Bill #{$purchase->bill_no} for amount ₹ " . number_format($purchase->grand_total, 2)
+            );
+
+            return redirect()->route('purchases.show', $purchase->id)->with('success', "Purchase Bill #{$purchase->bill_no} updated successfully.");
+        } catch (\Exception $e) {
+            return back()->withInput()->with('error', $e->getMessage());
+        }
+    }
 }

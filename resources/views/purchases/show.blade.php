@@ -11,6 +11,9 @@
         <h4 class="fw-bold mb-0">Vendor Bill: {{ $purchase->bill_no }}</h4>
     </div>
     <div class="d-flex gap-2">
+        <a href="{{ route('purchases.edit', $purchase->id) }}" class="btn btn-warning btn-sm fw-semibold">
+            <i class="fa-solid fa-pen-to-square me-1"></i> Edit Bill
+        </a>
         <button type="button" class="btn btn-outline-primary btn-sm btn-trigger-print" onclick="window.print()">
             <i class="fa-solid fa-print me-1"></i> Print Bill (Ctrl+P)
         </button>
