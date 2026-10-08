@@ -54,5 +54,34 @@ class SalesAndPurchaseTest extends TestCase
         $showRes->assertSee('HSN/SAC');
         $showRes->assertSee('Taxable');
         $showRes->assertSee('Total');
+
+        // Check Base Measurement Unit is rendered with quantity
+        $unitSymbol = $product->unit?->symbol ?: ($product->unit?->name ?: '');
+        if ($unitSymbol) {
+            $showRes->assertSee($unitSymbol);
+        }
+    }
+
+    public function test_invoice_views_display_base_measurement_unit_and_api(): void
+    {
+        $admin = User::where('email', 'admin@fuzurra.com')->first();
+        $this->actingAs($admin);
+
+        // Verify product search API returns unit_symbol
+        $apiRes = $this->getJson('/api/products/search?type=sales&limit=5');
+        $apiRes->assertStatus(200);
+        $json = $apiRes->json();
+        $this->assertNotEmpty($json);
+        $this->assertArrayHasKey('unit_symbol', $json[0]);
+
+        // Verify sales create page has unit symbol binding
+        $createRes = $this->get('/sales/create');
+        $createRes->assertStatus(200);
+        $createRes->assertSee('item.unit_symbol');
+
+        // Verify purchases create page has unit symbol binding
+        $purchCreateRes = $this->get('/purchases/create');
+        $purchCreateRes->assertStatus(200);
+        $purchCreateRes->assertSee('item.unit_symbol');
     }
 }

@@ -83,7 +83,7 @@ class PurchaseInvoiceController extends Controller
 
     public function show(PurchaseInvoice $purchase): View
     {
-        $purchase->load(['company', 'supplier', 'items.product', 'voucher']);
+        $purchase->load(['company', 'supplier', 'items.product.unit', 'voucher']);
         return view('purchases.show', compact('purchase'));
     }
 }

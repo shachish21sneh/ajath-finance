@@ -59,7 +59,7 @@
                 <tr>
                     <th>Item Description</th>
                     <th style="width: 90px;" class="text-center">HSN</th>
-                    <th style="width: 70px;" class="text-end">Qty</th>
+                    <th style="width: 85px;" class="text-end">Qty</th>
                     <th style="width: 100px;" class="text-end">Rate (₹)</th>
                     <th style="width: 110px;" class="text-end">Taxable (₹)</th>
                     <th style="width: 70px;" class="text-center">GST %</th>
@@ -82,7 +82,13 @@
                             @endif
                         </td>
                         <td class="text-center text-muted">{{ $item->hsn_code ?: '-' }}</td>
-                        <td class="text-end">{{ number_format($item->quantity, 0) }}</td>
+                        <td class="text-end fw-semibold text-nowrap">
+                            @php
+                                $qtyFormatted = (float)$item->quantity == (int)$item->quantity ? number_format($item->quantity, 0) : number_format($item->quantity, 2);
+                                $unitSymbol = $item->product?->unit?->symbol ?: ($item->product?->unit?->name ?: '');
+                            @endphp
+                            <span>{{ $qtyFormatted }}</span>@if($unitSymbol)<span class="text-uppercase ms-1" style="font-size: 0.85em; font-weight: 600;">{{ $unitSymbol }}</span>@endif
+                        </td>
                         <td class="text-end num-align">₹ {{ number_format($item->unit_price, 2) }}</td>
                         <td class="text-end num-align fw-semibold">₹ {{ number_format($item->taxable_amount, 2) }}</td>
                         <td class="text-center">{{ (float)$item->gst_rate }}%</td>

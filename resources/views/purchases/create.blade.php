@@ -63,7 +63,7 @@
                         <tr>
                             <th style="min-width: 180px;">Item / Product *</th>
                             <th style="width: 85px;">HSN Code</th>
-                            <th style="width: 70px;" class="text-end">Qty *</th>
+                            <th style="width: 95px;" class="text-end">Qty *</th>
                             <th style="width: 110px;" class="text-end">Rate (Incl. of Tax)</th>
                             <th style="width: 95px;" class="text-end">Unit Rate (₹) *</th>
                             <th style="width: 75px;" class="text-end">Disc (₹)</th>
@@ -215,7 +215,10 @@
                                     <input type="text" :name="`items[${index}][hsn_code]`" class="form-control form-control-sm text-center" x-model="item.hsn_code" placeholder="HSN">
                                 </td>
                                 <td>
-                                    <input type="number" step="1" min="1" :name="`items[${index}][quantity]`" class="form-control form-control-sm text-end num-align px-1" x-model="item.quantity" @input="recalcRow(index)" required>
+                                    <div class="input-group input-group-sm">
+                                        <input type="number" step="1" min="1" :name="`items[${index}][quantity]`" class="form-control form-control-sm text-end num-align px-1" x-model="item.quantity" @input="recalcRow(index)" required>
+                                        <span class="input-group-text px-1 text-muted text-uppercase fw-semibold" style="font-size: 0.68rem; min-width: 30px; justify-content: center;" x-show="item.unit_symbol" x-text="item.unit_symbol"></span>
+                                    </div>
                                 </td>
                                 <td>
                                     <input type="number" 
@@ -324,6 +327,7 @@ function purchaseForm() {
                 gst_rate: 18,
                 tax_amount: 0,
                 total_amount: 0,
+                unit_symbol: '',
                 warehouse_id: '{{ $warehouses->firstWhere('is_default', true)?->id ?? $warehouses->first()?->id ?? '' }}',
                 isOpen: false,
                 searchQuery: '',
@@ -374,6 +378,7 @@ function purchaseForm() {
                 gst_rate: 18,
                 tax_amount: 0,
                 total_amount: 0,
+                unit_symbol: '',
                 warehouse_id: this.defaultWarehouseId,
                 isOpen: false,
                 searchQuery: '',
@@ -458,6 +463,7 @@ function purchaseForm() {
 
             item.product_id = prod.id;
             item.selectedLabel = prod.name;
+            item.unit_symbol = prod.unit_symbol || '';
             item.selectedStock = `${prod.current_stock} ${prod.unit_symbol}`;
             item.description = '';
             item.hsn_code = prod.hsn || '';
@@ -476,6 +482,7 @@ function purchaseForm() {
 
             item.product_id = '';
             item.selectedLabel = '';
+            item.unit_symbol = '';
             item.selectedStock = '';
             item.description = '';
             item.searchQuery = '';
@@ -546,6 +553,7 @@ function purchaseForm() {
                 item.selectedLabel = 'Custom Item';
             }
             item.selectedStock = '';
+            item.unit_symbol = '';
             item.isOpen = false;
         },
         onSearchKeyDown(event, index) {

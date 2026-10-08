@@ -292,7 +292,7 @@ class ProductController extends Controller
                 'price' => $price,
                 'tax_rate' => (float) ($p->taxMaster->rate ?? 0),
                 'current_stock' => (float) $p->current_stock,
-                'unit_symbol' => $p->unit->symbol ?? 'PCS',
+                'unit_symbol' => $p->unit?->symbol ?: ($p->unit?->name ?: 'PCS'),
                 'has_components' => (bool) ($p->has_inventory_components && $components->isNotEmpty()),
                 'components_count' => $components->count(),
                 'components' => $components,
