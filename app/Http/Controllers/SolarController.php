@@ -22,18 +22,28 @@ class SolarController extends Controller
         $products = SolarProduct::with('product')
             ->where('company_id', $company->id)
             ->latest()
-            ->get();
+            ->paginate(15, ['*'], 'products_page');
 
-        $leads = SolarLead::where('company_id', $company->id)->latest()->get();
-        $surveys = SolarSiteSurvey::with(['lead', 'customer'])->where('company_id', $company->id)->latest()->get();
-        $quotations = SolarQuotation::with(['lead', 'customer'])->where('company_id', $company->id)->latest()->get();
-        $projects = SolarProject::with(['customer', 'quotation'])->where('company_id', $company->id)->latest()->get();
-        $amcs = SolarAmc::with('project.customer')->where('company_id', $company->id)->latest()->get();
+        $leads = SolarLead::where('company_id', $company->id)->latest()->paginate(15, ['*'], 'leads_page');
+        $surveys = SolarSiteSurvey::with(['lead', 'customer'])->where('company_id', $company->id)->latest()->paginate(15, ['*'], 'surveys_page');
+        $quotations = SolarQuotation::with(['lead', 'customer'])->where('company_id', $company->id)->latest()->paginate(15, ['*'], 'quotes_page');
+        $projects = SolarProject::with(['customer', 'quotation'])->where('company_id', $company->id)->latest()->paginate(15, ['*'], 'projects_page');
+        $amcs = SolarAmc::with('project.customer')->where('company_id', $company->id)->latest()->paginate(15, ['*'], 'amcs_page');
+
+        $totalProjectsCount = SolarProject::where('company_id', $company->id)->count();
+        $commissionedProjectsCount = SolarProject::where('company_id', $company->id)->where('installation_status', 'COMMISSIONED')->count();
+        $totalCapacityKw = SolarProject::where('company_id', $company->id)->sum('capacity_kw');
+        $totalSurveysCount = SolarSiteSurvey::where('company_id', $company->id)->count();
+        $activeAmcsCount = SolarAmc::where('company_id', $company->id)->where('status', 'ACTIVE')->count();
 
         $rawProducts = Product::where('company_id', $company->id)->get();
         $customers = Ledger::where('company_id', $company->id)->where('party_type', 'customer')->get();
 
-        return view('solar.index', compact('company', 'products', 'leads', 'surveys', 'quotations', 'projects', 'amcs', 'rawProducts', 'customers'));
+        return view('solar.index', compact(
+            'company', 'products', 'leads', 'surveys', 'quotations', 'projects', 'amcs',
+            'rawProducts', 'customers', 'totalProjectsCount', 'commissionedProjectsCount',
+            'totalCapacityKw', 'totalSurveysCount', 'activeAmcsCount'
+        ));
     }
 
     public function storeProduct(Request $request)
@@ -178,5 +188,44 @@ class SolarController extends Controller
         SolarProject::create($validated);
 
         return redirect()->route('solar.index')->with('success', "Solar Project {$validated['project_code']} registered and assigned to workflow.");
+    }
+
+    public function updateProject(Request $request, SolarProject $project)
+    {
+        $validated = $request->validate([
+            'customer_ledger_id' => 'required|exists:ledgers,id',
+            'project_name' => 'required|string|max:150',
+            'site_address' => 'required|string',
+            'capacity_kw' => 'required|numeric|min:1',
+            'total_project_cost' => 'required|numeric|min:1000',
+            'installation_status' => 'required|in:NOT_STARTED,MATERIAL_DISPATCHED,STRUCTURE_COMPLETED,WIRING_COMPLETED,COMMISSIONED',
+            'net_metering_status' => 'required|in:APPLIED,FEASIBILITY_APPROVED,METER_INSTALLED,COMMISSIONED',
+            'subsidy_status' => 'required|in:NOT_APPLICABLE,APPLIED,APPROVED,DISBURSED',
+            'start_date' => 'nullable|date',
+            'commissioning_date' => 'nullable|date',
+        ]);
+
+        $project->update($validated);
+
+        return redirect()->route('solar.index')->with('success', "Solar Project {$project->project_code} updated successfully.");
+    }
+
+    public function updateLead(Request $request, SolarLead $lead)
+    {
+        $validated = $request->validate([
+            'customer_name' => 'required|string|max:150',
+            'phone' => 'required|string|max:30',
+            'email' => 'nullable|email',
+            'address' => 'nullable|string',
+            'city' => 'nullable|string',
+            'state' => 'nullable|string',
+            'estimated_kw' => 'required|numeric|min:1',
+            'source' => 'nullable|string',
+            'status' => 'required|in:NEW,CONTACTED,SURVEY_SCHEDULED,QUOTED,NEGOTIATION,WON,LOST',
+        ]);
+
+        $lead->update($validated);
+
+        return redirect()->route('solar.index')->with('success', "Solar Lead {$lead->customer_name} updated successfully.");
     }
 }

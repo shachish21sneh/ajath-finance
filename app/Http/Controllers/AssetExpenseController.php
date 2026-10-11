@@ -16,15 +16,15 @@ class AssetExpenseController extends Controller
     public function index(Request $request): View
     {
         $company = AccountingHelper::getActiveCompany();
-        $assets = FixedAsset::with('ledger')->where('company_id', $company->id)->latest()->get();
+        $assets = FixedAsset::with('ledger')->where('company_id', $company->id)->latest()->paginate(15, ['*'], 'assets_page');
         $categories = ExpenseCategory::with('ledger')->where('company_id', $company->id)->get();
-        $expenses = ExpenseRecord::with(['category', 'costCentre'])->where('company_id', $company->id)->latest('expense_date')->get();
-        $costCentres = CostCentre::where('company_id', $company->id)->get();
+        $expenses = ExpenseRecord::with(['category', 'costCentre'])->where('company_id', $company->id)->latest('expense_date')->paginate(15, ['*'], 'expenses_page');
+        $costCentres = CostCentre::where('company_id', $company->id)->paginate(15, ['*'], 'costcentres_page');
         $ledgers = Ledger::where('company_id', $company->id)->get();
 
-        $totalAssetCost = (float) $assets->sum('purchase_cost');
-        $totalBookValue = (float) $assets->sum('book_value');
-        $totalExpenses = (float) $expenses->sum('amount');
+        $totalAssetCost = (float) FixedAsset::where('company_id', $company->id)->sum('purchase_cost');
+        $totalBookValue = (float) FixedAsset::where('company_id', $company->id)->sum('book_value');
+        $totalExpenses = (float) ExpenseRecord::where('company_id', $company->id)->sum('amount');
 
         return view('assets-expenses.index', compact('company', 'assets', 'categories', 'expenses', 'costCentres', 'ledgers', 'totalAssetCost', 'totalBookValue', 'totalExpenses'));
     }
@@ -54,6 +54,23 @@ class AssetExpenseController extends Controller
         return redirect()->route('assets-expenses.index')->with('success', "Fixed Asset '{$validated['asset_name']}' logged in Asset Register.");
     }
 
+    public function updateAsset(Request $request, FixedAsset $asset)
+    {
+        $validated = $request->validate([
+            'asset_name' => 'required|string|max:150',
+            'useful_life_years' => 'required|integer|min:1',
+            'depreciation_method' => 'required|in:SLM,WDV',
+            'depreciation_rate' => 'required|numeric|min:0|max:100',
+            'location' => 'nullable|string',
+            'department' => 'nullable|string',
+            'status' => 'required|in:ACTIVE,DISPOSED,UNDER_MAINTENANCE,WRITTEN_OFF',
+        ]);
+
+        $asset->update($validated);
+
+        return redirect()->route('assets-expenses.index')->with('success', "Fixed Asset '{$asset->asset_name}' updated successfully.");
+    }
+
     public function storeExpense(Request $request)
     {
         $company = AccountingHelper::getActiveCompany();
@@ -76,6 +93,25 @@ class AssetExpenseController extends Controller
         return redirect()->route('assets-expenses.index')->with('success', "Operating Expense of ₹ " . number_format($validated['amount'], 2) . " posted.");
     }
 
+    public function updateExpense(Request $request, ExpenseRecord $expense)
+    {
+        $validated = $request->validate([
+            'expense_category_id' => 'required|exists:expense_categories,id',
+            'cost_centre_id' => 'nullable|exists:cost_centres,id',
+            'expense_date' => 'required|date',
+            'amount' => 'required|numeric|min:0.01',
+            'paid_to' => 'required|string|max:150',
+            'payment_mode' => 'required|in:CASH,BANK_TRANSFER,CHEQUE,UPI,CREDIT_CARD',
+            'reference_no' => 'nullable|string',
+            'description' => 'nullable|string',
+            'status' => 'required|in:PENDING,APPROVED,REJECTED',
+        ]);
+
+        $expense->update($validated);
+
+        return redirect()->route('assets-expenses.index')->with('success', "Expense record updated successfully.");
+    }
+
     public function storeCostCentre(Request $request)
     {
         $company = AccountingHelper::getActiveCompany();
@@ -90,5 +126,19 @@ class AssetExpenseController extends Controller
         CostCentre::create($validated);
 
         return redirect()->route('assets-expenses.index')->with('success', "Cost Centre '{$validated['name']}' created.");
+    }
+
+    public function updateCostCentre(Request $request, CostCentre $costCentre)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:100',
+            'code' => 'nullable|string',
+            'type' => 'required|in:BRANCH,DEPARTMENT,PROJECT,DIVISION',
+            'description' => 'nullable|string',
+        ]);
+
+        $costCentre->update($validated);
+
+        return redirect()->route('assets-expenses.index')->with('success', "Cost Centre '{$costCentre->name}' updated successfully.");
     }
 }

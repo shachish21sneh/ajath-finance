@@ -91,6 +91,7 @@
                                     <th>Accumulated Depr.</th>
                                     <th>Net Book Value</th>
                                     <th>Status</th>
+                                    <th class="text-center">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -108,15 +109,79 @@
                                         <td class="text-danger">- ₹ {{ number_format($a->accumulated_depreciation, 2) }}</td>
                                         <td class="fw-bold text-success fs-6">₹ {{ number_format($a->book_value, 2) }}</td>
                                         <td><span class="badge bg-success">{{ $a->status }}</span></td>
+                                        <td class="text-center">
+                                            <button type="button" class="btn btn-sm btn-light border py-1 px-2 text-primary" data-bs-toggle="modal" data-bs-target="#editAssetModal{{ $a->id }}" title="Edit Asset">
+                                                <i class="fa-solid fa-pen-to-square"></i>
+                                            </button>
+
+                                            <!-- Edit Asset Modal -->
+                                            <div class="modal fade text-start" id="editAssetModal{{ $a->id }}" tabindex="-1">
+                                                <div class="modal-dialog modal-lg">
+                                                    <form action="{{ route('assets-expenses.assets.update', $a->id) }}" method="POST" class="modal-content">
+                                                        @csrf
+                                                        @method('PUT')
+                                                        <div class="modal-header border-bottom">
+                                                            <h5 class="modal-title fw-bold"><i class="fa-solid fa-pen-to-square text-primary me-2"></i>Edit Fixed Asset: {{ $a->asset_code }}</h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                        </div>
+                                                        <div class="modal-body row g-3">
+                                                            <div class="col-md-6">
+                                                                <label class="form-label small fw-bold">Asset Name *</label>
+                                                                <input type="text" name="asset_name" class="form-control" required value="{{ old('asset_name', $a->asset_name) }}">
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <label class="form-label small fw-bold">Location / Branch</label>
+                                                                <input type="text" name="location" class="form-control" value="{{ old('location', $a->location) }}">
+                                                            </div>
+                                                            <div class="col-md-4">
+                                                                <label class="form-label small fw-bold">Department</label>
+                                                                <input type="text" name="department" class="form-control" value="{{ old('department', $a->department) }}">
+                                                            </div>
+                                                            <div class="col-md-4">
+                                                                <label class="form-label small fw-bold">Useful Life (Years) *</label>
+                                                                <input type="number" name="useful_life_years" class="form-control" required value="{{ old('useful_life_years', $a->useful_life_years) }}">
+                                                            </div>
+                                                            <div class="col-md-4">
+                                                                <label class="form-label small fw-bold">Status *</label>
+                                                                <select name="status" class="form-select" required>
+                                                                    <option value="ACTIVE" {{ $a->status === 'ACTIVE' ? 'selected' : '' }}>ACTIVE</option>
+                                                                    <option value="UNDER_MAINTENANCE" {{ $a->status === 'UNDER_MAINTENANCE' ? 'selected' : '' }}>UNDER MAINTENANCE</option>
+                                                                    <option value="DISPOSED" {{ $a->status === 'DISPOSED' ? 'selected' : '' }}>DISPOSED</option>
+                                                                    <option value="WRITTEN_OFF" {{ $a->status === 'WRITTEN_OFF' ? 'selected' : '' }}>WRITTEN OFF</option>
+                                                                </select>
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <label class="form-label small fw-bold">Depreciation Method *</label>
+                                                                <select name="depreciation_method" class="form-select" required>
+                                                                    <option value="SLM" {{ $a->depreciation_method === 'SLM' ? 'selected' : '' }}>Straight Line Method (SLM)</option>
+                                                                    <option value="WDV" {{ $a->depreciation_method === 'WDV' ? 'selected' : '' }}>Written Down Value (WDV)</option>
+                                                                </select>
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <label class="form-label small fw-bold">Depreciation Rate (%) *</label>
+                                                                <input type="number" step="0.01" name="depreciation_rate" class="form-control" required value="{{ old('depreciation_rate', $a->depreciation_rate) }}">
+                                                            </div>
+                                                        </div>
+                                                        <div class="modal-footer border-top">
+                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                            <button type="submit" class="btn btn-primary fw-bold">Update Asset</button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="9" class="text-center py-4 text-muted">No fixed assets logged yet.</td>
+                                        <td colspan="10" class="text-center py-4 text-muted">No fixed assets logged yet.</td>
                                     </tr>
                                 @endforelse
                             </tbody>
                         </table>
                     </div>
+                </div>
+                <div class="card-footer bg-white border-0 py-3">
+                    {{ $assets->appends(request()->except('assets_page'))->links() }}
                 </div>
             </div>
         </div>
@@ -136,6 +201,7 @@
                                     <th>Payment Mode</th>
                                     <th>Amount</th>
                                     <th>Status</th>
+                                    <th class="text-center">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -148,15 +214,98 @@
                                         <td><span class="badge bg-info text-dark">{{ $e->payment_mode }}</span></td>
                                         <td class="fw-bold text-danger">₹ {{ number_format($e->amount, 2) }}</td>
                                         <td><span class="badge bg-success">{{ $e->status }}</span></td>
+                                        <td class="text-center">
+                                            <button type="button" class="btn btn-sm btn-light border py-1 px-2 text-primary" data-bs-toggle="modal" data-bs-target="#editExpenseModal{{ $e->id }}" title="Edit Expense">
+                                                <i class="fa-solid fa-pen-to-square"></i>
+                                            </button>
+
+                                            <!-- Edit Expense Modal -->
+                                            <div class="modal fade text-start" id="editExpenseModal{{ $e->id }}" tabindex="-1">
+                                                <div class="modal-dialog">
+                                                    <form action="{{ route('assets-expenses.expenses.update', $e->id) }}" method="POST" class="modal-content">
+                                                        @csrf
+                                                        @method('PUT')
+                                                        <div class="modal-header border-bottom">
+                                                            <h5 class="modal-title fw-bold"><i class="fa-solid fa-pen-to-square text-primary me-2"></i>Edit Operating Expense</h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                        </div>
+                                                        <div class="modal-body row g-3">
+                                                            <div class="col-md-6">
+                                                                <label class="form-label small fw-bold">Expense Category *</label>
+                                                                <select name="expense_category_id" class="form-select" required>
+                                                                    @foreach($categories as $cat)
+                                                                        <option value="{{ $cat->id }}" {{ $e->expense_category_id == $cat->id ? 'selected' : '' }}>{{ $cat->name }}</option>
+                                                                    @endforeach
+                                                                </select>
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <label class="form-label small fw-bold">Cost Centre</label>
+                                                                <select name="cost_centre_id" class="form-select">
+                                                                    <option value="">General Overhead</option>
+                                                                    @foreach($costCentres as $cc)
+                                                                        <option value="{{ $cc->id }}" {{ $e->cost_centre_id == $cc->id ? 'selected' : '' }}>{{ $cc->name }}</option>
+                                                                    @endforeach
+                                                                </select>
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <label class="form-label small fw-bold">Expense Date *</label>
+                                                                <input type="date" name="expense_date" class="form-control" required value="{{ old('expense_date', $e->expense_date->format('Y-m-d')) }}">
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <label class="form-label small fw-bold">Amount (₹) *</label>
+                                                                <input type="number" step="0.01" name="amount" class="form-control" required value="{{ old('amount', $e->amount) }}">
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <label class="form-label small fw-bold">Paid To *</label>
+                                                                <input type="text" name="paid_to" class="form-control" required value="{{ old('paid_to', $e->paid_to) }}">
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <label class="form-label small fw-bold">Payment Mode *</label>
+                                                                <select name="payment_mode" class="form-select" required>
+                                                                    <option value="CASH" {{ $e->payment_mode === 'CASH' ? 'selected' : '' }}>Cash</option>
+                                                                    <option value="BANK_TRANSFER" {{ $e->payment_mode === 'BANK_TRANSFER' ? 'selected' : '' }}>Bank Transfer / NEFT</option>
+                                                                    <option value="CHEQUE" {{ $e->payment_mode === 'CHEQUE' ? 'selected' : '' }}>Cheque</option>
+                                                                    <option value="UPI" {{ $e->payment_mode === 'UPI' ? 'selected' : '' }}>UPI / Digital</option>
+                                                                    <option value="CREDIT_CARD" {{ $e->payment_mode === 'CREDIT_CARD' ? 'selected' : '' }}>Corporate Card</option>
+                                                                </select>
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <label class="form-label small fw-bold">Reference / Voucher #</label>
+                                                                <input type="text" name="reference_no" class="form-control" value="{{ old('reference_no', $e->reference_no) }}">
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <label class="form-label small fw-bold">Approval Status *</label>
+                                                                <select name="status" class="form-select" required>
+                                                                    <option value="APPROVED" {{ $e->status === 'APPROVED' ? 'selected' : '' }}>APPROVED</option>
+                                                                    <option value="PENDING" {{ $e->status === 'PENDING' ? 'selected' : '' }}>PENDING</option>
+                                                                    <option value="REJECTED" {{ $e->status === 'REJECTED' ? 'selected' : '' }}>REJECTED</option>
+                                                                </select>
+                                                            </div>
+                                                            <div class="col-12">
+                                                                <label class="form-label small fw-bold">Description / Purpose</label>
+                                                                <textarea name="description" class="form-control" rows="2">{{ old('description', $e->description) }}</textarea>
+                                                            </div>
+                                                        </div>
+                                                        <div class="modal-footer border-top">
+                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                            <button type="submit" class="btn btn-danger fw-bold">Update Expense</button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="7" class="text-center py-4 text-muted">No expense vouchers posted yet.</td>
+                                        <td colspan="8" class="text-center py-4 text-muted">No expense vouchers posted yet.</td>
                                     </tr>
                                 @endforelse
                             </tbody>
                         </table>
                     </div>
+                </div>
+                <div class="card-footer bg-white border-0 py-3">
+                    {{ $expenses->appends(request()->except('expenses_page'))->links() }}
                 </div>
             </div>
         </div>
@@ -173,6 +322,7 @@
                                     <th>Cost Centre Name</th>
                                     <th>Type</th>
                                     <th>Description</th>
+                                    <th class="text-center">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -182,15 +332,64 @@
                                         <td><strong>{{ $cc->name }}</strong></td>
                                         <td><span class="badge bg-primary">{{ $cc->type }}</span></td>
                                         <td>{{ $cc->description ?? '—' }}</td>
+                                        <td class="text-center">
+                                            <button type="button" class="btn btn-sm btn-light border py-1 px-2 text-primary" data-bs-toggle="modal" data-bs-target="#editCostCentreModal{{ $cc->id }}" title="Edit Cost Centre">
+                                                <i class="fa-solid fa-pen-to-square"></i>
+                                            </button>
+
+                                            <!-- Edit Cost Centre Modal -->
+                                            <div class="modal fade text-start" id="editCostCentreModal{{ $cc->id }}" tabindex="-1">
+                                                <div class="modal-dialog">
+                                                    <form action="{{ route('assets-expenses.cost-centres.update', $cc->id) }}" method="POST" class="modal-content">
+                                                        @csrf
+                                                        @method('PUT')
+                                                        <div class="modal-header border-bottom">
+                                                            <h5 class="modal-title fw-bold"><i class="fa-solid fa-pen-to-square text-primary me-2"></i>Edit Cost Centre: {{ $cc->name }}</h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                        </div>
+                                                        <div class="modal-body row g-3">
+                                                            <div class="col-md-6">
+                                                                <label class="form-label small fw-bold">Cost Centre Name *</label>
+                                                                <input type="text" name="name" class="form-control" required value="{{ old('name', $cc->name) }}">
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <label class="form-label small fw-bold">Centre Code</label>
+                                                                <input type="text" name="code" class="form-control" value="{{ old('code', $cc->code) }}">
+                                                            </div>
+                                                            <div class="col-md-12">
+                                                                <label class="form-label small fw-bold">Entity Type *</label>
+                                                                <select name="type" class="form-select" required>
+                                                                    <option value="BRANCH" {{ $cc->type === 'BRANCH' ? 'selected' : '' }}>Regional Branch Office</option>
+                                                                    <option value="DEPARTMENT" {{ $cc->type === 'DEPARTMENT' ? 'selected' : '' }}>Operational Department</option>
+                                                                    <option value="PROJECT" {{ $cc->type === 'PROJECT' ? 'selected' : '' }}>EPC / Installation Project</option>
+                                                                    <option value="DIVISION" {{ $cc->type === 'DIVISION' ? 'selected' : '' }}>Business Division</option>
+                                                                </select>
+                                                            </div>
+                                                            <div class="col-md-12">
+                                                                <label class="form-label small fw-bold">Description</label>
+                                                                <textarea name="description" class="form-control" rows="2">{{ old('description', $cc->description) }}</textarea>
+                                                            </div>
+                                                        </div>
+                                                        <div class="modal-footer border-top">
+                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                            <button type="submit" class="btn btn-primary fw-bold">Update Cost Centre</button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="4" class="text-center py-4 text-muted">No cost centres created.</td>
+                                        <td colspan="5" class="text-center py-4 text-muted">No cost centres created.</td>
                                     </tr>
                                 @endforelse
                             </tbody>
                         </table>
                     </div>
+                </div>
+                <div class="card-footer bg-white border-0 py-3">
+                    {{ $costCentres->appends(request()->except('costcentres_page'))->links() }}
                 </div>
             </div>
         </div>

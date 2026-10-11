@@ -14,7 +14,7 @@ class FinancialYearController extends Controller
     public function index(): View
     {
         $company = AccountingHelper::getActiveCompany();
-        $financialYears = $company ? $company->financialYears()->latest()->get() : collect();
+        $financialYears = $company ? $company->financialYears()->latest('start_date')->paginate(15) : new \Illuminate\Pagination\LengthAwarePaginator([], 0, 15);
         return view('financial-years.index', compact('company', 'financialYears'));
     }
 
@@ -54,5 +54,24 @@ class FinancialYearController extends Controller
         ActivityLog::log('Switch FY', 'Financial Year', "Switched active FY to: {$fy->title}");
 
         return back()->with('success', "Active Financial Year changed to '{$fy->title}'.");
+    }
+
+    public function update(Request $request, int $id): RedirectResponse
+    {
+        $fy = FinancialYear::findOrFail($id);
+
+        $data = $request->validate([
+            'title' => ['required', 'string', 'max:50'],
+            'start_date' => ['required', 'date'],
+            'end_date' => ['required', 'date', 'after:start_date'],
+        ]);
+
+        $data['is_locked'] = $request->has('is_locked');
+
+        $fy->update($data);
+
+        ActivityLog::log('Update FY', 'Financial Year', "Updated financial year: {$fy->title}");
+
+        return back()->with('success', "Financial Year '{$fy->title}' updated successfully.");
     }
 }

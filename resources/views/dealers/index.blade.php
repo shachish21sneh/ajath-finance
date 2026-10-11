@@ -65,6 +65,7 @@
                             <th>Credit Terms</th>
                             <th>Outstanding</th>
                             <th>Status</th>
+                            <th class="text-center">Action</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -90,16 +91,95 @@
                                     <small class="text-muted">{{ $d->credit_days }} Days Credit</small>
                                 </td>
                                 <td class="fw-bold text-danger">₹ {{ number_format($d->outstanding_balance, 2) }}</td>
-                                <td><span class="badge bg-success">ACTIVE</span></td>
+                                <td><span class="badge bg-{{ ($d->status ?? 'active') === 'active' ? 'success' : 'secondary' }} text-uppercase">{{ $d->status ?? 'active' }}</span></td>
+                                <td class="text-center">
+                                    <button type="button" class="btn btn-sm btn-light border py-1 px-2 text-primary" data-bs-toggle="modal" data-bs-target="#editDealerModal{{ $d->id }}" title="Edit Partner">
+                                        <i class="fa-solid fa-pen-to-square"></i>
+                                    </button>
+
+                                    <!-- Edit Dealer Modal -->
+                                    <div class="modal fade text-start" id="editDealerModal{{ $d->id }}" tabindex="-1">
+                                        <div class="modal-dialog modal-lg">
+                                            <form action="{{ route('dealers.update', $d->id) }}" method="POST" class="modal-content">
+                                                @csrf
+                                                @method('PUT')
+                                                <div class="modal-header border-bottom">
+                                                    <h5 class="modal-title fw-bold"><i class="fa-solid fa-pen-to-square text-primary me-2"></i>Edit Channel Partner: {{ $d->name }}</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                </div>
+                                                <div class="modal-body row g-3">
+                                                    <div class="col-md-4">
+                                                        <label class="form-label small fw-bold">Dealer Code</label>
+                                                        <input type="text" class="form-control" value="{{ $d->dealer_code }}" disabled>
+                                                    </div>
+                                                    <div class="col-md-8">
+                                                        <label class="form-label small fw-bold">Contact Person Name *</label>
+                                                        <input type="text" name="name" class="form-control" required value="{{ old('name', $d->name) }}">
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label class="form-label small fw-bold">Firm / Company Name</label>
+                                                        <input type="text" name="company_name" class="form-control" value="{{ old('company_name', $d->company_name) }}">
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label class="form-label small fw-bold">Price Tier Level *</label>
+                                                        <select name="price_tier" class="form-select" required>
+                                                            <option value="DISTRIBUTOR" {{ $d->price_tier === 'DISTRIBUTOR' ? 'selected' : '' }}>Distributor (Wholesale / Master Stockist)</option>
+                                                            <option value="DEALER" {{ $d->price_tier === 'DEALER' ? 'selected' : '' }}>Authorized Dealer (Retail Supply)</option>
+                                                            <option value="RETAILER" {{ $d->price_tier === 'RETAILER' ? 'selected' : '' }}>Direct Retailer</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label class="form-label small fw-bold">Sales Territory / State</label>
+                                                        <input type="text" name="territory" class="form-control" value="{{ old('territory', $d->territory) }}">
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label class="form-label small fw-bold">GSTIN Number</label>
+                                                        <input type="text" name="gstin" class="form-control" value="{{ old('gstin', $d->gstin) }}">
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <label class="form-label small fw-bold">Phone Number</label>
+                                                        <input type="text" name="phone" class="form-control" value="{{ old('phone', $d->phone) }}">
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <label class="form-label small fw-bold">Email</label>
+                                                        <input type="email" name="email" class="form-control" value="{{ old('email', $d->email) }}">
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <label class="form-label small fw-bold">Status</label>
+                                                        <select name="status" class="form-select">
+                                                            <option value="active" {{ ($d->status ?? 'active') === 'active' ? 'selected' : '' }}>Active</option>
+                                                            <option value="inactive" {{ ($d->status ?? 'active') === 'inactive' ? 'selected' : '' }}>Inactive</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label class="form-label small fw-bold">Credit Limit (₹)</label>
+                                                        <input type="number" step="0.01" name="credit_limit" class="form-control" value="{{ old('credit_limit', $d->credit_limit) }}">
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label class="form-label small fw-bold">Credit Days</label>
+                                                        <input type="number" name="credit_days" class="form-control" value="{{ old('credit_days', $d->credit_days) }}">
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer border-top">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                    <button type="submit" class="btn btn-primary fw-bold">Update Partner</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="text-center py-4 text-muted">No channel partners registered yet.</td>
+                                <td colspan="9" class="text-center py-4 text-muted">No channel partners registered yet.</td>
                             </tr>
                         @endforelse
                     </tbody>
                 </table>
             </div>
+        </div>
+        <div class="card-footer bg-white border-0 py-3">
+            {{ $dealers->links() }}
         </div>
     </div>
 </div>

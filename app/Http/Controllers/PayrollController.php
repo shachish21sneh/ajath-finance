@@ -28,15 +28,14 @@ class PayrollController extends Controller
         $employees = Employee::with(['department', 'designation', 'salaryStructure'])
             ->where('company_id', $company->id)
             ->latest()
-            ->get();
+            ->paginate(15, ['*'], 'employees_page');
 
         $departments = Department::where('company_id', $company->id)->get();
         $designations = Designation::where('company_id', $company->id)->get();
         $attendances = Attendance::with('employee')
             ->where('company_id', $company->id)
             ->latest('attendance_date')
-            ->take(50)
-            ->get();
+            ->paginate(15, ['*'], 'attendance_page');
 
         $leaves = Leave::with('employee')
             ->where('company_id', $company->id)
@@ -48,9 +47,18 @@ class PayrollController extends Controller
             ->where('company_id', $company->id)
             ->latest('year')
             ->latest('month')
-            ->get();
+            ->paginate(15, ['*'], 'runs_page');
 
-        return view('payroll.index', compact('company', 'employees', 'departments', 'designations', 'attendances', 'leaves', 'payrollRuns'));
+        $activeEmployeesCount = Employee::where('company_id', $company->id)->where('status', 'active')->count();
+        $monthlyGrossPayroll = Employee::where('company_id', $company->id)->where('status', 'active')->sum('monthly_salary');
+        $todayPresentCount = Attendance::where('company_id', $company->id)->where('attendance_date', now()->toDateString())->where('status', 'present')->count();
+        $payrollBatchesCount = PayrollRun::where('company_id', $company->id)->count();
+
+        return view('payroll.index', compact(
+            'company', 'employees', 'departments', 'designations', 'attendances',
+            'leaves', 'payrollRuns', 'activeEmployeesCount', 'monthlyGrossPayroll',
+            'todayPresentCount', 'payrollBatchesCount'
+        ));
     }
 
     public function storeEmployee(Request $request)
@@ -226,5 +234,52 @@ class PayrollController extends Controller
         $company = AccountingHelper::getActiveCompany();
         $payslip->load(['employee.department', 'employee.designation', 'payrollRun']);
         return view('payroll.payslip', compact('company', 'payslip'));
+    }
+
+    public function updateEmployee(Request $request, Employee $employee)
+    {
+        $validated = $request->validate([
+            'first_name' => 'required|string|max:100',
+            'last_name' => 'nullable|string|max:100',
+            'department_id' => 'nullable|exists:departments,id',
+            'designation_id' => 'nullable|exists:designations,id',
+            'phone' => 'nullable|string',
+            'email' => 'nullable|email',
+            'pan' => 'nullable|string',
+            'joining_date' => 'required|date',
+            'monthly_salary' => 'required|numeric|min:0',
+            'status' => 'required|in:active,inactive,on_leave,terminated',
+        ]);
+
+        $employee->update($validated);
+
+        $gross = (float) $validated['monthly_salary'];
+        $basic = round($gross * 0.50, 2);
+        $hra = round($gross * 0.25, 2);
+        $conveyance = round($gross * 0.10, 2);
+        $special = round($gross - ($basic + $hra + $conveyance), 2);
+        $pf = round(min($basic, 15000) * 0.12, 2);
+        $esi = $gross <= 21000 ? round($gross * 0.0075, 2) : 0.00;
+        $pt = 200.00;
+        $tds = $gross > 50000 ? round($gross * 0.05, 2) : 0.00;
+        $net = $gross - ($pf + $esi + $pt + $tds);
+
+        SalaryStructure::updateOrCreate(
+            ['employee_id' => $employee->id, 'company_id' => $employee->company_id],
+            [
+                'basic_salary' => $basic,
+                'hra' => $hra,
+                'conveyance' => $conveyance,
+                'special_allowance' => $special,
+                'pf_deduction' => $pf,
+                'esi_deduction' => $esi,
+                'pt_deduction' => $pt,
+                'tds_deduction' => $tds,
+                'gross_salary' => $gross,
+                'net_salary' => $net,
+            ]
+        );
+
+        return redirect()->route('payroll.index')->with('success', "Employee {$employee->full_name} updated successfully.");
     }
 }

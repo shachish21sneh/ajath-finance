@@ -33,9 +33,14 @@
                         </div>
                         <div class="text-end">
                             <div class="fw-bold fs-6 text-primary num-align">{{ $bank->formatted_balance }}</div>
-                            <a href="{{ route('ledgers.statement', $bank->id) }}" class="btn btn-sm btn-light border py-0 px-2 mt-1 small">
-                                Passbook
-                            </a>
+                            <div class="d-inline-flex gap-1 mt-1">
+                                <a href="{{ route('ledgers.statement', $bank->id) }}" class="btn btn-sm btn-light border py-0 px-2 small">
+                                    Passbook
+                                </a>
+                                <a href="{{ route('ledgers.edit', $bank->id) }}" class="btn btn-sm btn-light border py-0 px-2 small text-muted" title="Edit Bank Ledger">
+                                    <i class="fa-solid fa-pen"></i>
+                                </a>
+                            </div>
                         </div>
                     </div>
                 @empty
@@ -59,9 +64,14 @@
                         </div>
                         <div class="text-end">
                             <div class="fw-bold fs-6 text-success num-align">{{ $cash->formatted_balance }}</div>
-                            <a href="{{ route('ledgers.statement', $cash->id) }}" class="btn btn-sm btn-light border py-0 px-2 mt-1 small">
-                                Cash Book
-                            </a>
+                            <div class="d-inline-flex gap-1 mt-1">
+                                <a href="{{ route('ledgers.statement', $cash->id) }}" class="btn btn-sm btn-light border py-0 px-2 small">
+                                    Cash Book
+                                </a>
+                                <a href="{{ route('ledgers.edit', $cash->id) }}" class="btn btn-sm btn-light border py-0 px-2 small text-muted" title="Edit Cash Ledger">
+                                    <i class="fa-solid fa-pen"></i>
+                                </a>
+                            </div>
                         </div>
                     </div>
                 @empty
@@ -86,6 +96,7 @@
                     <th>Particulars</th>
                     <th class="text-end">Inward (Deposit)</th>
                     <th class="text-end">Outward (Withdrawal)</th>
+                    <th class="text-center">Action</th>
                 </tr>
             </thead>
             <tbody>
@@ -111,14 +122,23 @@
                         <td class="text-end fw-bold num-align text-danger">
                             {{ !$isDr ? '₹ ' . number_format($entry->amount, 2) : '-' }}
                         </td>
+                        <td class="text-center">
+                            <a href="{{ route('vouchers.show', $entry->voucher_id) }}" class="btn btn-sm btn-light border py-1 px-2" title="View Transaction Voucher">
+                                <i class="fa-solid fa-eye text-primary"></i>
+                            </a>
+                        </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7" class="text-center text-muted py-4">No recent banking entries.</td>
+                        <td colspan="8" class="text-center text-muted py-4">No recent banking entries.</td>
                     </tr>
                 @endforelse
             </tbody>
         </table>
+    </div>
+
+    <div class="mt-3">
+        {{ $recentEntries->links() }}
     </div>
 </div>
 @endsection

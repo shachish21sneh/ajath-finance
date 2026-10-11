@@ -54,6 +54,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/companies/{id}/switch', [CompanyController::class, 'switch'])->name('companies.switch');
     Route::get('/financial-years', [FinancialYearController::class, 'index'])->name('financial-years.index');
     Route::post('/financial-years', [FinancialYearController::class, 'store'])->name('financial-years.store');
+    Route::put('/financial-years/{id}', [FinancialYearController::class, 'update'])->name('financial-years.update');
     Route::post('/financial-years/{id}/switch', [FinancialYearController::class, 'switch'])->name('financial-years.switch');
 
     // User Management & RBAC
@@ -72,9 +73,11 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('uqc', UqcMasterController::class)->except(['show', 'create', 'edit']);
     Route::get('/warehouses', [WarehouseController::class, 'index'])->name('warehouses.index');
     Route::post('/warehouses', [WarehouseController::class, 'store'])->name('warehouses.store');
+    Route::put('/warehouses/{warehouse}', [WarehouseController::class, 'update'])->name('warehouses.update');
 
     // Double-Entry Accounting Vouchers
     Route::resource('vouchers', VoucherController::class)->only(['index', 'create', 'store', 'show']);
+    Route::put('/vouchers/{voucher}', [VoucherController::class, 'update'])->name('vouchers.update');
 
     // Sales & Billing
     Route::get('/sales', [SalesInvoiceController::class, 'index'])->name('sales.index');
@@ -106,6 +109,7 @@ Route::middleware(['auth'])->group(function () {
     // Payroll & HR Management
     Route::get('/payroll', [PayrollController::class, 'index'])->name('payroll.index');
     Route::post('/payroll/employees', [PayrollController::class, 'storeEmployee'])->name('payroll.employees.store');
+    Route::put('/payroll/employees/{employee}', [PayrollController::class, 'updateEmployee'])->name('payroll.employees.update');
     Route::post('/payroll/attendance', [PayrollController::class, 'storeAttendance'])->name('payroll.attendance.store');
     Route::post('/payroll/process', [PayrollController::class, 'processPayroll'])->name('payroll.process');
     Route::get('/payroll/payslips/{payslip}', [PayrollController::class, 'showPayslip'])->name('payroll.payslip');
@@ -113,13 +117,17 @@ Route::middleware(['auth'])->group(function () {
     // Manufacturing & BOM & Job Work
     Route::get('/manufacturing', [ManufacturingController::class, 'index'])->name('manufacturing.index');
     Route::post('/manufacturing/boms', [ManufacturingController::class, 'storeBom'])->name('manufacturing.boms.store');
+    Route::put('/manufacturing/boms/{bom}', [ManufacturingController::class, 'updateBom'])->name('manufacturing.boms.update');
     Route::post('/manufacturing/production-orders', [ManufacturingController::class, 'storeProductionOrder'])->name('manufacturing.orders.store');
+    Route::put('/manufacturing/production-orders/{order}', [ManufacturingController::class, 'updateProductionOrder'])->name('manufacturing.orders.update');
     Route::post('/manufacturing/production-orders/{order}/complete', [ManufacturingController::class, 'completeProductionOrder'])->name('manufacturing.orders.complete');
 
     // Battery ERP Domain
     Route::get('/battery', [BatteryController::class, 'index'])->name('battery.index');
     Route::post('/battery/models', [BatteryController::class, 'storeModel'])->name('battery.models.store');
+    Route::put('/battery/models/{model}', [BatteryController::class, 'updateModel'])->name('battery.models.update');
     Route::post('/battery/serials', [BatteryController::class, 'storeSerial'])->name('battery.serials.store');
+    Route::put('/battery/serials/{serial}', [BatteryController::class, 'updateSerial'])->name('battery.serials.update');
     Route::get('/battery/serials/{serial}', [BatteryController::class, 'showSerialJson'])->name('battery.serials.show');
     Route::post('/battery/tests', [BatteryController::class, 'storeTest'])->name('battery.tests.store');
     Route::post('/battery/warranties', [BatteryController::class, 'storeWarranty'])->name('battery.warranties.store');
@@ -129,29 +137,37 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/solar', [SolarController::class, 'index'])->name('solar.index');
     Route::post('/solar/products', [SolarController::class, 'storeProduct'])->name('solar.products.store');
     Route::post('/solar/leads', [SolarController::class, 'storeLead'])->name('solar.leads.store');
+    Route::put('/solar/leads/{lead}', [SolarController::class, 'updateLead'])->name('solar.leads.update');
     Route::post('/solar/surveys', [SolarController::class, 'storeSurvey'])->name('solar.surveys.store');
     Route::post('/solar/quotations', [SolarController::class, 'storeQuotation'])->name('solar.quotations.store');
     Route::post('/solar/projects', [SolarController::class, 'storeProject'])->name('solar.projects.store');
+    Route::put('/solar/projects/{project}', [SolarController::class, 'updateProject'])->name('solar.projects.update');
 
     // Dealer & Distributor Management
     Route::get('/dealers', [DealerController::class, 'index'])->name('dealers.index');
     Route::post('/dealers', [DealerController::class, 'store'])->name('dealers.store');
+    Route::put('/dealers/{dealer}', [DealerController::class, 'update'])->name('dealers.update');
 
     // Service Management
     Route::get('/service', [ServiceController::class, 'index'])->name('service.index');
     Route::post('/service/tickets', [ServiceController::class, 'storeTicket'])->name('service.tickets.store');
+    Route::put('/service/tickets/{ticket}', [ServiceController::class, 'updateTicket'])->name('service.tickets.update');
     Route::post('/service/visits', [ServiceController::class, 'storeVisit'])->name('service.visits.store');
 
     // CRM & Sales Pipeline
     Route::get('/crm', [CrmController::class, 'index'])->name('crm.index');
     Route::post('/crm/leads', [CrmController::class, 'store'])->name('crm.leads.store');
+    Route::put('/crm/leads/{lead}', [CrmController::class, 'update'])->name('crm.leads.update');
     Route::post('/crm/leads/{lead}/stage', [CrmController::class, 'updateStage'])->name('crm.leads.stage');
 
     // Fixed Assets & Operating Expenses & Cost Centres
     Route::get('/assets-expenses', [AssetExpenseController::class, 'index'])->name('assets-expenses.index');
     Route::post('/assets-expenses/assets', [AssetExpenseController::class, 'storeAsset'])->name('assets-expenses.assets.store');
+    Route::put('/assets-expenses/assets/{asset}', [AssetExpenseController::class, 'updateAsset'])->name('assets-expenses.assets.update');
     Route::post('/assets-expenses/expenses', [AssetExpenseController::class, 'storeExpense'])->name('assets-expenses.expenses.store');
+    Route::put('/assets-expenses/expenses/{expense}', [AssetExpenseController::class, 'updateExpense'])->name('assets-expenses.expenses.update');
     Route::post('/assets-expenses/cost-centres', [AssetExpenseController::class, 'storeCostCentre'])->name('assets-expenses.cost-centres.store');
+    Route::put('/assets-expenses/cost-centres/{costCentre}', [AssetExpenseController::class, 'updateCostCentre'])->name('assets-expenses.cost-centres.update');
 
     // AI Business Assistant
     Route::get('/ai-assistant', [AiAssistantController::class, 'index'])->name('ai-assistant.index');

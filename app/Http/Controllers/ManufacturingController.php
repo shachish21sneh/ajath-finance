@@ -24,23 +24,33 @@ class ManufacturingController extends Controller
         $boms = Bom::with(['product', 'items.rawMaterial'])
             ->where('company_id', $company->id)
             ->latest()
-            ->get();
+            ->paginate(15, ['*'], 'boms_page');
 
         $productionOrders = ProductionOrder::with(['bom.product', 'warehouse'])
             ->where('company_id', $company->id)
             ->latest()
-            ->get();
+            ->paginate(15, ['*'], 'orders_page');
 
         $jobWorkers = JobWorker::where('company_id', $company->id)->get();
         $jobWorkOrders = JobWorkOrder::with('jobWorker')
             ->where('company_id', $company->id)
             ->latest()
-            ->get();
+            ->paginate(15, ['*'], 'jobwork_page');
+
+        $totalBomsCount = Bom::where('company_id', $company->id)->count();
+        $totalOrdersCount = ProductionOrder::where('company_id', $company->id)->count();
+        $completedOrdersCount = ProductionOrder::where('company_id', $company->id)->where('status', 'completed')->count();
+        $totalCompletedQty = ProductionOrder::where('company_id', $company->id)->sum('completed_qty');
+        $totalJobWorkOrdersCount = JobWorkOrder::where('company_id', $company->id)->count();
 
         $products = Product::where('company_id', $company->id)->get();
         $warehouses = Warehouse::where('company_id', $company->id)->get();
 
-        return view('manufacturing.index', compact('company', 'boms', 'productionOrders', 'jobWorkers', 'jobWorkOrders', 'products', 'warehouses'));
+        return view('manufacturing.index', compact(
+            'company', 'boms', 'productionOrders', 'jobWorkers', 'jobWorkOrders',
+            'products', 'warehouses', 'totalBomsCount', 'totalOrdersCount',
+            'completedOrdersCount', 'totalCompletedQty', 'totalJobWorkOrdersCount'
+        ));
     }
 
     public function storeBom(Request $request)
@@ -193,5 +203,67 @@ class ManufacturingController extends Controller
 
             return redirect()->route('manufacturing.index')->with('success', "Production Order {$order->order_no} executed! Stock updated: +{$producedQty} {$finishedGood->name}, and all raw material components deducted.");
         });
+    }
+
+    public function updateBom(Request $request, Bom $bom)
+    {
+        $validated = $request->validate([
+            'bom_name' => 'required|string|max:150',
+            'output_qty' => 'required|numeric|min:0.01',
+            'labor_cost' => 'nullable|numeric|min:0',
+            'overhead_cost' => 'nullable|numeric|min:0',
+            'is_active' => 'nullable',
+        ]);
+
+        $labor = (float) ($validated['labor_cost'] ?? $bom->labor_cost);
+        $overhead = (float) ($validated['overhead_cost'] ?? $bom->overhead_cost);
+        $totalMatCost = (float) $bom->total_material_cost;
+        $totalUnitCost = ($totalMatCost + $labor + $overhead) / (float) $validated['output_qty'];
+
+        $bom->update([
+            'bom_name' => $validated['bom_name'],
+            'output_qty' => $validated['output_qty'],
+            'labor_cost' => $labor,
+            'overhead_cost' => $overhead,
+            'total_unit_cost' => $totalUnitCost,
+            'is_active' => $request->has('is_active') ? true : false,
+        ]);
+
+        return redirect()->route('manufacturing.index')->with('success', "BOM {$bom->bom_code} updated successfully.");
+    }
+
+    public function updateProductionOrder(Request $request, ProductionOrder $order)
+    {
+        $validated = $request->validate([
+            'warehouse_id' => 'required|exists:warehouses,id',
+            'planned_qty' => 'required|numeric|min:1',
+            'remarks' => 'nullable|string',
+            'order_date' => 'required|date',
+        ]);
+
+        $bom = $order->bom;
+        $totalCost = (float) $bom->total_unit_cost * (float) $validated['planned_qty'];
+
+        $order->update([
+            'warehouse_id' => $validated['warehouse_id'],
+            'planned_qty' => $validated['planned_qty'],
+            'order_date' => $validated['order_date'],
+            'remarks' => $validated['remarks'] ?? null,
+            'total_cost' => $totalCost,
+        ]);
+
+        if ($order->status !== 'completed') {
+            foreach ($order->materials as $mat) {
+                $bomItem = BomItem::where('bom_id', $order->bom_id)->where('raw_material_id', $mat->raw_material_id)->first();
+                $rate = $bomItem ? (float) $bomItem->quantity : 1;
+                $reqQty = $rate * (float) $validated['planned_qty'];
+                $mat->update([
+                    'required_qty' => $reqQty,
+                    'total_cost' => $reqQty * (float) $mat->unit_cost,
+                ]);
+            }
+        }
+
+        return redirect()->route('manufacturing.index')->with('success', "Production Order {$order->order_no} updated successfully.");
     }
 }

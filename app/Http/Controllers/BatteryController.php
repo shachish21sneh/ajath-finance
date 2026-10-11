@@ -23,13 +23,12 @@ class BatteryController extends Controller
         $models = BatteryModel::with('product')
             ->where('company_id', $company->id)
             ->latest()
-            ->get();
+            ->paginate(15, ['*'], 'models_page');
 
         $serials = BatterySerial::with(['model.product', 'warehouse', 'customer', 'warranty'])
             ->where('company_id', $company->id)
             ->latest()
-            ->take(50)
-            ->get();
+            ->paginate(15, ['*'], 'serials_page');
 
         $tests = BatteryTest::with('batterySerial.model.product')
             ->latest()
@@ -85,6 +84,26 @@ class BatteryController extends Controller
         return redirect()->route('battery.index')->with('success', 'Battery Model specification created successfully.');
     }
 
+    public function updateModel(Request $request, BatteryModel $model)
+    {
+        $validated = $request->validate([
+            'chemistry' => 'required|in:Lead Acid,Tubular,Lithium Ion,LiFePO4,E-Rickshaw,EV',
+            'nominal_voltage' => 'required|numeric|min:1',
+            'capacity_ah' => 'required|numeric|min:1',
+            'bms_model' => 'nullable|string',
+            'warranty_months' => 'required|integer|min:6',
+            'free_replacement_months' => 'required|integer|min:0',
+            'cell_type' => 'nullable|string',
+        ]);
+
+        $validated['energy_wh'] = (float) $validated['nominal_voltage'] * (float) $validated['capacity_ah'];
+        $validated['pro_rata_months'] = max(0, (int) $validated['warranty_months'] - (int) $validated['free_replacement_months']);
+
+        $model->update($validated);
+
+        return redirect()->route('battery.index')->with('success', 'Battery Model updated successfully.');
+    }
+
     public function storeSerial(Request $request)
     {
         $company = AccountingHelper::getActiveCompany();
@@ -103,6 +122,20 @@ class BatteryController extends Controller
         $serial = BatterySerial::create($validated);
 
         return redirect()->route('battery.index')->with('success', "Battery Serial {$serial->serial_number} registered in inventory.");
+    }
+
+    public function updateSerial(Request $request, BatterySerial $serial)
+    {
+        $validated = $request->validate([
+            'warehouse_id' => 'required|exists:warehouses,id',
+            'cell_batch_number' => 'nullable|string',
+            'qc_status' => 'required|in:PASSED,FAILED,RETEST',
+            'current_status' => 'required|in:IN_STOCK,DISPATCHED,UNDER_TEST,RESERVED,SCRAPPED',
+        ]);
+
+        $serial->update($validated);
+
+        return redirect()->route('battery.index')->with('success', "Battery Serial {$serial->serial_number} updated successfully.");
     }
 
     public function storeTest(Request $request)

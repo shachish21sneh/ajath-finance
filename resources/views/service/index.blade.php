@@ -69,6 +69,7 @@
                             <th>Technician</th>
                             <th>Date</th>
                             <th>Status</th>
+                            <th class="text-center">Action</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -96,15 +97,85 @@
                                         {{ $t->status }}
                                     </span>
                                 </td>
+                                <td class="text-center">
+                                    <button type="button" class="btn btn-sm btn-light border py-1 px-2 text-primary" data-bs-toggle="modal" data-bs-target="#editTicketModal{{ $t->id }}" title="Edit Ticket">
+                                        <i class="fa-solid fa-pen-to-square"></i>
+                                    </button>
+
+                                    <!-- Edit Ticket Modal -->
+                                    <div class="modal fade text-start" id="editTicketModal{{ $t->id }}" tabindex="-1">
+                                        <div class="modal-dialog">
+                                            <form action="{{ route('service.tickets.update', $t->id) }}" method="POST" class="modal-content">
+                                                @csrf
+                                                @method('PUT')
+                                                <div class="modal-header border-bottom">
+                                                    <h5 class="modal-title fw-bold"><i class="fa-solid fa-pen-to-square text-info me-2"></i>Edit Ticket: {{ $t->ticket_no }}</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                </div>
+                                                <div class="modal-body row g-3">
+                                                    <div class="col-md-6">
+                                                        <label class="form-label small fw-bold">Customer Name *</label>
+                                                        <input type="text" name="customer_name" class="form-control" required value="{{ old('customer_name', $t->customer_name) }}">
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label class="form-label small fw-bold">Phone Number *</label>
+                                                        <input type="text" name="phone" class="form-control" required value="{{ old('phone', $t->phone) }}">
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label class="form-label small fw-bold">Product Name *</label>
+                                                        <input type="text" name="product_name" class="form-control" required value="{{ old('product_name', $t->product_name) }}">
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label class="form-label small fw-bold">Serial Number</label>
+                                                        <input type="text" name="serial_number" class="form-control" value="{{ old('serial_number', $t->serial_number) }}">
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label class="form-label small fw-bold">Priority *</label>
+                                                        <select name="priority" class="form-select" required>
+                                                            <option value="LOW" {{ $t->priority === 'LOW' ? 'selected' : '' }}>Low</option>
+                                                            <option value="MEDIUM" {{ $t->priority === 'MEDIUM' ? 'selected' : '' }}>Medium</option>
+                                                            <option value="HIGH" {{ $t->priority === 'HIGH' ? 'selected' : '' }}>High</option>
+                                                            <option value="CRITICAL" {{ $t->priority === 'CRITICAL' ? 'selected' : '' }}>Critical</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label class="form-label small fw-bold">Status *</label>
+                                                        <select name="status" class="form-select" required>
+                                                            <option value="OPEN" {{ $t->status === 'OPEN' ? 'selected' : '' }}>OPEN</option>
+                                                            <option value="IN_PROGRESS" {{ $t->status === 'IN_PROGRESS' ? 'selected' : '' }}>IN PROGRESS</option>
+                                                            <option value="RESOLVED" {{ $t->status === 'RESOLVED' ? 'selected' : '' }}>RESOLVED</option>
+                                                            <option value="CLOSED" {{ $t->status === 'CLOSED' ? 'selected' : '' }}>CLOSED</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="col-12">
+                                                        <label class="form-label small fw-bold">Assigned Technician</label>
+                                                        <input type="text" name="assigned_technician" class="form-control" value="{{ old('assigned_technician', $t->assigned_technician) }}">
+                                                    </div>
+                                                    <div class="col-12">
+                                                        <label class="form-label small fw-bold">Complaint Details *</label>
+                                                        <textarea name="complaint_details" class="form-control" rows="3" required>{{ old('complaint_details', $t->complaint_details) }}</textarea>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer border-top">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                    <button type="submit" class="btn btn-info text-white fw-bold">Update Ticket</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="text-center py-4 text-muted">No open service tickets found.</td>
+                                <td colspan="9" class="text-center py-4 text-muted">No open service tickets found.</td>
                             </tr>
                         @endforelse
                     </tbody>
                 </table>
             </div>
+        </div>
+        <div class="card-footer bg-white border-0 py-3">
+            {{ $tickets->links() }}
         </div>
     </div>
 </div>

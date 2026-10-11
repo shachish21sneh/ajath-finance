@@ -23,8 +23,7 @@ class BankingController extends Controller
             ->whereIn('ledger_id', $allBankCashIds)
             ->latest('entry_date')
             ->latest('id')
-            ->take(20)
-            ->get();
+            ->paginate(15);
 
         return view('banking.index', compact('bankLedgers', 'cashLedgers', 'recentEntries', 'company'));
     }

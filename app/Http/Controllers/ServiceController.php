@@ -17,7 +17,7 @@ class ServiceController extends Controller
         $tickets = ServiceTicket::with(['customer', 'visits'])
             ->where('company_id', $company->id)
             ->latest('created_date')
-            ->get();
+            ->paginate(15);
 
         $visits = ServiceVisit::with('ticket')
             ->latest('visit_date')
@@ -50,6 +50,28 @@ class ServiceController extends Controller
         ServiceTicket::create($validated);
 
         return redirect()->route('service.index')->with('success', "Service Ticket {$validated['ticket_no']} logged.");
+    }
+
+    public function updateTicket(Request $request, ServiceTicket $ticket)
+    {
+        $validated = $request->validate([
+            'customer_name' => 'required|string|max:150',
+            'phone' => 'required|string|max:30',
+            'product_name' => 'required|string|max:150',
+            'serial_number' => 'nullable|string',
+            'complaint_details' => 'required|string',
+            'priority' => 'required|in:LOW,MEDIUM,HIGH,CRITICAL',
+            'assigned_technician' => 'nullable|string',
+            'status' => 'required|in:OPEN,IN_PROGRESS,RESOLVED,CLOSED',
+        ]);
+
+        if ($validated['status'] === 'RESOLVED' && !$ticket->resolved_date) {
+            $validated['resolved_date'] = now();
+        }
+
+        $ticket->update($validated);
+
+        return redirect()->route('service.index')->with('success', "Service Ticket {$ticket->ticket_no} updated successfully.");
     }
 
     public function storeVisit(Request $request)

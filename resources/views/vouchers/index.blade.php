@@ -72,9 +72,72 @@
                         </td>
                         <td class="text-end fw-bold num-align">₹ {{ number_format($v->total_amount, 2) }}</td>
                         <td class="text-center">
-                            <a href="{{ route('vouchers.show', $v->id) }}" class="btn btn-sm btn-light border py-1 px-2" title="View Voucher">
-                                <i class="fa-solid fa-eye text-primary"></i>
-                            </a>
+                            <div class="d-inline-flex gap-1 align-items-center">
+                                <a href="{{ route('vouchers.show', $v->id) }}" class="btn btn-sm btn-light border py-1 px-2" title="View Voucher">
+                                    <i class="fa-solid fa-eye text-primary"></i>
+                                </a>
+                                <button type="button" class="btn btn-sm btn-light border py-1 px-2 text-warning-emphasis" data-bs-toggle="modal" data-bs-target="#editVoucherModal{{ $v->id }}" title="Edit Voucher">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                </button>
+                            </div>
+
+                            <!-- Edit Voucher Modal -->
+                            <div class="modal fade text-start" id="editVoucherModal{{ $v->id }}" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered">
+                                    <div class="modal-content card-modern">
+                                        <div class="modal-header border-bottom">
+                                            <h5 class="modal-title fs-6 fw-bold">
+                                                <i class="fa-solid fa-pen-to-square me-2 text-primary"></i> Edit Voucher: {{ $v->voucher_no }}
+                                            </h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <form action="{{ route('vouchers.update', $v->id) }}" method="POST">
+                                            @csrf
+                                            @method('PUT')
+                                            <div class="modal-body p-3">
+                                                <div class="row g-2 mb-3">
+                                                    <div class="col-6">
+                                                        <label class="form-label small fw-semibold">Voucher Date *</label>
+                                                        <input type="date" name="voucher_date" class="form-control" required value="{{ old('voucher_date', $v->voucher_date->format('Y-m-d')) }}">
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <label class="form-label small fw-semibold">Payment Mode</label>
+                                                        <select name="payment_mode" class="form-select">
+                                                            <option value="cash" {{ $v->payment_mode === 'cash' ? 'selected' : '' }}>Cash</option>
+                                                            <option value="bank" {{ $v->payment_mode === 'bank' ? 'selected' : '' }}>Bank</option>
+                                                            <option value="cheque" {{ $v->payment_mode === 'cheque' ? 'selected' : '' }}>Cheque</option>
+                                                            <option value="upi" {{ $v->payment_mode === 'upi' ? 'selected' : '' }}>UPI / Digital</option>
+                                                            <option value="credit" {{ $v->payment_mode === 'credit' ? 'selected' : '' }}>Credit / Accrual</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label class="form-label small fw-semibold">Reference #</label>
+                                                    <input type="text" name="reference_no" class="form-control" value="{{ old('reference_no', $v->reference_no) }}" placeholder="e.g. Bank Ref / Challan">
+                                                </div>
+                                                <div class="row g-2 mb-3">
+                                                    <div class="col-6">
+                                                        <label class="form-label small fw-semibold">Cheque / Txn #</label>
+                                                        <input type="text" name="cheque_no" class="form-control" value="{{ old('cheque_no', $v->cheque_no) }}">
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <label class="form-label small fw-semibold">Cheque Date</label>
+                                                        <input type="date" name="cheque_date" class="form-control" value="{{ old('cheque_date', $v->cheque_date?->format('Y-m-d')) }}">
+                                                    </div>
+                                                </div>
+                                                <div class="mb-2">
+                                                    <label class="form-label small fw-semibold">Narration</label>
+                                                    <textarea name="narration" class="form-control" rows="3" placeholder="Narration or reason for voucher...">{{ old('narration', $v->narration) }}</textarea>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer border-top">
+                                                <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Cancel</button>
+                                                <button type="submit" class="btn btn-primary fw-semibold">Update Voucher</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
                         </td>
                     </tr>
                 @empty

@@ -29,7 +29,50 @@
                         <div class="text-muted small">Code: {{ $wh->code ?: 'N/A' }}</div>
                     </div>
                 </div>
-                <p class="text-muted small mb-0"><i class="fa-solid fa-location-dot me-1"></i> {{ $wh->address ?: 'No physical address configured.' }}</p>
+                <p class="text-muted small mb-3"><i class="fa-solid fa-location-dot me-1"></i> {{ $wh->address ?: 'No physical address configured.' }}</p>
+                <div class="mt-auto d-flex justify-content-end">
+                    <button type="button" class="btn btn-sm btn-light border py-1 px-3 fw-semibold text-primary" data-bs-toggle="modal" data-bs-target="#editWarehouseModal{{ $wh->id }}">
+                        <i class="fa-solid fa-pen-to-square me-1"></i> Edit
+                    </button>
+                </div>
+
+                <!-- Edit Warehouse Modal -->
+                <div class="modal fade text-start" id="editWarehouseModal{{ $wh->id }}" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content card-modern">
+                            <div class="modal-header border-bottom">
+                                <h5 class="modal-title fs-6 fw-bold"><i class="fa-solid fa-pen-to-square me-2 text-primary"></i> Edit Warehouse / Godown</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <form action="{{ route('warehouses.update', $wh->id) }}" method="POST">
+                                @csrf
+                                @method('PUT')
+                                <div class="modal-body p-3">
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-semibold">Godown Name *</label>
+                                        <input type="text" name="name" class="form-control" required value="{{ old('name', $wh->name) }}">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-semibold">Location Code</label>
+                                        <input type="text" name="code" class="form-control" value="{{ old('code', $wh->code) }}">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-semibold">Address</label>
+                                        <textarea name="address" class="form-control" rows="2">{{ old('address', $wh->address) }}</textarea>
+                                    </div>
+                                    <div class="form-check form-switch mb-2">
+                                        <input class="form-check-input" type="checkbox" name="is_default" value="1" id="isDefault{{ $wh->id }}" {{ $wh->is_default ? 'checked' : '' }}>
+                                        <label class="form-check-label small fw-semibold" for="isDefault{{ $wh->id }}">Default Storage Depot</label>
+                                    </div>
+                                </div>
+                                <div class="modal-footer border-top">
+                                    <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Cancel</button>
+                                    <button type="submit" class="btn btn-primary fw-semibold">Update Godown</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     @empty

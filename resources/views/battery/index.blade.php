@@ -197,6 +197,7 @@
                                     <th>QC Status</th>
                                     <th>Current Lifecycle Status</th>
                                     <th>Customer / Assigned</th>
+                                    <th class="text-center">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -213,15 +214,73 @@
                                         <td><span class="badge bg-{{ $s->qc_status === 'PASSED' ? 'success' : 'danger' }}">{{ $s->qc_status }}</span></td>
                                         <td><span class="badge bg-info text-dark">{{ $s->current_status }}</span></td>
                                         <td>{{ $s->customer?->name ?? ($s->warehouse?->name ?? 'Factory Warehouse') }}</td>
+                                        <td class="text-center">
+                                            <button type="button" class="btn btn-sm btn-light border py-1 px-2 text-primary" data-bs-toggle="modal" data-bs-target="#editSerialModal{{ $s->id }}" title="Edit Serial">
+                                                <i class="fa-solid fa-pen-to-square"></i>
+                                            </button>
+
+                                            <!-- Edit Serial Modal -->
+                                            <div class="modal fade text-start" id="editSerialModal{{ $s->id }}" tabindex="-1">
+                                                <div class="modal-dialog">
+                                                    <form action="{{ route('battery.serials.update', $s->id) }}" method="POST" class="modal-content">
+                                                        @csrf
+                                                        @method('PUT')
+                                                        <div class="modal-header border-bottom">
+                                                            <h5 class="modal-title fw-bold"><i class="fa-solid fa-pen-to-square text-danger me-2"></i>Edit Serial: {{ $s->serial_number }}</h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                        </div>
+                                                        <div class="modal-body row g-3">
+                                                            <div class="col-md-6">
+                                                                <label class="form-label small fw-bold">Current Warehouse *</label>
+                                                                <select name="warehouse_id" class="form-select" required>
+                                                                    @foreach($warehouses as $wh)
+                                                                        <option value="{{ $wh->id }}" {{ $s->warehouse_id == $wh->id ? 'selected' : '' }}>{{ $wh->name }}</option>
+                                                                    @endforeach
+                                                                </select>
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <label class="form-label small fw-bold">Cell Batch Number</label>
+                                                                <input type="text" name="cell_batch_number" class="form-control" value="{{ old('cell_batch_number', $s->cell_batch_number) }}">
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <label class="form-label small fw-bold">QC Status *</label>
+                                                                <select name="qc_status" class="form-select" required>
+                                                                    <option value="PASSED" {{ $s->qc_status === 'PASSED' ? 'selected' : '' }}>PASSED</option>
+                                                                    <option value="FAILED" {{ $s->qc_status === 'FAILED' ? 'selected' : '' }}>FAILED</option>
+                                                                    <option value="RETEST" {{ $s->qc_status === 'RETEST' ? 'selected' : '' }}>RETEST</option>
+                                                                </select>
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <label class="form-label small fw-bold">Lifecycle Status *</label>
+                                                                <select name="current_status" class="form-select" required>
+                                                                    <option value="IN_STOCK" {{ $s->current_status === 'IN_STOCK' ? 'selected' : '' }}>IN_STOCK</option>
+                                                                    <option value="DISPATCHED" {{ $s->current_status === 'DISPATCHED' ? 'selected' : '' }}>DISPATCHED</option>
+                                                                    <option value="UNDER_TEST" {{ $s->current_status === 'UNDER_TEST' ? 'selected' : '' }}>UNDER_TEST</option>
+                                                                    <option value="RESERVED" {{ $s->current_status === 'RESERVED' ? 'selected' : '' }}>RESERVED</option>
+                                                                    <option value="SCRAPPED" {{ $s->current_status === 'SCRAPPED' ? 'selected' : '' }}>SCRAPPED</option>
+                                                                </select>
+                                                            </div>
+                                                        </div>
+                                                        <div class="modal-footer border-top">
+                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                            <button type="submit" class="btn btn-danger fw-bold">Update Serial</button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="7" class="text-center py-4 text-muted">No battery serials registered.</td>
+                                        <td colspan="8" class="text-center py-4 text-muted">No battery serials registered.</td>
                                     </tr>
                                 @endforelse
                             </tbody>
                         </table>
                     </div>
+                </div>
+                <div class="card-footer bg-white border-0 py-3">
+                    {{ $serials->appends(request()->except('serials_page'))->links() }}
                 </div>
             </div>
         </div>
@@ -241,6 +300,7 @@
                                     <th>Energy Rating</th>
                                     <th>BMS Specs</th>
                                     <th>Warranty (Months)</th>
+                                    <th class="text-center">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -253,15 +313,78 @@
                                         <td class="text-primary fw-bold">{{ $m->energy_wh }} Wh</td>
                                         <td>{{ $m->bms_model ?? 'Smart CAN/RS485 BMS' }}</td>
                                         <td>{{ $m->warranty_months }} Months ({{ $m->free_replacement_months }} Free)</td>
+                                        <td class="text-center">
+                                            <button type="button" class="btn btn-sm btn-light border py-1 px-2 text-primary" data-bs-toggle="modal" data-bs-target="#editModelModal{{ $m->id }}" title="Edit Model">
+                                                <i class="fa-solid fa-pen-to-square"></i>
+                                            </button>
+
+                                            <!-- Edit Model Modal -->
+                                            <div class="modal fade text-start" id="editModelModal{{ $m->id }}" tabindex="-1">
+                                                <div class="modal-dialog modal-lg">
+                                                    <form action="{{ route('battery.models.update', $m->id) }}" method="POST" class="modal-content">
+                                                        @csrf
+                                                        @method('PUT')
+                                                        <div class="modal-header border-bottom">
+                                                            <h5 class="modal-title fw-bold"><i class="fa-solid fa-pen-to-square text-primary me-2"></i>Edit Battery Model: {{ $m->product?->name }}</h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                        </div>
+                                                        <div class="modal-body row g-3">
+                                                            <div class="col-md-6">
+                                                                <label class="form-label small fw-bold">Battery Chemistry *</label>
+                                                                <select name="chemistry" class="form-select" required>
+                                                                    <option value="LiFePO4" {{ $m->chemistry === 'LiFePO4' ? 'selected' : '' }}>Lithium Iron Phosphate (LiFePO4)</option>
+                                                                    <option value="Lithium Ion" {{ $m->chemistry === 'Lithium Ion' ? 'selected' : '' }}>Lithium Ion (NMC)</option>
+                                                                    <option value="Lead Acid" {{ $m->chemistry === 'Lead Acid' ? 'selected' : '' }}>Flat Plate Lead Acid</option>
+                                                                    <option value="Tubular" {{ $m->chemistry === 'Tubular' ? 'selected' : '' }}>Deep Cycle Tubular Solar</option>
+                                                                    <option value="E-Rickshaw" {{ $m->chemistry === 'E-Rickshaw' ? 'selected' : '' }}>EV / E-Rickshaw Heavy Duty</option>
+                                                                    <option value="EV" {{ $m->chemistry === 'EV' ? 'selected' : '' }}>High Rate Traction EV</option>
+                                                                </select>
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <label class="form-label small fw-bold">Cell Type</label>
+                                                                <input type="text" name="cell_type" class="form-control" value="{{ old('cell_type', $m->cell_type) }}">
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <label class="form-label small fw-bold">Nominal Voltage (V) *</label>
+                                                                <input type="number" step="0.1" name="nominal_voltage" class="form-control" required value="{{ old('nominal_voltage', $m->nominal_voltage) }}">
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <label class="form-label small fw-bold">Rated Capacity (Ah) *</label>
+                                                                <input type="number" step="0.1" name="capacity_ah" class="form-control" required value="{{ old('capacity_ah', $m->capacity_ah) }}">
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <label class="form-label small fw-bold">Total Warranty (Months) *</label>
+                                                                <input type="number" name="warranty_months" class="form-control" required value="{{ old('warranty_months', $m->warranty_months) }}">
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <label class="form-label small fw-bold">Free Replacement (Months) *</label>
+                                                                <input type="number" name="free_replacement_months" class="form-control" required value="{{ old('free_replacement_months', $m->free_replacement_months) }}">
+                                                            </div>
+                                                            <div class="col-md-12">
+                                                                <label class="form-label small fw-bold">BMS Specification</label>
+                                                                <input type="text" name="bms_model" class="form-control" value="{{ old('bms_model', $m->bms_model) }}">
+                                                            </div>
+                                                        </div>
+                                                        <div class="modal-footer border-top">
+                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                            <button type="submit" class="btn btn-primary fw-bold">Update Model</button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="7" class="text-center py-4 text-muted">No battery models defined.</td>
+                                        <td colspan="8" class="text-center py-4 text-muted">No battery models defined.</td>
                                     </tr>
                                 @endforelse
                             </tbody>
                         </table>
                     </div>
+                </div>
+                <div class="card-footer bg-white border-0 py-3">
+                    {{ $models->appends(request()->except('models_page'))->links() }}
                 </div>
             </div>
         </div>

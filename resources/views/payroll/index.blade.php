@@ -29,7 +29,7 @@
                 <div class="d-flex align-items-center justify-content-between">
                     <div>
                         <div class="text-muted small fw-semibold">Active Workforce</div>
-                        <div class="fs-4 fw-bold text-dark mt-1">{{ $employees->where('status', 'active')->count() }} Employees</div>
+                        <div class="fs-4 fw-bold text-dark mt-1">{{ $activeEmployeesCount }} Employees</div>
                         <div class="small text-success mt-1"><i class="fa-solid fa-circle-check me-1"></i>100% Compliant</div>
                     </div>
                     <div class="bg-primary-subtle text-primary p-3 rounded-circle fs-4">
@@ -43,7 +43,7 @@
                 <div class="d-flex align-items-center justify-content-between">
                     <div>
                         <div class="text-muted small fw-semibold">Monthly Gross Payroll</div>
-                        <div class="fs-4 fw-bold text-dark mt-1">₹ {{ number_format($employees->sum('monthly_salary'), 2) }}</div>
+                        <div class="fs-4 fw-bold text-dark mt-1">₹ {{ number_format($monthlyGrossPayroll, 2) }}</div>
                         <div class="small text-muted mt-1">CTC Liability</div>
                     </div>
                     <div class="bg-success-subtle text-success p-3 rounded-circle fs-4">
@@ -57,7 +57,7 @@
                 <div class="d-flex align-items-center justify-content-between">
                     <div>
                         <div class="text-muted small fw-semibold">Today's Attendance</div>
-                        <div class="fs-4 fw-bold text-dark mt-1">{{ $attendances->where('attendance_date', now()->toDateString())->where('status', 'present')->count() }} Present</div>
+                        <div class="fs-4 fw-bold text-dark mt-1">{{ $todayPresentCount }} Present</div>
                         <div class="small text-info mt-1"><i class="fa-solid fa-clock me-1"></i>Shift Active</div>
                     </div>
                     <div class="bg-info-subtle text-info p-3 rounded-circle fs-4">
@@ -71,7 +71,7 @@
                 <div class="d-flex align-items-center justify-content-between">
                     <div>
                         <div class="text-muted small fw-semibold">Payroll Batches</div>
-                        <div class="fs-4 fw-bold text-dark mt-1">{{ $payrollRuns->count() }} Processed</div>
+                        <div class="fs-4 fw-bold text-dark mt-1">{{ $payrollBatchesCount }} Processed</div>
                         <div class="small text-muted mt-1">Double-Entry Posted</div>
                     </div>
                     <div class="bg-warning-subtle text-warning p-3 rounded-circle fs-4">
@@ -118,6 +118,7 @@
                                     <th>Monthly Gross</th>
                                     <th>Net Salary</th>
                                     <th>Status</th>
+                                    <th class="text-end pe-3">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -138,16 +139,104 @@
                                                 {{ ucfirst($emp->status) }}
                                             </span>
                                         </td>
+                                        <td class="text-end pe-3">
+                                            <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editEmployeeModal{{ $emp->id }}" title="Edit Employee">
+                                                <i class="fa-solid fa-pen-to-square"></i>
+                                            </button>
+                                        </td>
                                     </tr>
+
+                                    <!-- Edit Employee Modal -->
+                                    <div class="modal fade" id="editEmployeeModal{{ $emp->id }}" tabindex="-1">
+                                        <div class="modal-dialog modal-lg">
+                                            <form action="{{ route('payroll.employees.update', $emp->id) }}" method="POST" class="modal-content">
+                                                @csrf
+                                                @method('PUT')
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title fw-bold"><i class="fa-solid fa-pen-to-square text-primary me-2"></i>Edit Employee ({{ $emp->emp_code }})</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                </div>
+                                                <div class="modal-body row g-3">
+                                                    <div class="col-md-6">
+                                                        <label class="form-label small fw-bold">First Name *</label>
+                                                        <input type="text" name="first_name" class="form-control" required value="{{ $emp->first_name }}">
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label class="form-label small fw-bold">Last Name</label>
+                                                        <input type="text" name="last_name" class="form-control" value="{{ $emp->last_name }}">
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <label class="form-label small fw-bold">Department</label>
+                                                        <select name="department_id" class="form-select">
+                                                            <option value="">Select Department</option>
+                                                            @foreach($departments as $dept)
+                                                                <option value="{{ $dept->id }}" {{ $emp->department_id == $dept->id ? 'selected' : '' }}>{{ $dept->name }}</option>
+                                                            @endforeach
+                                                        </select>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <label class="form-label small fw-bold">Designation</label>
+                                                        <select name="designation_id" class="form-select">
+                                                            <option value="">Select Designation</option>
+                                                            @foreach($designations as $desig)
+                                                                <option value="{{ $desig->id }}" {{ $emp->designation_id == $desig->id ? 'selected' : '' }}>{{ $desig->title }}</option>
+                                                            @endforeach
+                                                        </select>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <label class="form-label small fw-bold">Status *</label>
+                                                        <select name="status" class="form-select" required>
+                                                            <option value="active" {{ $emp->status == 'active' ? 'selected' : '' }}>Active</option>
+                                                            <option value="inactive" {{ $emp->status == 'inactive' ? 'selected' : '' }}>Inactive</option>
+                                                            <option value="on_leave" {{ $emp->status == 'on_leave' ? 'selected' : '' }}>On Leave</option>
+                                                            <option value="terminated" {{ $emp->status == 'terminated' ? 'selected' : '' }}>Terminated</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label class="form-label small fw-bold">Monthly CTC Salary (₹) *</label>
+                                                        <input type="number" step="0.01" name="monthly_salary" class="form-control" required value="{{ $emp->monthly_salary }}">
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label class="form-label small fw-bold">Joining Date *</label>
+                                                        <input type="date" name="joining_date" class="form-control" required value="{{ $emp->joining_date->format('Y-m-d') }}">
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <label class="form-label small fw-bold">Mobile Phone</label>
+                                                        <input type="text" name="phone" class="form-control" value="{{ $emp->phone }}">
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <label class="form-label small fw-bold">Email Address</label>
+                                                        <input type="email" name="email" class="form-control" value="{{ $emp->email }}">
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <label class="form-label small fw-bold">PAN Number</label>
+                                                        <input type="text" name="pan" class="form-control" value="{{ $emp->pan }}">
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                    <button type="submit" class="btn btn-primary fw-bold">Save Changes</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
                                 @empty
                                     <tr>
-                                        <td colspan="8" class="text-center py-4 text-muted">No employees registered yet. Click "Enroll Employee" to begin.</td>
+                                        <td colspan="9" class="text-center py-4 text-muted">No employees registered yet. Click "Enroll Employee" to begin.</td>
                                     </tr>
                                 @endforelse
                             </tbody>
                         </table>
                     </div>
                 </div>
+                @if($employees->hasPages())
+                    <div class="card-footer bg-white border-top py-3">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <span class="small text-muted">Showing {{ $employees->firstItem() }} to {{ $employees->lastItem() }} of {{ $employees->total() }} employees</span>
+                            {{ $employees->appends(request()->except('employees_page'))->links() }}
+                        </div>
+                    </div>
+                @endif
             </div>
         </div>
 
@@ -191,6 +280,14 @@
                         </table>
                     </div>
                 </div>
+                @if($attendances->hasPages())
+                    <div class="card-footer bg-white border-top py-3">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <span class="small text-muted">Showing {{ $attendances->firstItem() }} to {{ $attendances->lastItem() }} of {{ $attendances->total() }} records</span>
+                            {{ $attendances->appends(request()->except('attendance_page'))->links() }}
+                        </div>
+                    </div>
+                @endif
             </div>
         </div>
 
@@ -238,6 +335,14 @@
                         </table>
                     </div>
                 </div>
+                @if($payrollRuns->hasPages())
+                    <div class="card-footer bg-white border-top py-3">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <span class="small text-muted">Showing {{ $payrollRuns->firstItem() }} to {{ $payrollRuns->lastItem() }} of {{ $payrollRuns->total() }} batches</span>
+                            {{ $payrollRuns->appends(request()->except('runs_page'))->links() }}
+                        </div>
+                    </div>
+                @endif
             </div>
         </div>
     </div>

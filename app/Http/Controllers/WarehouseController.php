@@ -35,4 +35,25 @@ class WarehouseController extends Controller
 
         return back()->with('success', "Godown '{$data['name']}' added successfully.");
     }
+
+    public function update(Request $request, Warehouse $warehouse): RedirectResponse
+    {
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:100'],
+            'code' => ['nullable', 'string', 'max:50'],
+            'address' => ['nullable', 'string'],
+            'is_default' => ['nullable', 'boolean'],
+        ]);
+
+        $data['is_default'] = $request->has('is_default');
+        if ($data['is_default']) {
+            Warehouse::where('company_id', $warehouse->company_id)->where('id', '!=', $warehouse->id)->update(['is_default' => false]);
+        }
+
+        $warehouse->update($data);
+
+        ActivityLog::log('Update Warehouse', 'Inventory', "Updated godown/depot: {$warehouse->name}");
+
+        return back()->with('success', "Godown '{$warehouse->name}' updated successfully.");
+    }
 }

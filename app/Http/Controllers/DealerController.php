@@ -18,7 +18,7 @@ class DealerController extends Controller
         $dealers = Dealer::with(['ledger', 'commissions'])
             ->where('company_id', $company->id)
             ->latest()
-            ->get();
+            ->paginate(15);
 
         $commissions = DealerCommission::with(['dealer', 'salesInvoice'])
             ->where('company_id', $company->id)
@@ -54,5 +54,26 @@ class DealerController extends Controller
         Dealer::create($validated);
 
         return redirect()->route('dealers.index')->with('success', "Dealer / Channel Partner '{$validated['name']}' ({$validated['price_tier']}) added successfully.");
+    }
+
+    public function update(Request $request, Dealer $dealer)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:150',
+            'company_name' => 'nullable|string|max:150',
+            'territory' => 'nullable|string|max:100',
+            'phone' => 'nullable|string',
+            'email' => 'nullable|email',
+            'gstin' => 'nullable|string',
+            'address' => 'nullable|string',
+            'credit_limit' => 'nullable|numeric|min:0',
+            'credit_days' => 'nullable|integer|min:0',
+            'price_tier' => 'required|in:DISTRIBUTOR,DEALER,RETAILER',
+            'status' => 'nullable|in:active,inactive',
+        ]);
+
+        $dealer->update($validated);
+
+        return redirect()->route('dealers.index')->with('success', "Dealer '{$dealer->name}' updated successfully.");
     }
 }

@@ -110,4 +110,29 @@ class VoucherController extends Controller
         $voucher->load(['items.ledger', 'partyLedger', 'creator', 'company', 'financialYear']);
         return view('vouchers.show', compact('voucher'));
     }
+
+    public function update(Request $request, Voucher $voucher): RedirectResponse
+    {
+        $data = $request->validate([
+            'voucher_date' => ['required', 'date'],
+            'reference_no' => ['nullable', 'string', 'max:100'],
+            'narration' => ['nullable', 'string'],
+            'payment_mode' => ['nullable', 'in:cash,bank,cheque,upi,credit'],
+            'cheque_no' => ['nullable', 'string', 'max:50'],
+            'cheque_date' => ['nullable', 'date'],
+        ]);
+
+        $voucher->update($data);
+
+        // Update entry dates on ledger entries to keep synchronicity
+        $voucher->ledgerEntries()->update(['entry_date' => $data['voucher_date']]);
+
+        ActivityLog::log(
+            "Update {$voucher->voucher_type->value}",
+            'Accounting',
+            "Updated voucher #{$voucher->voucher_no}"
+        );
+
+        return back()->with('success', "Voucher '{$voucher->voucher_no}' updated successfully.");
+    }
 }

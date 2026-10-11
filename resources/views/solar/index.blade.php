@@ -10,6 +10,9 @@
             <p class="text-muted small mb-0">Rooftop site surveys, automated sizing calculator, MNRE subsidies, net-metering compliance, and AMC lifecycle.</p>
         </div>
         <div class="d-flex gap-2">
+            <button class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#newLeadModal">
+                <i class="fa-solid fa-user-plus me-1"></i> New Lead
+            </button>
             <button class="btn btn-outline-warning text-dark" data-bs-toggle="modal" data-bs-target="#newSurveyModal">
                 <i class="fa-solid fa-compass-drafting me-1"></i> Log Site Survey
             </button>
@@ -44,8 +47,8 @@
                 <div class="d-flex align-items-center justify-content-between">
                     <div>
                         <div class="text-muted small fw-semibold">Total Installations</div>
-                        <div class="fs-4 fw-bold text-dark mt-1">{{ $projects->count() }} Projects</div>
-                        <div class="small text-success mt-1">{{ $projects->where('installation_status', 'COMMISSIONED')->count() }} Commissioned</div>
+                        <div class="fs-4 fw-bold text-dark mt-1">{{ $totalProjectsCount }} Projects</div>
+                        <div class="small text-success mt-1">{{ $commissionedProjectsCount }} Commissioned</div>
                     </div>
                     <div class="bg-warning-subtle text-warning p-3 rounded-circle fs-4">
                         <i class="fa-solid fa-solar-panel"></i>
@@ -58,7 +61,7 @@
                 <div class="d-flex align-items-center justify-content-between">
                     <div>
                         <div class="text-muted small fw-semibold">Capacity Built</div>
-                        <div class="fs-4 fw-bold text-dark mt-1">{{ $projects->sum('capacity_kw') }} kW</div>
+                        <div class="fs-4 fw-bold text-dark mt-1">{{ number_format($totalCapacityKw, 1) }} kW</div>
                         <div class="small text-muted mt-1">Solar PV Generation</div>
                     </div>
                     <div class="bg-success-subtle text-success p-3 rounded-circle fs-4">
@@ -72,7 +75,7 @@
                 <div class="d-flex align-items-center justify-content-between">
                     <div>
                         <div class="text-muted small fw-semibold">Site Surveys</div>
-                        <div class="fs-4 fw-bold text-dark mt-1">{{ $surveys->count() }} Completed</div>
+                        <div class="fs-4 fw-bold text-dark mt-1">{{ $totalSurveysCount }} Completed</div>
                         <div class="small text-info mt-1">Shadow-free Audits</div>
                     </div>
                     <div class="bg-info-subtle text-info p-3 rounded-circle fs-4">
@@ -86,7 +89,7 @@
                 <div class="d-flex align-items-center justify-content-between">
                     <div>
                         <div class="text-muted small fw-semibold">Active AMCs</div>
-                        <div class="fs-4 fw-bold text-dark mt-1">{{ $amcs->where('status', 'ACTIVE')->count() }} Contracts</div>
+                        <div class="fs-4 fw-bold text-dark mt-1">{{ $activeAmcsCount }} Contracts</div>
                         <div class="small text-muted mt-1">Preventive Service</div>
                     </div>
                     <div class="bg-primary-subtle text-primary p-3 rounded-circle fs-4">
@@ -102,6 +105,11 @@
         <li class="nav-item">
             <button class="nav-link active fw-semibold" id="projects-tab" data-bs-toggle="tab" data-bs-target="#projectsPane" type="button">
                 <i class="fa-solid fa-diagram-project me-1"></i> Solar EPC Projects
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link fw-semibold" id="leads-tab" data-bs-toggle="tab" data-bs-target="#leadsPane" type="button">
+                <i class="fa-solid fa-filter-circle-dollar me-1"></i> Leads & Inquiries
             </button>
         </li>
         <li class="nav-item">
@@ -137,6 +145,7 @@
                                     <th>Net-Metering Status</th>
                                     <th>Subsidy Status</th>
                                     <th>Installation Stage</th>
+                                    <th class="text-end pe-3">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -156,16 +165,208 @@
                                                 {{ $p->installation_status }}
                                             </span>
                                         </td>
+                                        <td class="text-end pe-3">
+                                            <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editProjectModal{{ $p->id }}" title="Edit Project">
+                                                <i class="fa-solid fa-pen-to-square"></i>
+                                            </button>
+                                        </td>
                                     </tr>
+
+                                    <!-- Edit Project Modal -->
+                                    <div class="modal fade" id="editProjectModal{{ $p->id }}" tabindex="-1">
+                                        <div class="modal-dialog modal-lg">
+                                            <form action="{{ route('solar.projects.update', $p->id) }}" method="POST" class="modal-content">
+                                                @csrf
+                                                @method('PUT')
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title fw-bold"><i class="fa-solid fa-pen-to-square me-2 text-primary"></i>Edit Solar Project ({{ $p->project_code }})</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                </div>
+                                                <div class="modal-body row g-3">
+                                                    <div class="col-md-6">
+                                                        <label class="form-label small fw-bold">Customer Account *</label>
+                                                        <select name="customer_ledger_id" class="form-select" required>
+                                                            @foreach($customers as $c)
+                                                                <option value="{{ $c->id }}" {{ $p->customer_ledger_id == $c->id ? 'selected' : '' }}>{{ $c->name }}</option>
+                                                            @endforeach
+                                                        </select>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label class="form-label small fw-bold">Project Name *</label>
+                                                        <input type="text" name="project_name" class="form-control" required value="{{ $p->project_name }}">
+                                                    </div>
+                                                    <div class="col-12">
+                                                        <label class="form-label small fw-bold">Site Installation Address *</label>
+                                                        <textarea name="site_address" class="form-control" rows="2" required>{{ $p->site_address }}</textarea>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <label class="form-label small fw-bold">Capacity (kW) *</label>
+                                                        <input type="number" step="0.1" name="capacity_kw" class="form-control" required value="{{ $p->capacity_kw }}" min="1">
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <label class="form-label small fw-bold">Total Project Cost ₹ *</label>
+                                                        <input type="number" step="0.01" name="total_project_cost" class="form-control" required value="{{ $p->total_project_cost }}">
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <label class="form-label small fw-bold">Installation Stage *</label>
+                                                        <select name="installation_status" class="form-select" required>
+                                                            @foreach(['NOT_STARTED', 'MATERIAL_DISPATCHED', 'STRUCTURE_COMPLETED', 'WIRING_COMPLETED', 'COMMISSIONED'] as $stage)
+                                                                <option value="{{ $stage }}" {{ $p->installation_status == $stage ? 'selected' : '' }}>{{ $stage }}</option>
+                                                            @endforeach
+                                                        </select>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <label class="form-label small fw-bold">Net Metering Status *</label>
+                                                        <select name="net_metering_status" class="form-select" required>
+                                                            @foreach(['APPLIED', 'FEASIBILITY_APPROVED', 'METER_INSTALLED', 'COMMISSIONED'] as $nms)
+                                                                <option value="{{ $nms }}" {{ $p->net_metering_status == $nms ? 'selected' : '' }}>{{ $nms }}</option>
+                                                            @endforeach
+                                                        </select>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <label class="form-label small fw-bold">Subsidy Status *</label>
+                                                        <select name="subsidy_status" class="form-select" required>
+                                                            @foreach(['NOT_APPLICABLE', 'APPLIED', 'APPROVED', 'DISBURSED'] as $subs)
+                                                                <option value="{{ $subs }}" {{ $p->subsidy_status == $subs ? 'selected' : '' }}>{{ $subs }}</option>
+                                                            @endforeach
+                                                        </select>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <label class="form-label small fw-bold">Commissioning Date</label>
+                                                        <input type="date" name="commissioning_date" class="form-control" value="{{ $p->commissioning_date ? date('Y-m-d', strtotime($p->commissioning_date)) : '' }}">
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                    <button type="submit" class="btn btn-primary fw-bold">Save Changes</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
                                 @empty
                                     <tr>
-                                        <td colspan="7" class="text-center py-4 text-muted">No solar projects registered.</td>
+                                        <td colspan="8" class="text-center py-4 text-muted">No solar projects registered.</td>
                                     </tr>
                                 @endforelse
                             </tbody>
                         </table>
                     </div>
                 </div>
+                @if($projects->hasPages())
+                    <div class="card-footer bg-white border-top py-3">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <span class="small text-muted">Showing {{ $projects->firstItem() }} to {{ $projects->lastItem() }} of {{ $projects->total() }} projects</span>
+                            {{ $projects->appends(request()->except('projects_page'))->links() }}
+                        </div>
+                    </div>
+                @endif
+            </div>
+        </div>
+
+        <!-- Leads Pane -->
+        <div class="tab-pane fade" id="leadsPane">
+            <div class="card border-0 shadow-sm rounded-3">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Customer / Prospect</th>
+                                    <th>Contact</th>
+                                    <th>Location</th>
+                                    <th>Required Capacity</th>
+                                    <th>Source</th>
+                                    <th>Status</th>
+                                    <th class="text-end pe-3">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($leads as $l)
+                                    <tr>
+                                        <td><div class="fw-bold">{{ $l->customer_name }}</div></td>
+                                        <td>
+                                            <div><i class="fa-solid fa-phone me-1 small text-muted"></i>{{ $l->phone }}</div>
+                                            @if($l->email)<div class="small text-muted">{{ $l->email }}</div>@endif
+                                        </td>
+                                        <td>{{ $l->city ? $l->city . ', ' . $l->state : 'N/A' }}</td>
+                                        <td><span class="badge bg-warning text-dark fs-6">{{ $l->estimated_kw }} kW</span></td>
+                                        <td><span class="badge bg-secondary">{{ $l->source ?? 'Direct' }}</span></td>
+                                        <td><span class="badge bg-primary">{{ $l->status }}</span></td>
+                                        <td class="text-end pe-3">
+                                            <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editLeadModal{{ $l->id }}" title="Edit Lead">
+                                                <i class="fa-solid fa-pen-to-square"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+
+                                    <!-- Edit Lead Modal -->
+                                    <div class="modal fade" id="editLeadModal{{ $l->id }}" tabindex="-1">
+                                        <div class="modal-dialog">
+                                            <form action="{{ route('solar.leads.update', $l->id) }}" method="POST" class="modal-content">
+                                                @csrf
+                                                @method('PUT')
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title fw-bold"><i class="fa-solid fa-pen-to-square me-2 text-primary"></i>Edit Solar Lead</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                </div>
+                                                <div class="modal-body row g-3">
+                                                    <div class="col-12">
+                                                        <label class="form-label small fw-bold">Customer Name *</label>
+                                                        <input type="text" name="customer_name" class="form-control" required value="{{ $l->customer_name }}">
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label class="form-label small fw-bold">Phone *</label>
+                                                        <input type="text" name="phone" class="form-control" required value="{{ $l->phone }}">
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label class="form-label small fw-bold">Email</label>
+                                                        <input type="email" name="email" class="form-control" value="{{ $l->email }}">
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label class="form-label small fw-bold">City</label>
+                                                        <input type="text" name="city" class="form-control" value="{{ $l->city }}">
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label class="form-label small fw-bold">Estimated kW *</label>
+                                                        <input type="number" step="0.5" name="estimated_kw" class="form-control" required value="{{ $l->estimated_kw }}" min="1">
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label class="form-label small fw-bold">Lead Source</label>
+                                                        <input type="text" name="source" class="form-control" value="{{ $l->source }}">
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label class="form-label small fw-bold">Status *</label>
+                                                        <select name="status" class="form-select" required>
+                                                            @foreach(['NEW', 'CONTACTED', 'SURVEY_SCHEDULED', 'QUOTED', 'NEGOTIATION', 'WON', 'LOST'] as $st)
+                                                                <option value="{{ $st }}" {{ $l->status == $st ? 'selected' : '' }}>{{ $st }}</option>
+                                                            @endforeach
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                    <button type="submit" class="btn btn-primary fw-bold">Save Lead Changes</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                @empty
+                                    <tr>
+                                        <td colspan="7" class="text-center py-4 text-muted">No solar leads registered yet.</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                @if($leads->hasPages())
+                    <div class="card-footer bg-white border-top py-3">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <span class="small text-muted">Showing {{ $leads->firstItem() }} to {{ $leads->lastItem() }} of {{ $leads->total() }} leads</span>
+                            {{ $leads->appends(request()->except('leads_page'))->links() }}
+                        </div>
+                    </div>
+                @endif
             </div>
         </div>
 
@@ -206,6 +407,14 @@
                         </table>
                     </div>
                 </div>
+                @if($surveys->hasPages())
+                    <div class="card-footer bg-white border-top py-3">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <span class="small text-muted">Showing {{ $surveys->firstItem() }} to {{ $surveys->lastItem() }} of {{ $surveys->total() }} surveys</span>
+                            {{ $surveys->appends(request()->except('surveys_page'))->links() }}
+                        </div>
+                    </div>
+                @endif
             </div>
         </div>
 
@@ -248,6 +457,14 @@
                         </table>
                     </div>
                 </div>
+                @if($quotations->hasPages())
+                    <div class="card-footer bg-white border-top py-3">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <span class="small text-muted">Showing {{ $quotations->firstItem() }} to {{ $quotations->lastItem() }} of {{ $quotations->total() }} quotations</span>
+                            {{ $quotations->appends(request()->except('quotes_page'))->links() }}
+                        </div>
+                    </div>
+                @endif
             </div>
         </div>
 
@@ -288,6 +505,14 @@
                         </table>
                     </div>
                 </div>
+                @if($amcs->hasPages())
+                    <div class="card-footer bg-white border-top py-3">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <span class="small text-muted">Showing {{ $amcs->firstItem() }} to {{ $amcs->lastItem() }} of {{ $amcs->total() }} contracts</span>
+                            {{ $amcs->appends(request()->except('amcs_page'))->links() }}
+                        </div>
+                    </div>
+                @endif
             </div>
         </div>
     </div>
@@ -419,6 +644,140 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                 <button type="submit" class="btn btn-primary fw-bold">Compute Subsidy & Create Quotation</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Commission Project Modal -->
+<div class="modal fade" id="newProjectModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <form action="{{ route('solar.projects.store') }}" method="POST" class="modal-content">
+            @csrf
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold"><i class="fa-solid fa-plus text-primary me-2"></i>Commission New Solar Project</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body row g-3">
+                <div class="col-md-6">
+                    <label class="form-label small fw-bold">Customer Account *</label>
+                    <select name="customer_ledger_id" class="form-select" required>
+                        @foreach($customers as $c)
+                            <option value="{{ $c->id }}">{{ $c->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label small fw-bold">Project Code *</label>
+                    <input type="text" name="project_code" class="form-control" required value="PRJ-SOL-{{ date('Ymd') }}-{{ rand(100, 999) }}">
+                </div>
+                <div class="col-12">
+                    <label class="form-label small fw-bold">Project Name *</label>
+                    <input type="text" name="project_name" class="form-control" required placeholder="e.g. 10kW On-Grid Rooftop Solar Plant">
+                </div>
+                <div class="col-12">
+                    <label class="form-label small fw-bold">Site Installation Address *</label>
+                    <textarea name="site_address" class="form-control" rows="2" required placeholder="Full site address where panels and inverters will be erected"></textarea>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small fw-bold">Capacity (kW) *</label>
+                    <input type="number" step="0.1" name="capacity_kw" class="form-control" required value="5" min="1">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small fw-bold">Total Project Cost ₹ *</label>
+                    <input type="number" step="0.01" name="total_project_cost" class="form-control" required value="325000">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small fw-bold">Installation Stage *</label>
+                    <select name="installation_status" class="form-select" required>
+                        <option value="NOT_STARTED">NOT_STARTED</option>
+                        <option value="MATERIAL_DISPATCHED">MATERIAL_DISPATCHED</option>
+                        <option value="STRUCTURE_COMPLETED">STRUCTURE_COMPLETED</option>
+                        <option value="WIRING_COMPLETED">WIRING_COMPLETED</option>
+                        <option value="COMMISSIONED">COMMISSIONED</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small fw-bold">Net Metering Status *</label>
+                    <select name="net_metering_status" class="form-select" required>
+                        <option value="APPLIED">APPLIED</option>
+                        <option value="FEASIBILITY_APPROVED">FEASIBILITY_APPROVED</option>
+                        <option value="METER_INSTALLED">METER_INSTALLED</option>
+                        <option value="COMMISSIONED">COMMISSIONED</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small fw-bold">Subsidy Status *</label>
+                    <select name="subsidy_status" class="form-select" required>
+                        <option value="NOT_APPLICABLE">NOT_APPLICABLE</option>
+                        <option value="APPLIED">APPLIED</option>
+                        <option value="APPROVED">APPROVED</option>
+                        <option value="DISBURSED">DISBURSED</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small fw-bold">Start Date</label>
+                    <input type="date" name="start_date" class="form-control" value="{{ date('Y-m-d') }}">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-primary fw-bold">Register Solar Project</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- New Lead Modal -->
+<div class="modal fade" id="newLeadModal" tabindex="-1">
+    <div class="modal-dialog">
+        <form action="{{ route('solar.leads.store') }}" method="POST" class="modal-content">
+            @csrf
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold"><i class="fa-solid fa-user-plus text-info me-2"></i>New Solar Inquiry Lead</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body row g-3">
+                <div class="col-12">
+                    <label class="form-label small fw-bold">Customer Name *</label>
+                    <input type="text" name="customer_name" class="form-control" required placeholder="e.g. Ramesh Kumar">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label small fw-bold">Phone Number *</label>
+                    <input type="text" name="phone" class="form-control" required placeholder="+91 9876543210">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label small fw-bold">Email</label>
+                    <input type="email" name="email" class="form-control" placeholder="client@example.com">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label small fw-bold">City</label>
+                    <input type="text" name="city" class="form-control" placeholder="New Delhi">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label small fw-bold">Estimated kW Requirement *</label>
+                    <input type="number" step="0.5" name="estimated_kw" class="form-control" required value="5" min="1">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label small fw-bold">Source</label>
+                    <input type="text" name="source" class="form-control" value="Website Inquiry">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label small fw-bold">Status *</label>
+                    <select name="status" class="form-select" required>
+                        <option value="NEW">NEW</option>
+                        <option value="CONTACTED">CONTACTED</option>
+                        <option value="SURVEY_SCHEDULED">SURVEY_SCHEDULED</option>
+                        <option value="QUOTED">QUOTED</option>
+                        <option value="NEGOTIATION">NEGOTIATION</option>
+                        <option value="WON">WON</option>
+                        <option value="LOST">LOST</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-info fw-bold">Create Solar Lead</button>
             </div>
         </form>
     </div>

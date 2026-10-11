@@ -48,65 +48,205 @@
         </div>
     </div>
 
-    <!-- Kanban Stage Columns -->
-    <div class="row g-3 overflow-auto flex-nowrap pb-3">
-        @php
-            $stages = [
-                'NEW' => ['title' => 'New Leads', 'color' => 'secondary'],
-                'CONTACTED' => ['title' => 'Contacted / Discovery', 'color' => 'info'],
-                'PROPOSAL' => ['title' => 'Quotation Sent', 'color' => 'primary'],
-                'NEGOTIATION' => ['title' => 'Negotiation', 'color' => 'warning'],
-                'WON' => ['title' => 'Won / Closed', 'color' => 'success'],
-                'LOST' => ['title' => 'Lost / Dropped', 'color' => 'danger'],
-            ];
-        @endphp
+    <!-- View Switcher Tabs -->
+    <ul class="nav nav-tabs mb-4" id="crmTabs" role="tablist">
+        <li class="nav-item">
+            <button class="nav-link active fw-semibold" id="kanban-tab" data-bs-toggle="tab" data-bs-target="#kanbanPane" type="button">
+                <i class="fa-solid fa-table-columns me-1"></i> Opportunity Pipeline (Kanban)
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link fw-semibold" id="table-tab" data-bs-toggle="tab" data-bs-target="#tablePane" type="button">
+                <i class="fa-solid fa-list-ul me-1"></i> All Leads Directory (Table)
+            </button>
+        </li>
+    </ul>
 
-        @foreach($stages as $key => $meta)
-            <div class="col-md-3" style="min-width: 280px;">
-                <div class="card border-0 shadow-sm rounded-3 bg-light h-100">
-                    <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
-                        <span class="fw-bold text-{{ $meta['color'] }}">{{ $meta['title'] }}</span>
-                        <span class="badge bg-{{ $meta['color'] }} rounded-pill">{{ $pipeline[$key]->count() }}</span>
-                    </div>
-                    <div class="card-body p-2" style="max-height: 550px; overflow-y: auto;">
-                        @forelse($pipeline[$key] as $lead)
-                            <div class="card border-0 shadow-sm rounded-3 mb-2 p-3 bg-white">
-                                <div class="fw-bold text-dark">{{ $lead->contact_name }}</div>
-                                <div class="small text-muted mb-2">{{ $lead->company_name ?? 'Individual' }}</div>
-                                <div class="small fw-semibold text-primary mb-1">
-                                    <i class="fa-solid fa-box me-1"></i>{{ $lead->product_interest ?? 'Solar / Battery' }}
-                                </div>
-                                <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top">
-                                    <span class="fw-bold text-dark small">₹ {{ number_format($lead->estimated_value, 2) }}</span>
-                                    <div class="dropdown">
-                                        <button class="btn btn-sm btn-light border py-0 px-2 dropdown-toggle" data-bs-toggle="dropdown">
-                                            Stage
-                                        </button>
-                                        <ul class="dropdown-menu dropdown-menu-end shadow-sm">
-                                            @foreach(array_keys($stages) as $st)
-                                                <li>
-                                                    <form action="{{ route('crm.leads.stage', $lead->id) }}" method="POST">
-                                                        @csrf
-                                                        <input type="hidden" name="stage" value="{{ $st }}">
-                                                        <button type="submit" class="dropdown-item small {{ $lead->stage === $st ? 'active' : '' }}">
-                                                            Move to {{ $stages[$st]['title'] }}
-                                                        </button>
-                                                    </form>
-                                                </li>
-                                            @endforeach
-                                        </ul>
-                                    </div>
-                                </div>
+    <div class="tab-content" id="crmTabsContent">
+        <!-- Kanban Stage Columns -->
+        <div class="tab-pane fade show active" id="kanbanPane">
+            <div class="row g-3 overflow-auto flex-nowrap pb-3">
+                @php
+                    $stages = [
+                        'NEW' => ['title' => 'New Leads', 'color' => 'secondary'],
+                        'CONTACTED' => ['title' => 'Contacted / Discovery', 'color' => 'info'],
+                        'PROPOSAL' => ['title' => 'Quotation Sent', 'color' => 'primary'],
+                        'NEGOTIATION' => ['title' => 'Negotiation', 'color' => 'warning'],
+                        'WON' => ['title' => 'Won / Closed', 'color' => 'success'],
+                        'LOST' => ['title' => 'Lost / Dropped', 'color' => 'danger'],
+                    ];
+                @endphp
+
+                @foreach($stages as $key => $meta)
+                    <div class="col-md-3" style="min-width: 280px;">
+                        <div class="card border-0 shadow-sm rounded-3 bg-light h-100">
+                            <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
+                                <span class="fw-bold text-{{ $meta['color'] }}">{{ $meta['title'] }}</span>
+                                <span class="badge bg-{{ $meta['color'] }} rounded-pill">{{ $pipeline[$key]->count() }}</span>
                             </div>
-                        @empty
-                            <div class="text-center py-4 text-muted small">No leads in this stage.</div>
-                        @endforelse
+                            <div class="card-body p-2" style="max-height: 550px; overflow-y: auto;">
+                                @forelse($pipeline[$key] as $lead)
+                                    <div class="card border-0 shadow-sm rounded-3 mb-2 p-3 bg-white">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <div class="fw-bold text-dark">{{ $lead->contact_name }}</div>
+                                                <div class="small text-muted mb-2">{{ $lead->company_name ?? 'Individual' }}</div>
+                                            </div>
+                                            <button type="button" class="btn btn-sm btn-light border py-0 px-2 text-primary" data-bs-toggle="modal" data-bs-target="#editLeadModal{{ $lead->id }}" title="Edit Lead">
+                                                <i class="fa-solid fa-pen-to-square"></i>
+                                            </button>
+                                        </div>
+                                        <div class="small fw-semibold text-primary mb-1">
+                                            <i class="fa-solid fa-box me-1"></i>{{ $lead->product_interest ?? 'Solar / Battery' }}
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top">
+                                            <span class="fw-bold text-dark small">₹ {{ number_format($lead->estimated_value, 2) }}</span>
+                                            <div class="dropdown">
+                                                <button class="btn btn-sm btn-light border py-0 px-2 dropdown-toggle" data-bs-toggle="dropdown">
+                                                    Stage
+                                                </button>
+                                                <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                                                    @foreach(array_keys($stages) as $st)
+                                                        <li>
+                                                            <form action="{{ route('crm.leads.stage', $lead->id) }}" method="POST">
+                                                                @csrf
+                                                                <input type="hidden" name="stage" value="{{ $st }}">
+                                                                <button type="submit" class="dropdown-item small {{ $lead->stage === $st ? 'active' : '' }}">
+                                                                    Move to {{ $stages[$st]['title'] }}
+                                                                </button>
+                                                            </form>
+                                                        </li>
+                                                    @endforeach
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @empty
+                                    <div class="text-center py-4 text-muted small">No leads in this stage.</div>
+                                @endforelse
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+
+        <!-- Table Directory Pane -->
+        <div class="tab-pane fade" id="tablePane">
+            <div class="card border-0 shadow-sm rounded-3">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Contact Name</th>
+                                    <th>Firm / Company</th>
+                                    <th>Phone & Email</th>
+                                    <th>Product Requirement</th>
+                                    <th>Estimated Value</th>
+                                    <th>Stage</th>
+                                    <th class="text-center">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($leads as $lead)
+                                    <tr>
+                                        <td>
+                                            <div class="fw-bold">{{ $lead->contact_name }}</div>
+                                            <div class="small text-muted">{{ $lead->source ?? 'Direct Inbound' }}</div>
+                                        </td>
+                                        <td>{{ $lead->company_name ?? 'Individual' }}</td>
+                                        <td>
+                                            <div>{{ $lead->phone }}</div>
+                                            <small class="text-muted">{{ $lead->email ?? '—' }}</small>
+                                        </td>
+                                        <td>{{ $lead->product_interest ?? 'Solar / Battery' }}</td>
+                                        <td class="fw-bold text-primary">₹ {{ number_format($lead->estimated_value, 2) }}</td>
+                                        <td>
+                                            <span class="badge bg-{{ $stages[$lead->stage]['color'] ?? 'secondary' }}">
+                                                {{ $stages[$lead->stage]['title'] ?? $lead->stage }}
+                                            </span>
+                                        </td>
+                                        <td class="text-center">
+                                            <button type="button" class="btn btn-sm btn-light border py-1 px-2 text-primary" data-bs-toggle="modal" data-bs-target="#editLeadModal{{ $lead->id }}" title="Edit Lead">
+                                                <i class="fa-solid fa-pen-to-square"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="7" class="text-center py-4 text-muted">No sales leads recorded yet.</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
                     </div>
                 </div>
+                <div class="card-footer bg-white border-0 py-3">
+                    {{ $leads->links() }}
+                </div>
             </div>
-        @endforeach
+        </div>
     </div>
 </div>
+
+<!-- Edit Lead Modals for All Leads -->
+@foreach($allLeads as $lead)
+    <div class="modal fade text-start" id="editLeadModal{{ $lead->id }}" tabindex="-1">
+        <div class="modal-dialog">
+            <form action="{{ route('crm.leads.update', $lead->id) }}" method="POST" class="modal-content">
+                @csrf
+                @method('PUT')
+                <div class="modal-header border-bottom">
+                    <h5 class="modal-title fw-bold"><i class="fa-solid fa-pen-to-square text-primary me-2"></i>Edit Sales Lead: {{ $lead->contact_name }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">Contact Name *</label>
+                        <input type="text" name="contact_name" class="form-control" required value="{{ old('contact_name', $lead->contact_name) }}">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">Company / Organization</label>
+                        <input type="text" name="company_name" class="form-control" value="{{ old('company_name', $lead->company_name) }}">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">Phone Number *</label>
+                        <input type="text" name="phone" class="form-control" required value="{{ old('phone', $lead->phone) }}">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">Email Address</label>
+                        <input type="email" name="email" class="form-control" value="{{ old('email', $lead->email) }}">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">Product Requirement</label>
+                        <input type="text" name="product_interest" class="form-control" value="{{ old('product_interest', $lead->product_interest) }}">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">Estimated Deal Value (₹)</label>
+                        <input type="number" step="0.01" name="estimated_value" class="form-control" value="{{ old('estimated_value', $lead->estimated_value) }}">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">Lead Source</label>
+                        <input type="text" name="source" class="form-control" value="{{ old('source', $lead->source) }}">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">Pipeline Stage *</label>
+                        <select name="stage" class="form-select" required>
+                            @foreach($stages as $stKey => $stVal)
+                                <option value="{{ $stKey }}" {{ $lead->stage === $stKey ? 'selected' : '' }}>{{ $stVal['title'] }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer border-top">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary fw-bold">Update Opportunity</button>
+                </div>
+            </form>
+        </div>
+    </div>
+@endforeach
 
 <!-- Add Lead Modal -->
 <div class="modal fade" id="newLeadModal" tabindex="-1">

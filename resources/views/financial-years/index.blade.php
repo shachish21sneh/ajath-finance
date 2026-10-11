@@ -47,14 +47,57 @@
                             @endif
                         </td>
                         <td class="text-end">
-                            @if($currentFinancialYear?->id != $fy->id)
-                                <form action="{{ route('financial-years.switch', $fy->id) }}" method="POST" class="d-inline">
-                                    @csrf
-                                    <button type="submit" class="btn btn-sm btn-outline-primary py-1 px-2">
-                                        <i class="fa-solid fa-right-to-bracket me-1"></i> Set Current
-                                    </button>
-                                </form>
-                            @endif
+                            <div class="d-inline-flex gap-1 align-items-center">
+                                @if($currentFinancialYear?->id != $fy->id)
+                                    <form action="{{ route('financial-years.switch', $fy->id) }}" method="POST" class="d-inline">
+                                        @csrf
+                                        <button type="submit" class="btn btn-sm btn-outline-primary py-1 px-2" title="Set Active Financial Year">
+                                            <i class="fa-solid fa-right-to-bracket me-1"></i> Set Current
+                                        </button>
+                                    </form>
+                                @endif
+                                <button type="button" class="btn btn-sm btn-light border py-1 px-2 text-primary" data-bs-toggle="modal" data-bs-target="#editFyModal{{ $fy->id }}" title="Edit Financial Year">
+                                    <i class="fa-solid fa-pen"></i>
+                                </button>
+                            </div>
+
+                            <!-- Edit FY Modal -->
+                            <div class="modal fade text-start" id="editFyModal{{ $fy->id }}" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered">
+                                    <div class="modal-content card-modern">
+                                        <div class="modal-header border-bottom">
+                                            <h5 class="modal-title fs-6 fw-bold"><i class="fa-solid fa-pen-to-square me-2 text-primary"></i> Edit Financial Year</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <form action="{{ route('financial-years.update', $fy->id) }}" method="POST">
+                                            @csrf
+                                            @method('PUT')
+                                            <div class="modal-body p-3">
+                                                <div class="mb-3">
+                                                    <label class="form-label small fw-semibold">Title *</label>
+                                                    <input type="text" name="title" class="form-control" required value="{{ old('title', $fy->title) }}">
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label class="form-label small fw-semibold">Start Date *</label>
+                                                    <input type="date" name="start_date" class="form-control" required value="{{ old('start_date', $fy->start_date->format('Y-m-d')) }}">
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label class="form-label small fw-semibold">End Date *</label>
+                                                    <input type="date" name="end_date" class="form-control" required value="{{ old('end_date', $fy->end_date->format('Y-m-d')) }}">
+                                                </div>
+                                                <div class="form-check form-switch mb-2">
+                                                    <input class="form-check-input" type="checkbox" name="is_locked" value="1" id="isLocked{{ $fy->id }}" {{ $fy->is_locked ? 'checked' : '' }}>
+                                                    <label class="form-check-label small fw-semibold" for="isLocked{{ $fy->id }}">Lock Period (Prevent new vouchers)</label>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer border-top">
+                                                <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Cancel</button>
+                                                <button type="submit" class="btn btn-primary fw-semibold">Update Financial Year</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
                         </td>
                     </tr>
                 @empty
@@ -64,6 +107,10 @@
                 @endforelse
             </tbody>
         </table>
+    </div>
+
+    <div class="mt-3">
+        {{ $financialYears->links() }}
     </div>
 </div>
 
