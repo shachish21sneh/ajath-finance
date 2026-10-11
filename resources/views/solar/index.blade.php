@@ -252,14 +252,22 @@
                         </table>
                     </div>
                 </div>
-                @if($projects->hasPages())
-                    <div class="card-footer bg-white border-top py-3">
-                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-                            <span class="small text-muted">Showing {{ $projects->firstItem() }} to {{ $projects->lastItem() }} of {{ $projects->total() }} projects</span>
-                            {{ $projects->appends(request()->except('projects_page'))->links() }}
+                <div class="card-footer bg-white border-top py-3">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <span class="small text-muted">Showing {{ $projects->firstItem() ?? ($projects->total() > 0 ? 1 : 0) }} to {{ $projects->lastItem() ?? $projects->total() }} of {{ $projects->total() }} projects</span>
+                        <div>
+                            @if($projects->hasPages())
+                                {{ $projects->appends(request()->except('projects_page'))->links() }}
+                            @else
+                                <ul class="pagination pagination-sm mb-0">
+                                    <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
+                                    <li class="page-item active"><span class="page-link">1</span></li>
+                                    <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
+                                </ul>
+                            @endif
                         </div>
                     </div>
-                @endif
+                </div>
             </div>
         </div>
 
@@ -359,14 +367,22 @@
                         </table>
                     </div>
                 </div>
-                @if($leads->hasPages())
-                    <div class="card-footer bg-white border-top py-3">
-                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-                            <span class="small text-muted">Showing {{ $leads->firstItem() }} to {{ $leads->lastItem() }} of {{ $leads->total() }} leads</span>
-                            {{ $leads->appends(request()->except('leads_page'))->links() }}
+                <div class="card-footer bg-white border-top py-3">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <span class="small text-muted">Showing {{ $leads->firstItem() ?? ($leads->total() > 0 ? 1 : 0) }} to {{ $leads->lastItem() ?? $leads->total() }} of {{ $leads->total() }} leads</span>
+                        <div>
+                            @if($leads->hasPages())
+                                {{ $leads->appends(request()->except('leads_page'))->links() }}
+                            @else
+                                <ul class="pagination pagination-sm mb-0">
+                                    <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
+                                    <li class="page-item active"><span class="page-link">1</span></li>
+                                    <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
+                                </ul>
+                            @endif
                         </div>
                     </div>
-                @endif
+                </div>
             </div>
         </div>
 
@@ -407,14 +423,22 @@
                         </table>
                     </div>
                 </div>
-                @if($surveys->hasPages())
-                    <div class="card-footer bg-white border-top py-3">
-                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-                            <span class="small text-muted">Showing {{ $surveys->firstItem() }} to {{ $surveys->lastItem() }} of {{ $surveys->total() }} surveys</span>
-                            {{ $surveys->appends(request()->except('surveys_page'))->links() }}
+                <div class="card-footer bg-white border-top py-3">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <span class="small text-muted">Showing {{ $surveys->firstItem() ?? ($surveys->total() > 0 ? 1 : 0) }} to {{ $surveys->lastItem() ?? $surveys->total() }} of {{ $surveys->total() }} surveys</span>
+                        <div>
+                            @if($surveys->hasPages())
+                                {{ $surveys->appends(request()->except('surveys_page'))->links() }}
+                            @else
+                                <ul class="pagination pagination-sm mb-0">
+                                    <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
+                                    <li class="page-item active"><span class="page-link">1</span></li>
+                                    <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
+                                </ul>
+                            @endif
                         </div>
                     </div>
-                @endif
+                </div>
             </div>
         </div>
 
@@ -457,14 +481,22 @@
                         </table>
                     </div>
                 </div>
-                @if($quotations->hasPages())
-                    <div class="card-footer bg-white border-top py-3">
-                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-                            <span class="small text-muted">Showing {{ $quotations->firstItem() }} to {{ $quotations->lastItem() }} of {{ $quotations->total() }} quotations</span>
-                            {{ $quotations->appends(request()->except('quotes_page'))->links() }}
+                <div class="card-footer bg-white border-top py-3">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <span class="small text-muted">Showing {{ $quotations->firstItem() ?? ($quotations->total() > 0 ? 1 : 0) }} to {{ $quotations->lastItem() ?? $quotations->total() }} of {{ $quotations->total() }} quotations</span>
+                        <div>
+                            @if($quotations->hasPages())
+                                {{ $quotations->appends(request()->except('quotes_page'))->links() }}
+                            @else
+                                <ul class="pagination pagination-sm mb-0">
+                                    <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
+                                    <li class="page-item active"><span class="page-link">1</span></li>
+                                    <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
+                                </ul>
+                            @endif
                         </div>
                     </div>
-                @endif
+                </div>
             </div>
         </div>
 
@@ -505,14 +537,22 @@
                         </table>
                     </div>
                 </div>
-                @if($amcs->hasPages())
-                    <div class="card-footer bg-white border-top py-3">
-                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-                            <span class="small text-muted">Showing {{ $amcs->firstItem() }} to {{ $amcs->lastItem() }} of {{ $amcs->total() }} contracts</span>
-                            {{ $amcs->appends(request()->except('amcs_page'))->links() }}
+                <div class="card-footer bg-white border-top py-3">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <span class="small text-muted">Showing {{ $amcs->firstItem() ?? ($amcs->total() > 0 ? 1 : 0) }} to {{ $amcs->lastItem() ?? $amcs->total() }} of {{ $amcs->total() }} contracts</span>
+                        <div>
+                            @if($amcs->hasPages())
+                                {{ $amcs->appends(request()->except('amcs_page'))->links() }}
+                            @else
+                                <ul class="pagination pagination-sm mb-0">
+                                    <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
+                                    <li class="page-item active"><span class="page-link">1</span></li>
+                                    <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
+                                </ul>
+                            @endif
                         </div>
                     </div>
-                @endif
+                </div>
             </div>
         </div>
     </div>

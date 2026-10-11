@@ -193,14 +193,22 @@
                         </table>
                     </div>
                 </div>
-                @if($boms->hasPages())
-                    <div class="card-footer bg-white border-top py-3">
-                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-                            <span class="small text-muted">Showing {{ $boms->firstItem() }} to {{ $boms->lastItem() }} of {{ $boms->total() }} recipes</span>
-                            {{ $boms->appends(request()->except('boms_page'))->links() }}
+                <div class="card-footer bg-white border-top py-3">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <span class="small text-muted">Showing {{ $boms->firstItem() ?? ($boms->total() > 0 ? 1 : 0) }} to {{ $boms->lastItem() ?? $boms->total() }} of {{ $boms->total() }} recipes</span>
+                        <div>
+                            @if($boms->hasPages())
+                                {{ $boms->appends(request()->except('boms_page'))->links() }}
+                            @else
+                                <ul class="pagination pagination-sm mb-0">
+                                    <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
+                                    <li class="page-item active"><span class="page-link">1</span></li>
+                                    <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
+                                </ul>
+                            @endif
                         </div>
                     </div>
-                @endif
+                </div>
             </div>
         </div>
 
@@ -301,14 +309,22 @@
                         </table>
                     </div>
                 </div>
-                @if($productionOrders->hasPages())
-                    <div class="card-footer bg-white border-top py-3">
-                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-                            <span class="small text-muted">Showing {{ $productionOrders->firstItem() }} to {{ $productionOrders->lastItem() }} of {{ $productionOrders->total() }} orders</span>
-                            {{ $productionOrders->appends(request()->except('orders_page'))->links() }}
+                <div class="card-footer bg-white border-top py-3">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <span class="small text-muted">Showing {{ $productionOrders->firstItem() ?? ($productionOrders->total() > 0 ? 1 : 0) }} to {{ $productionOrders->lastItem() ?? $productionOrders->total() }} of {{ $productionOrders->total() }} orders</span>
+                        <div>
+                            @if($productionOrders->hasPages())
+                                {{ $productionOrders->appends(request()->except('orders_page'))->links() }}
+                            @else
+                                <ul class="pagination pagination-sm mb-0">
+                                    <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
+                                    <li class="page-item active"><span class="page-link">1</span></li>
+                                    <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
+                                </ul>
+                            @endif
                         </div>
                     </div>
-                @endif
+                </div>
             </div>
         </div>
 
@@ -350,14 +366,22 @@
                         </table>
                     </div>
                 </div>
-                @if($jobWorkOrders->hasPages())
-                    <div class="card-footer bg-white border-top py-3">
-                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-                            <span class="small text-muted">Showing {{ $jobWorkOrders->firstItem() }} to {{ $jobWorkOrders->lastItem() }} of {{ $jobWorkOrders->total() }} job work orders</span>
-                            {{ $jobWorkOrders->appends(request()->except('jobwork_page'))->links() }}
+                <div class="card-footer bg-white border-top py-3">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <span class="small text-muted">Showing {{ $jobWorkOrders->firstItem() ?? ($jobWorkOrders->total() > 0 ? 1 : 0) }} to {{ $jobWorkOrders->lastItem() ?? $jobWorkOrders->total() }} of {{ $jobWorkOrders->total() }} job work orders</span>
+                        <div>
+                            @if($jobWorkOrders->hasPages())
+                                {{ $jobWorkOrders->appends(request()->except('jobwork_page'))->links() }}
+                            @else
+                                <ul class="pagination pagination-sm mb-0">
+                                    <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
+                                    <li class="page-item active"><span class="page-link">1</span></li>
+                                    <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
+                                </ul>
+                            @endif
                         </div>
                     </div>
-                @endif
+                </div>
             </div>
         </div>
     </div>

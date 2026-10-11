@@ -182,8 +182,21 @@
                         </table>
                     </div>
                 </div>
-                <div class="card-footer bg-white border-0 py-3">
-                    {{ $leads->links() }}
+                <div class="card-footer bg-white border-top py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <span class="small text-muted">
+                        Showing {{ $leads->firstItem() ?? ($leads->total() > 0 ? 1 : 0) }} to {{ $leads->lastItem() ?? $leads->total() }} of {{ $leads->total() }} leads
+                    </span>
+                    <div>
+                        @if($leads->hasPages())
+                            {{ $leads->links() }}
+                        @else
+                            <ul class="pagination pagination-sm mb-0">
+                                <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
+                                <li class="page-item active"><span class="page-link">1</span></li>
+                                <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
+                            </ul>
+                        @endif
+                    </div>
                 </div>
             </div>
         </div>

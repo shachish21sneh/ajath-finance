@@ -80,8 +80,21 @@
     @endforelse
 </div>
 
-<div class="mt-4">
-    {{ $warehouses->links() }}
+<div class="card card-modern border-0 shadow-sm mt-4 p-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <span class="small text-muted">
+        Showing {{ $warehouses->firstItem() ?? ($warehouses->total() > 0 ? 1 : 0) }} to {{ $warehouses->lastItem() ?? $warehouses->total() }} of {{ $warehouses->total() }} warehouses
+    </span>
+    <div>
+        @if($warehouses->hasPages())
+            {{ $warehouses->links() }}
+        @else
+            <ul class="pagination pagination-sm mb-0">
+                <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
+                <li class="page-item active"><span class="page-link">1</span></li>
+                <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
+            </ul>
+        @endif
+    </div>
 </div>
 
 <!-- Add Warehouse Modal -->

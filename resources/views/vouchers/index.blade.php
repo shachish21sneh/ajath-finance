@@ -149,8 +149,21 @@
         </table>
     </div>
 
-    <div class="mt-3">
-        {{ $vouchers->withQueryString()->links() }}
+    <div class="card-footer bg-white border-top py-3 mt-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <span class="small text-muted">
+            Showing {{ $vouchers->firstItem() ?? ($vouchers->total() > 0 ? 1 : 0) }} to {{ $vouchers->lastItem() ?? $vouchers->total() }} of {{ $vouchers->total() }} vouchers
+        </span>
+        <div>
+            @if($vouchers->hasPages())
+                {{ $vouchers->withQueryString()->links() }}
+            @else
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
+                    <li class="page-item active"><span class="page-link">1</span></li>
+                    <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
+                </ul>
+            @endif
+        </div>
     </div>
 </div>
 @endsection

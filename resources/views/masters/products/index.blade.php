@@ -140,8 +140,21 @@
         </table>
     </div>
 
-    <div class="mt-3">
-        {{ $products->links() }}
+    <div class="card-footer bg-white border-top py-3 mt-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <span class="small text-muted">
+            Showing {{ $products->firstItem() ?? ($products->total() > 0 ? 1 : 0) }} to {{ $products->lastItem() ?? $products->total() }} of {{ $products->total() }} items
+        </span>
+        <div>
+            @if($products->hasPages())
+                {{ $products->links() }}
+            @else
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
+                    <li class="page-item active"><span class="page-link">1</span></li>
+                    <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
+                </ul>
+            @endif
+        </div>
     </div>
 </div>
 @endsection

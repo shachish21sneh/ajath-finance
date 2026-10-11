@@ -178,8 +178,21 @@
                 </table>
             </div>
         </div>
-        <div class="card-footer bg-white border-0 py-3">
-            {{ $dealers->links() }}
+        <div class="card-footer bg-white border-top py-3">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <span class="small text-muted">Showing {{ $dealers->firstItem() ?? ($dealers->total() > 0 ? 1 : 0) }} to {{ $dealers->lastItem() ?? $dealers->total() }} of {{ $dealers->total() }} partners</span>
+                <div>
+                    @if($dealers->hasPages())
+                        {{ $dealers->links() }}
+                    @else
+                        <ul class="pagination pagination-sm mb-0">
+                            <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
+                            <li class="page-item active"><span class="page-link">1</span></li>
+                            <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
+                        </ul>
+                    @endif
+                </div>
+            </div>
         </div>
     </div>
 </div>
