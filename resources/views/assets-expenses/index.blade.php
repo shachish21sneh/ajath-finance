@@ -180,8 +180,21 @@
                         </table>
                     </div>
                 </div>
-                <div class="card-footer bg-white border-0 py-3">
-                    {{ $assets->appends(request()->except('assets_page'))->links() }}
+                <div class="card-footer bg-white border-top py-3">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <span class="small text-muted">Showing {{ $assets->firstItem() ?? ($assets->total() > 0 ? 1 : 0) }} to {{ $assets->lastItem() ?? $assets->total() }} of {{ $assets->total() }} fixed assets</span>
+                        <div>
+                            @if($assets->hasPages())
+                                {{ $assets->appends(request()->except('assets_page'))->links() }}
+                            @else
+                                <ul class="pagination pagination-sm mb-0">
+                                    <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
+                                    <li class="page-item active"><span class="page-link">1</span></li>
+                                    <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
+                                </ul>
+                            @endif
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -304,8 +317,21 @@
                         </table>
                     </div>
                 </div>
-                <div class="card-footer bg-white border-0 py-3">
-                    {{ $expenses->appends(request()->except('expenses_page'))->links() }}
+                <div class="card-footer bg-white border-top py-3">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <span class="small text-muted">Showing {{ $expenses->firstItem() ?? ($expenses->total() > 0 ? 1 : 0) }} to {{ $expenses->lastItem() ?? $expenses->total() }} of {{ $expenses->total() }} expense records</span>
+                        <div>
+                            @if($expenses->hasPages())
+                                {{ $expenses->appends(request()->except('expenses_page'))->links() }}
+                            @else
+                                <ul class="pagination pagination-sm mb-0">
+                                    <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
+                                    <li class="page-item active"><span class="page-link">1</span></li>
+                                    <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
+                                </ul>
+                            @endif
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -388,8 +414,21 @@
                         </table>
                     </div>
                 </div>
-                <div class="card-footer bg-white border-0 py-3">
-                    {{ $costCentres->appends(request()->except('costcentres_page'))->links() }}
+                <div class="card-footer bg-white border-top py-3">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <span class="small text-muted">Showing {{ $costCentres->firstItem() ?? ($costCentres->total() > 0 ? 1 : 0) }} to {{ $costCentres->lastItem() ?? $costCentres->total() }} of {{ $costCentres->total() }} cost centres</span>
+                        <div>
+                            @if($costCentres->hasPages())
+                                {{ $costCentres->appends(request()->except('costcentres_page'))->links() }}
+                            @else
+                                <ul class="pagination pagination-sm mb-0">
+                                    <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
+                                    <li class="page-item active"><span class="page-link">1</span></li>
+                                    <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
+                                </ul>
+                            @endif
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

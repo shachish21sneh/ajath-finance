@@ -279,8 +279,21 @@
                         </table>
                     </div>
                 </div>
-                <div class="card-footer bg-white border-0 py-3">
-                    {{ $serials->appends(request()->except('serials_page'))->links() }}
+                <div class="card-footer bg-white border-top py-3">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <span class="small text-muted">Showing {{ $serials->firstItem() ?? ($serials->total() > 0 ? 1 : 0) }} to {{ $serials->lastItem() ?? $serials->total() }} of {{ $serials->total() }} serial numbers</span>
+                        <div>
+                            @if($serials->hasPages())
+                                {{ $serials->appends(request()->except('serials_page'))->links() }}
+                            @else
+                                <ul class="pagination pagination-sm mb-0">
+                                    <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
+                                    <li class="page-item active"><span class="page-link">1</span></li>
+                                    <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
+                                </ul>
+                            @endif
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -383,8 +396,21 @@
                         </table>
                     </div>
                 </div>
-                <div class="card-footer bg-white border-0 py-3">
-                    {{ $models->appends(request()->except('models_page'))->links() }}
+                <div class="card-footer bg-white border-top py-3">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <span class="small text-muted">Showing {{ $models->firstItem() ?? ($models->total() > 0 ? 1 : 0) }} to {{ $models->lastItem() ?? $models->total() }} of {{ $models->total() }} battery models</span>
+                        <div>
+                            @if($models->hasPages())
+                                {{ $models->appends(request()->except('models_page'))->links() }}
+                            @else
+                                <ul class="pagination pagination-sm mb-0">
+                                    <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
+                                    <li class="page-item active"><span class="page-link">1</span></li>
+                                    <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
+                                </ul>
+                            @endif
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

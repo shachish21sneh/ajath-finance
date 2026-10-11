@@ -229,14 +229,22 @@
                         </table>
                     </div>
                 </div>
-                @if($employees->hasPages())
-                    <div class="card-footer bg-white border-top py-3">
-                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-                            <span class="small text-muted">Showing {{ $employees->firstItem() }} to {{ $employees->lastItem() }} of {{ $employees->total() }} employees</span>
-                            {{ $employees->appends(request()->except('employees_page'))->links() }}
+                <div class="card-footer bg-white border-top py-3">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <span class="small text-muted">Showing {{ $employees->firstItem() ?? ($employees->total() > 0 ? 1 : 0) }} to {{ $employees->lastItem() ?? $employees->total() }} of {{ $employees->total() }} employees</span>
+                        <div>
+                            @if($employees->hasPages())
+                                {{ $employees->appends(request()->except('employees_page'))->links() }}
+                            @else
+                                <ul class="pagination pagination-sm mb-0">
+                                    <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
+                                    <li class="page-item active"><span class="page-link">1</span></li>
+                                    <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
+                                </ul>
+                            @endif
                         </div>
                     </div>
-                @endif
+                </div>
             </div>
         </div>
 
@@ -270,24 +278,84 @@
                                         </td>
                                         <td>{{ $att->total_hours }} hrs</td>
                                         <td>{{ $att->remarks ?? '—' }}</td>
+                                        <td class="text-end pe-3">
+                                            <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editAttendanceModal{{ $att->id }}" title="Edit Attendance">
+                                                <i class="fa-solid fa-pen-to-square"></i>
+                                            </button>
+                                        </td>
                                     </tr>
+
+                                    <!-- Edit Attendance Modal -->
+                                    <div class="modal fade" id="editAttendanceModal{{ $att->id }}" tabindex="-1">
+                                        <div class="modal-dialog">
+                                            <form action="{{ route('payroll.attendance.update', $att->id) }}" method="POST" class="modal-content">
+                                                @csrf
+                                                @method('PUT')
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title fw-bold"><i class="fa-solid fa-pen-to-square text-primary me-2"></i>Edit Attendance Record</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                </div>
+                                                <div class="modal-body row g-3">
+                                                    <div class="col-12">
+                                                        <label class="form-label small fw-bold">Employee</label>
+                                                        <input type="text" class="form-control" value="{{ $att->employee?->full_name }} ({{ $att->employee?->emp_code }})" disabled>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label class="form-label small fw-bold">Date *</label>
+                                                        <input type="date" name="attendance_date" class="form-control" required value="{{ $att->attendance_date->format('Y-m-d') }}">
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label class="form-label small fw-bold">Status *</label>
+                                                        <select name="status" class="form-select" required>
+                                                            <option value="present" {{ $att->status === 'present' ? 'selected' : '' }}>Present (Full Day)</option>
+                                                            <option value="half_day" {{ $att->status === 'half_day' ? 'selected' : '' }}>Half Day</option>
+                                                            <option value="absent" {{ $att->status === 'absent' ? 'selected' : '' }}>Absent</option>
+                                                            <option value="leave" {{ $att->status === 'leave' ? 'selected' : '' }}>Approved Leave</option>
+                                                            <option value="holiday" {{ $att->status === 'holiday' ? 'selected' : '' }}>Holiday</option>
+                                                            <option value="overtime" {{ $att->status === 'overtime' ? 'selected' : '' }}>Overtime</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label class="form-label small fw-bold">Hours Worked</label>
+                                                        <input type="number" step="0.5" name="total_hours" class="form-control" value="{{ $att->total_hours }}" min="0" max="24">
+                                                    </div>
+                                                    <div class="col-12">
+                                                        <label class="form-label small fw-bold">Remarks</label>
+                                                        <input type="text" name="remarks" class="form-control" value="{{ $att->remarks }}">
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                    <button type="submit" class="btn btn-primary fw-bold">Save Changes</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
                                 @empty
                                     <tr>
-                                        <td colspan="5" class="text-center py-4 text-muted">No attendance logs available.</td>
+                                        <td colspan="6" class="text-center py-4 text-muted">No attendance logs available.</td>
                                     </tr>
                                 @endforelse
                             </tbody>
                         </table>
                     </div>
                 </div>
-                @if($attendances->hasPages())
-                    <div class="card-footer bg-white border-top py-3">
-                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-                            <span class="small text-muted">Showing {{ $attendances->firstItem() }} to {{ $attendances->lastItem() }} of {{ $attendances->total() }} records</span>
-                            {{ $attendances->appends(request()->except('attendance_page'))->links() }}
+                <div class="card-footer bg-white border-top py-3">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <span class="small text-muted">Showing {{ $attendances->firstItem() ?? ($attendances->total() > 0 ? 1 : 0) }} to {{ $attendances->lastItem() ?? $attendances->total() }} of {{ $attendances->total() }} records</span>
+                        <div>
+                            @if($attendances->hasPages())
+                                {{ $attendances->appends(request()->except('attendance_page'))->links() }}
+                            @else
+                                <ul class="pagination pagination-sm mb-0">
+                                    <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
+                                    <li class="page-item active"><span class="page-link">1</span></li>
+                                    <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
+                                </ul>
+                            @endif
                         </div>
                     </div>
-                @endif
+                </div>
             </div>
         </div>
 
@@ -335,14 +403,22 @@
                         </table>
                     </div>
                 </div>
-                @if($payrollRuns->hasPages())
-                    <div class="card-footer bg-white border-top py-3">
-                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-                            <span class="small text-muted">Showing {{ $payrollRuns->firstItem() }} to {{ $payrollRuns->lastItem() }} of {{ $payrollRuns->total() }} batches</span>
-                            {{ $payrollRuns->appends(request()->except('runs_page'))->links() }}
+                <div class="card-footer bg-white border-top py-3">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <span class="small text-muted">Showing {{ $payrollRuns->firstItem() ?? ($payrollRuns->total() > 0 ? 1 : 0) }} to {{ $payrollRuns->lastItem() ?? $payrollRuns->total() }} of {{ $payrollRuns->total() }} batches</span>
+                        <div>
+                            @if($payrollRuns->hasPages())
+                                {{ $payrollRuns->appends(request()->except('runs_page'))->links() }}
+                            @else
+                                <ul class="pagination pagination-sm mb-0">
+                                    <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
+                                    <li class="page-item active"><span class="page-link">1</span></li>
+                                    <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
+                                </ul>
+                            @endif
                         </div>
                     </div>
-                @endif
+                </div>
             </div>
         </div>
     </div>

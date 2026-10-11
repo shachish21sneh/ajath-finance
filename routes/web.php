@@ -111,6 +111,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/payroll/employees', [PayrollController::class, 'storeEmployee'])->name('payroll.employees.store');
     Route::put('/payroll/employees/{employee}', [PayrollController::class, 'updateEmployee'])->name('payroll.employees.update');
     Route::post('/payroll/attendance', [PayrollController::class, 'storeAttendance'])->name('payroll.attendance.store');
+    Route::put('/payroll/attendance/{attendance}', [PayrollController::class, 'updateAttendance'])->name('payroll.attendance.update');
     Route::post('/payroll/process', [PayrollController::class, 'processPayroll'])->name('payroll.process');
     Route::get('/payroll/payslips/{payslip}', [PayrollController::class, 'showPayslip'])->name('payroll.payslip');
 

@@ -282,4 +282,20 @@ class PayrollController extends Controller
 
         return redirect()->route('payroll.index')->with('success', "Employee {$employee->full_name} updated successfully.");
     }
+
+    public function updateAttendance(Request $request, Attendance $attendance)
+    {
+        $validated = $request->validate([
+            'attendance_date' => 'required|date',
+            'status' => 'required|in:present,absent,half_day,leave,holiday,overtime',
+            'total_hours' => 'nullable|numeric|min:0|max:24',
+            'remarks' => 'nullable|string',
+        ]);
+
+        $validated['total_hours'] = $validated['total_hours'] ?? ($validated['status'] === 'present' ? 8.0 : ($validated['status'] === 'half_day' ? 4.0 : 0.0));
+
+        $attendance->update($validated);
+
+        return redirect()->route('payroll.index')->with('success', 'Attendance record updated successfully.');
+    }
 }
